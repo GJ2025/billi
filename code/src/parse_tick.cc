@@ -36,11 +36,68 @@ void print_header() {
               << std::setw(9)  << "Change%" << " | "
               << std::setw(12) << "Net_In(10k)" << " | "
               << std::setw(15) << "Net_In/Turnover" << " | "
-              << std::setw(14) << "Hist_Cum(10k)" << " | " // 位置对调
-              << std::setw(11) << "Cum_Chg%" << " | "     // 位置对调
+              << std::setw(14) << "Hist_Cum(10k)" << " | " 
+              << std::setw(11) << "Cum_Chg%" << " | "     
               << std::left  << std::setw(12) << "Signal"
               << std::endl;
     std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+}
+
+// ==================== 新增：封装的数据行格式化输出函数 ====================
+void print_data_row(const std::string& pure_name, long long valid_records_count, 
+                    double total_shares_wan, double avg_shares_per_tick, double total_turnover_wan,
+                    double closing_price, const std::string& pct_str, double net_inflow_wan, 
+                    double inflow_ratio, double cum_change_rate, bool has_prev_cum, 
+                    double historical_total_inflow, const std::string& divergence_str,
+                    const std::string& color_start, const std::string& color_end,
+                    const std::string& ratio_color_start, const std::string& cum_color_start) {
+    
+    // 1. 内部处理涉及符号与百分号的动态字符串格式化
+    std::stringstream inflow_ss, ratio_ss, cum_ss, hist_ss;
+    inflow_ss << std::fixed << std::setprecision(2) << (net_inflow_wan >= 0 ? "+" : "") << net_inflow_wan;
+    std::string inflow_str = inflow_ss.str();
+
+    ratio_ss << std::fixed << std::setprecision(2) << (inflow_ratio >= 0 ? "+" : "") << inflow_ratio << "%";
+    std::string ratio_str = ratio_ss.str();
+
+    std::string cum_change_str = "-";
+    if (has_prev_cum) {
+        cum_ss << std::fixed << std::setprecision(2) << (cum_change_rate >= 0 ? "+" : "") << cum_change_rate << "%";
+        cum_change_str = cum_ss.str();
+    }
+
+    hist_ss << std::fixed << std::setprecision(2) << (historical_total_inflow >= 0 ? "+" : "") << historical_total_inflow;
+    std::string hist_str = hist_ss.str();
+
+    // 2. 精准对齐格式化输出（通过剥离颜色代码保证列宽）
+    std::cout << std::left << std::setw(23) << pure_name << " | "
+              << std::right << std::setw(6) << valid_records_count << " | "
+              << std::setw(10) << std::fixed << std::setprecision(2) << total_shares_wan << " | "
+              << std::setw(14) << std::fixed << std::setprecision(1) << avg_shares_per_tick << " | " 
+              << std::setw(13) << total_turnover_wan << " | ";
+              
+    // Close 列
+    std::stringstream close_ss;
+    close_ss << std::fixed << std::setprecision(2) << closing_price;
+    std::cout << color_start << std::setw(8) << close_ss.str() << color_end << " | ";
+
+    // Change% 列
+    std::cout << color_start << std::setw(9) << pct_str << color_end << " | ";
+
+    // Net_In(10k) 列
+    std::cout << std::setw(12) << inflow_str << " | ";
+
+    // Net_In/Turnover 列
+    std::cout << ratio_color_start << std::setw(15) << ratio_str << "\033[0m | ";
+
+    // Hist_Cum(10k) 列
+    std::cout << std::setw(14) << hist_str << " | ";
+
+    // Cum_Chg% 列
+    std::cout << cum_color_start << std::setw(11) << cum_change_str << "\033[0m | ";
+
+    // Signal 列
+    std::cout << std::left << divergence_str << std::endl;
 }
 
 // ==================== 封装的单文件处理函数 ====================
@@ -177,58 +234,16 @@ double process_single_file(const std::string& filename, double prev_closing_pric
         }
     }
 
-    // 格式化当前净流入、占比与历史累计字符串
-    std::stringstream inflow_ss, ratio_ss, cum_ss, hist_ss;
-    inflow_ss << std::fixed << std::setprecision(2) << (net_inflow_wan >= 0 ? "+" : "") << net_inflow_wan;
-    std::string inflow_str = inflow_ss.str();
-
-    ratio_ss << std::fixed << std::setprecision(2) << (inflow_ratio >= 0 ? "+" : "") << inflow_ratio << "%";
-    std::string ratio_str = ratio_ss.str();
-
-    std::string cum_change_str = "-";
-    if (has_prev_cum) {
-        cum_ss << std::fixed << std::setprecision(2) << (cum_change_rate >= 0 ? "+" : "") << cum_change_rate << "%";
-        cum_change_str = cum_ss.str();
-    }
-
-    hist_ss << std::fixed << std::setprecision(2) << (historical_total_inflow >= 0 ? "+" : "") << historical_total_inflow;
-    std::string hist_str = hist_ss.str();
-
-    // ==================== 精准对齐格式化输出 ====================
-    std::cout << std::left << std::setw(23) << pure_name << " | "
-              << std::right << std::setw(6) << valid_records_count << " | "
-              << std::setw(10) << std::fixed << std::setprecision(2) << total_shares_wan << " | "
-              << std::setw(14) << std::fixed << std::setprecision(1) << avg_shares_per_tick << " | " 
-              << std::setw(13) << total_turnover_wan << " | ";
-              
-    // Close 列
-    std::stringstream close_ss;
-    close_ss << std::fixed << std::setprecision(2) << closing_price;
-    std::cout << color_start << std::setw(8) << close_ss.str() << color_end << " | ";
-
-    // Change% 列
-    std::cout << color_start << std::setw(9) << pct_str << color_end << " | ";
-
-    // Net_In(10k) 列
-    std::cout << std::setw(12) << inflow_str << " | ";
-
-    // Net_In/Turnover 列
-    std::cout << ratio_color_start << std::setw(15) << ratio_str << "\033[0m | ";
-
-    // Hist_Cum(10k) 列 (位置前移)
-    std::cout << std::setw(14) << hist_str << " | ";
-
-    // Cum_Chg% 列 (位置后移)
-    std::cout << cum_color_start << std::setw(11) << cum_change_str << "\033[0m | ";
-
-    // Signal 列
-    std::cout << std::left << divergence_str << std::endl;
+    // 调用独立的封装打印函数进行整行输出
+    print_data_row(pure_name, valid_records_count, total_shares_wan, avg_shares_per_tick, 
+                   total_turnover_wan, closing_price, pct_str, net_inflow_wan, inflow_ratio, 
+                   cum_change_rate, has_prev_cum, historical_total_inflow, divergence_str, 
+                   color_start, color_end, ratio_color_start, cum_color_start);
 
     return closing_price; 
 }
 
 int main(int argc, char* argv[]) {
-    
     if (argc < 2) {
         std::cerr << "用法提示: " << argv[0] << " <目录路径>" << std::endl;
         return 1;
