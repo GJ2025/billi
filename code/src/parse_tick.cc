@@ -29,8 +29,8 @@ void print_header() {
     std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
     std::cout << std::left  << std::setw(23) << "File_Name" << " | "
               << std::right << std::setw(6)  << "Ticks" << " | "
-              << std::setw(10) << "Vol(10k)" << " | "
-              << std::setw(14) << "Vol/Ticks(10K)" << " | "
+              << std::setw(10) << "Vol(10k)" << " | "               
+              << std::setw(14) << "Vol/Ticks(10K)" << " | "         
               << std::setw(13) << "Turnover(10k)" << " | "
               << std::setw(8)  << "Close" << " | "
               << std::setw(9)  << "Change%" << " | "
@@ -43,16 +43,15 @@ void print_header() {
     std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
 }
 
-// ==================== 新增：封装的数据行格式化输出函数 ====================
+// ==================== 封装的数据行格式化输出函数 ====================
 void print_data_row(const std::string& pure_name, long long valid_records_count, 
-                    double total_shares_wan, double avg_shares_per_tick, double total_turnover_wan,
+                    double total_vol_wan, double avg_vol_per_tick, double total_turnover_wan, 
                     double closing_price, const std::string& pct_str, double net_inflow_wan, 
                     double inflow_ratio, double cum_change_rate, bool has_prev_cum, 
                     double historical_total_inflow, const std::string& divergence_str,
                     const std::string& color_start, const std::string& color_end,
                     const std::string& ratio_color_start, const std::string& cum_color_start) {
     
-    // 1. 内部处理涉及符号与百分号的动态字符串格式化
     std::stringstream inflow_ss, ratio_ss, cum_ss, hist_ss;
     inflow_ss << std::fixed << std::setprecision(2) << (net_inflow_wan >= 0 ? "+" : "") << net_inflow_wan;
     std::string inflow_str = inflow_ss.str();
@@ -69,53 +68,85 @@ void print_data_row(const std::string& pure_name, long long valid_records_count,
     hist_ss << std::fixed << std::setprecision(2) << (historical_total_inflow >= 0 ? "+" : "") << historical_total_inflow;
     std::string hist_str = hist_ss.str();
 
-    // 2. 精准对齐格式化输出（通过剥离颜色代码保证列宽）
     std::cout << std::left << std::setw(23) << pure_name << " | "
               << std::right << std::setw(6) << valid_records_count << " | "
-              << std::setw(10) << std::fixed << std::setprecision(2) << total_shares_wan << " | "
-              << std::setw(14) << std::fixed << std::setprecision(1) << avg_shares_per_tick << " | " 
+              << std::setw(10) << std::fixed << std::setprecision(2) << total_vol_wan << " | " 
+              << std::setw(14) << std::fixed << std::setprecision(1) << avg_vol_per_tick << " | " 
               << std::setw(13) << total_turnover_wan << " | ";
               
-    // Close 列
     std::stringstream close_ss;
     close_ss << std::fixed << std::setprecision(2) << closing_price;
     std::cout << color_start << std::setw(8) << close_ss.str() << color_end << " | ";
-
-    // Change% 列
     std::cout << color_start << std::setw(9) << pct_str << color_end << " | ";
-
-    // Net_In(10k) 列
     std::cout << std::setw(12) << inflow_str << " | ";
-
-    // Net_In/Turnover 列
     std::cout << ratio_color_start << std::setw(15) << ratio_str << "\033[0m | ";
-
-    // Hist_Cum(10k) 列
     std::cout << std::setw(14) << hist_str << " | ";
-
-    // Cum_Chg% 列
     std::cout << cum_color_start << std::setw(11) << cum_change_str << "\033[0m | ";
-
-    // Signal 列
     std::cout << std::left << divergence_str << std::endl;
 }
 
-// ==================== 封装的单文件处理函数 ====================
-double process_single_file(const std::string& filename, double prev_closing_price, double& historical_total_inflow) {
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cerr << "错误：无法打开文件 " << filename << std::endl;
-        return 0.0;
+// ==================== 核心封装：指标衍生、信号计算与输出入口 ====================
+void get_and_print_signals(const std::string& pure_name, long long valid_records_count, 
+                           double total_vol_wan, double avg_vol_per_tick, double total_turnover_wan, 
+                           double closing_price, double prev_closing_price, double net_inflow_wan, 
+                           double inflow_ratio, double cum_change_rate, bool has_prev_cum, 
+                           double historical_total_inflow) {
+    
+    // 1. 计算涨跌幅及 Close/Change% 的颜色控制
+    bool has_prev = (prev_closing_price > 0.0);
+    double pct_change = 0.0;
+    std::string pct_str = "0.00%";
+    std::string color_start = "";
+    std::string color_end = "";
+
+    if (has_prev) {
+        pct_change = ((closing_price - prev_closing_price) / prev_closing_price) * 100.0;
+        
+        std::stringstream pct_ss;
+        pct_ss << std::fixed << std::setprecision(2) << (pct_change >= 0 ? "+" : "") << pct_change << "%";
+        pct_str = pct_ss.str();
+
+        if (closing_price > prev_closing_price) {
+            color_start = "\033[31m"; // 红
+            color_end = "\033[0m";
+        } else if (closing_price < prev_closing_price) {
+            color_start = "\033[32m"; // 绿
+            color_end = "\033[0m";
+        }
     }
 
-    std::string line;
-    double total_inflow = 0.0;
-    double total_outflow = 0.0;
-    double total_turnover = 0.0; 
-    long long total_shares_traded = 0; 
-    long long valid_records_count = 0;
-    double closing_price = 0.0; 
+    // 正数红、负数绿的辅助 Lambda 闭包
+    auto get_color = [](double value, bool condition = true) -> std::string {
+        if (!condition || value == 0.0) return "";
+        return (value > 0.0) ? "\033[31m" : "\033[32m";
+    };
 
+    // 2. 自动判定占比与历史累计颜色
+    std::string ratio_color_start = get_color(inflow_ratio);
+    std::string cum_color_start = get_color(cum_change_rate, has_prev_cum);
+
+    // 3. 自动判定背离信号标签
+    std::string divergence_str = "      -      "; 
+    if (has_prev) {
+        if (pct_change > 0 && net_inflow_wan < 0) {
+            divergence_str = "\033[33m[ 涨/净流出 ]\033[0m"; 
+        } else if (pct_change < 0 && net_inflow_wan > 0) {
+            divergence_str = "\033[35m[ 跌/净流入 ]\033[0m"; 
+        }
+    }
+
+    // 4. 送入最底层的对齐输出函数
+    print_data_row(pure_name, valid_records_count, total_vol_wan, avg_vol_per_tick, 
+                   total_turnover_wan, closing_price, pct_str, net_inflow_wan, inflow_ratio, 
+                   cum_change_rate, has_prev_cum, historical_total_inflow, divergence_str, 
+                   color_start, color_end, ratio_color_start, cum_color_start);
+}
+
+// ==================== 封装的文件核心原始数据解析函数 ====================
+void parse_tick_file(std::ifstream& infile, long long& valid_records_count, double& closing_price,
+                     long long& total_vol, double& total_turnover, 
+                     double& total_inflow, double& total_outflow) {
+    std::string line;
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
 
@@ -138,10 +169,10 @@ double process_single_file(const std::string& filename, double prev_closing_pric
             valid_records_count++;
             closing_price = price; 
 
-            long long current_shares = static_cast<long long>(volume) * 100;
-            total_shares_traded += current_shares;
+            long long current_vol = static_cast<long long>(volume) * 100; 
+            total_vol += current_vol;
 
-            double current_amount = price * current_shares;
+            double current_amount = price * current_vol;
             total_turnover += current_amount; 
 
             if (bs_type == "B") {
@@ -152,15 +183,35 @@ double process_single_file(const std::string& filename, double prev_closing_pric
         }
     }
     infile.close();
+}
+
+// ==================== 封装的单文件流程控制函数 ====================
+double process_single_file(const std::string& filename, double prev_closing_price, double& historical_total_inflow) {
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cerr << "错误：无法打开文件 " << filename << std::endl;
+        return 0.0;
+    }
+
+    double total_inflow = 0.0;
+    double total_outflow = 0.0;
+    double total_turnover = 0.0; 
+    long long total_vol = 0; 
+    long long valid_records_count = 0;
+    double closing_price = 0.0; 
+
+    // 数据清洗解析
+    parse_tick_file(infile, valid_records_count, closing_price, total_vol, 
+                    total_turnover, total_inflow, total_outflow);
 
     if (valid_records_count == 0) {
         return 0.0;
     }
 
-    // 单位转换
+    // 基础单位转换
     double net_inflow_wan = (total_inflow - total_outflow) / 10000.0;
     double total_turnover_wan = total_turnover / 10000.0;
-    double total_shares_wan = total_shares_traded / 10000.0; 
+    double total_vol_wan = total_vol / 10000.0;  
 
     // 计算净流向占成交额的比例
     double inflow_ratio = 0.0;
@@ -176,73 +227,21 @@ double process_single_file(const std::string& filename, double prev_closing_pric
         has_prev_cum = true;
     }
 
-    // 累加到历史遗留总资金中
     historical_total_inflow += net_inflow_wan;
 
-    // 计算平均每笔交易股数
-    double avg_shares_per_tick = (total_shares_wan * 10000.0) / valid_records_count;
+    // 计算平均每笔交易 Vol
+    double avg_vol_per_tick = (total_vol_wan * 10000.0) / valid_records_count; 
     std::string pure_name = fs::path(filename).filename().string();
 
-    // 涨跌幅及颜色代码判定
-    std::string color_start = "";
-    std::string color_end = "";
-    std::string pct_str = "-";
-    double pct_change = 0.0;
-    bool has_prev = false;
-
-    if (prev_closing_price > 0.0) {
-        has_prev = true;
-        pct_change = ((closing_price - prev_closing_price) / prev_closing_price) * 100.0;
-        
-        std::stringstream pct_ss;
-        pct_ss << std::fixed << std::setprecision(2) << (pct_change >= 0 ? "+" : "") << pct_change << "%";
-        pct_str = pct_ss.str();
-
-        if (closing_price > prev_closing_price) {
-            color_start = "\033[31m"; // 红
-            color_end = "\033[0m";
-        } else if (closing_price < prev_closing_price) {
-            color_start = "\033[32m"; // 绿
-            color_end = "\033[0m";
-        }
-    } else {
-        pct_str = "0.00%"; 
-    }
-
-    // 占比颜色控制
-    std::string ratio_color_start = "";
-    if (inflow_ratio > 0.0) {
-        ratio_color_start = "\033[31m"; 
-    } else if (inflow_ratio < 0.0) {
-        ratio_color_start = "\033[32m";
-    }
-
-    // 历史累计环比变动率颜色控制
-    std::string cum_color_start = "";
-    if (has_prev_cum) {
-        if (cum_change_rate > 0.0) cum_color_start = "\033[31m";      
-        else if (cum_change_rate < 0.0) cum_color_start = "\033[32m"; 
-    }
-
-    // 量价与资金背离判定标签
-    std::string divergence_str = "      -      "; 
-    if (has_prev) {
-        if (pct_change > 0 && net_inflow_wan < 0) {
-            divergence_str = "\033[33m[ 涨/净流出 ]\033[0m"; 
-        } else if (pct_change < 0 && net_inflow_wan > 0) {
-            divergence_str = "\033[35m[ 跌/净流入 ]\033[0m"; 
-        }
-    }
-
-    // 调用独立的封装打印函数进行整行输出
-    print_data_row(pure_name, valid_records_count, total_shares_wan, avg_shares_per_tick, 
-                   total_turnover_wan, closing_price, pct_str, net_inflow_wan, inflow_ratio, 
-                   cum_change_rate, has_prev_cum, historical_total_inflow, divergence_str, 
-                   color_start, color_end, ratio_color_start, cum_color_start);
+    // 流向控制大整合入口
+    get_and_print_signals(pure_name, valid_records_count, total_vol_wan, avg_vol_per_tick, 
+                          total_turnover_wan, closing_price, prev_closing_price, net_inflow_wan, 
+                          inflow_ratio, cum_change_rate, has_prev_cum, historical_total_inflow);
 
     return closing_price; 
 }
 
+// ==================== 主入口函数 ====================
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "用法提示: " << argv[0] << " <目录路径>" << std::endl;
@@ -259,7 +258,6 @@ int main(int argc, char* argv[]) {
     std::cout << "======================= 目录批处理资金统计 =======================" << std::endl;
     std::cout << "正在扫描目录: " << dir_path << std::endl;
 
-    // 1. 收集 .txt 文件并排序
     std::vector<std::string> files_to_process;
     for (const auto& entry : fs::directory_iterator(dir_path)) {
         if (entry.is_regular_file() && entry.path().extension() == ".txt") {
@@ -273,10 +271,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // 2. 顶部打印表头
     print_header();
 
-    // 3. 循环批处理
     double prev_closing_price = 0.0;
     double historical_total_inflow = 0.0; 
     
@@ -284,7 +280,6 @@ int main(int argc, char* argv[]) {
         prev_closing_price = process_single_file(file, prev_closing_price, historical_total_inflow);
     }
 
-    // 4. 尾部重新打印表头
     print_header();
 
     std::cout << "=======================================================================================================================================================" << std::endl;
