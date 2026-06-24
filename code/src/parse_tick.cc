@@ -32,12 +32,12 @@ void print_header() {
               << std::setw(10) << "Vol(10k)" << " | "               
               << std::setw(14) << "Vol/Ticks(10K)" << " | "         
               << std::setw(13) << "Turnover(10k)" << " | "
-              << std::setw(8)  << "Close" << " | "
-              << std::setw(9)  << "Change%" << " | "
               << std::setw(12) << "Net_In(10k)" << " | "
               << std::setw(15) << "Net_In/Turnover" << " | "
               << std::setw(14) << "Hist_Cum(10k)" << " | " 
               << std::setw(11) << "Cum_Chg%" << " | "     
+              << std::setw(8)  << "Close" << " | "           // 移动到这里
+              << std::setw(9)  << "Change%" << " | "         // 移动到这里
               << std::left  << std::setw(12) << "Signal"
               << std::endl;
     std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
@@ -68,20 +68,25 @@ void print_data_row(const std::string& pure_name, long long valid_records_count,
     hist_ss << std::fixed << std::setprecision(2) << (historical_total_inflow >= 0 ? "+" : "") << historical_total_inflow;
     std::string hist_str = hist_ss.str();
 
+    // 1. 先打印前面的量价与资金基础数据
     std::cout << std::left << std::setw(23) << pure_name << " | "
               << std::right << std::setw(6) << valid_records_count << " | "
               << std::setw(10) << std::fixed << std::setprecision(2) << total_vol_wan << " | " 
               << std::setw(14) << std::fixed << std::setprecision(1) << avg_vol_per_tick << " | " 
               << std::setw(13) << total_turnover_wan << " | ";
               
-    std::stringstream close_ss;
-    close_ss << std::fixed << std::setprecision(2) << closing_price;
-    std::cout << color_start << std::setw(8) << close_ss.str() << color_end << " | ";
-    std::cout << color_start << std::setw(9) << pct_str << color_end << " | ";
     std::cout << std::setw(12) << inflow_str << " | ";
     std::cout << ratio_color_start << std::setw(15) << ratio_str << "\033[0m | ";
     std::cout << std::setw(14) << hist_str << " | ";
     std::cout << cum_color_start << std::setw(11) << cum_change_str << "\033[0m | ";
+    
+    // 2. 紧接着打印移过来的 Close 和 Change%
+    std::stringstream close_ss;
+    close_ss << std::fixed << std::setprecision(2) << closing_price;
+    std::cout << color_start << std::setw(8) << close_ss.str() << color_end << " | ";
+    std::cout << color_start << std::setw(9) << pct_str << color_end << " | ";
+    
+    // 3. 最后输出 Signal 信号
     std::cout << std::left << divergence_str << std::endl;
 }
 
