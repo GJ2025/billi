@@ -8,6 +8,7 @@
 #include <filesystem> 
 #include <algorithm>  
 #include <cmath>       
+#include <cstdlib>   // 核心：引入 std::system 和 std::getenv
 
 namespace fs = std::filesystem;
 
@@ -43,7 +44,7 @@ void print_header() {
               << std::setw(9)  << "AM_Vol" << " | "
               << std::setw(10) << "Vol/Ticks" << " | "         
               << std::setw(11) << "Turnover" << " | "
-              << std::setw(7)  << "Close" << " | "           
+              << std::setw(7)  << "Close" << " | "            
               << std::setw(8)  << "Change%" << " | "         
               << std::setw(10) << "Net_In" << " | "     
               << std::setw(10) << "AM_Net_In" << " | "
@@ -220,7 +221,6 @@ double process_single_file(const std::string& filename, double prev_closing_pric
 
     double avg_vol_per_tick = (total_vol_wan * 10000.0) / valid_records_count; 
     
-    // 核心更改：提取纯文件名并截取前 10 位作为 Date (如 "2026-04-14")
     std::string pure_name = fs::path(filename).filename().string();
     std::string date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
@@ -239,6 +239,36 @@ int main(int argc, char* argv[]) {
     }
 
     std::string dir_path = argv[1];
+
+    // ---------------- 新增：自动执行前置 Shell 脚本逻辑 ----------------
+    std::cout << "======================= Pre-processing =======================" << std::endl;
+    
+    // 尝试从环境变量获取 $c，如果获取不到则默认当前目录或指定安全路径
+    const char* c_env = std::getenv("c");
+    std::string script_dir = c_env ? c_env : "."; 
+    std::string script_path = (fs::path(script_dir) / "c.sh").string();
+
+    // 健全性检查：确保前置脚本存在
+    if (!fs::exists(script_path)) {
+        std::cerr << "Warning: Pre-processing script not found at: " << script_path 
+                  << "\nSkipping pre-processing stage..." << std::endl;
+    } else {
+        // 拼接 shell 命令: sh /path/to/c.sh /path/to/xiye/
+        std::string shell_cmd = "sh " + script_path + " " + dir_path;
+        std::cout << "Executing: " << shell_cmd << std::endl;
+        
+        // 执行脚本
+        int ret = std::system(shell_cmd.c_str());
+        if (ret != 0) {
+            std::cerr << "Error: Pre-processing script exited with code " << ret << std::endl;
+            // 根据需要决定是否拦截后续流，通常数据清洗失败后面可能读不到新文件，这里选择报错提示
+        } else {
+            std::cout << "Pre-processing completed successfully.\n" << std::endl;
+        }
+    }
+    // ----------------------------------------------------------------
+
+    // 重新做一次常规的目录检测（因为清洗脚本可能刚刚创建或刷新了这个目录）
     if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
         std::cerr << "Error: Invalid directory path: " << dir_path << std::endl;
         return 1;
