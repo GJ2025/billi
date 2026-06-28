@@ -35,7 +35,7 @@ bool is_am_time(const std::string& tick_time) {
 }
 
 void print_header() {
-    std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl; 
     std::cout << std::left  << std::setw(11) << "Date" << " | "
               << std::right << std::setw(5)  << "Ticks" << " | "
@@ -49,21 +49,23 @@ void print_header() {
               << std::setw(8)  << "Change%" << " | "         
               << std::setw(10) << "Net_In" << " | "     
               << std::setw(10) << "AM_Net_In" << " | "
+              << std::setw(10) << "PM_Net_In" << " | " // 显式输出下午净流入
               << std::setw(11) << "Net_In/Turn" << " | " 
               << std::setw(11) << "Hist_Cum" << " | "   
-              << std::left  << std::setw(20) << "Signal" // 拓宽 Signal 列输出宽度
+              << std::left  << std::setw(20) << "Signal" 
               << std::endl;
-    std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl;
 }
 
 void print_data_row(const std::string& date_str, long long valid_records_count, 
                     double total_vol_wan, double am_vol_wan, double avg_vol_per_tick, double total_turnover_wan, 
-                    double am_closing_price, double avg_price, double closing_price, const std::string& pct_str, double net_inflow_wan, double am_net_inflow_wan,
+                    double am_closing_price, double avg_price, double closing_price, const std::string& pct_str, 
+                    double net_inflow_wan, double am_net_inflow_wan, double pm_net_inflow_wan,
                     double inflow_ratio, double historical_total_inflow, const std::string& divergence_str,
                     const std::string& row_color_start, const std::string& row_color_end) {
     
-    std::stringstream inflow_ss, am_inflow_ss, ratio_ss, hist_ss, close_ss, am_close_ss, avg_price_ss;
+    std::stringstream inflow_ss, am_inflow_ss, pm_inflow_ss, ratio_ss, hist_ss, close_ss, am_close_ss, avg_price_ss;
     
     close_ss << std::fixed << std::setprecision(2) << closing_price;
     std::string close_str = close_ss.str();
@@ -88,6 +90,9 @@ void print_data_row(const std::string& date_str, long long valid_records_count,
     am_inflow_ss << std::fixed << std::setprecision(2) << (am_net_inflow_wan >= 0 ? "+" : "") << am_net_inflow_wan;
     std::string am_inflow_str = am_inflow_ss.str();
 
+    pm_inflow_ss << std::fixed << std::setprecision(2) << (pm_net_inflow_wan >= 0 ? "+" : "") << pm_net_inflow_wan;
+    std::string pm_inflow_str = pm_inflow_ss.str();
+
     ratio_ss << std::fixed << std::setprecision(2) << (inflow_ratio >= 0 ? "+" : "") << inflow_ratio << "%";
     std::string ratio_str = ratio_ss.str();
 
@@ -110,17 +115,17 @@ void print_data_row(const std::string& date_str, long long valid_records_count,
               << std::setw(8)  << pct_str    << " | "
               << std::setw(10) << inflow_str << " | "
               << std::setw(10) << am_inflow_str << " | "
+              << std::setw(10) << pm_inflow_str << " | " 
               << std::setw(11) << ratio_str  << " | "
               << std::setw(11) << hist_str   << row_color_end << " | ";
     
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-// ==================== 信号衍生核心：加入均价背离判定 ====================
 void get_and_print_signals(const std::string& date_str, long long valid_records_count, 
                            double total_vol_wan, double am_vol_wan, double avg_vol_per_tick, double total_turnover_wan, 
                            double am_closing_price, double avg_price, double prev_avg_price, double closing_price, double prev_closing_price, 
-                           double net_inflow_wan, double am_net_inflow_wan, double inflow_ratio, double historical_total_inflow) {
+                           double net_inflow_wan, double am_net_inflow_wan, double pm_net_inflow_wan, double inflow_ratio, double historical_total_inflow) {
     
     bool has_prev = (prev_closing_price > 0.0);
     double pct_change = 0.0;
@@ -148,21 +153,19 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
     // 组合信号判定
     std::string divergence_str = ""; 
     if (has_prev) {
-        // 1. 收盘价传统背离判定
         if (pct_change > 0 && net_inflow_wan < 0) {
             divergence_str += "\033[33m[UP/NET_OUT]\033[0m"; 
         } else if (pct_change < 0 && net_inflow_wan > 0) {
             divergence_str += "\033[35m[DN/NET_IN ]\033[0m"; 
         }
 
-        // 2. 均价全新背离判定 (Avg_Price vs Net_In)
         if (prev_avg_price > 0.0) {
             if (avg_price > prev_avg_price && net_inflow_wan < 0) {
                 if (!divergence_str.empty()) divergence_str += " ";
-                divergence_str += "\033[1;31m[AV_UP/OUT]\033[0m"; // 加粗红高亮：均价升但资金流出
+                divergence_str += "\033[1;31m[AV_UP/OUT]\033[0m"; 
             } else if (avg_price < prev_avg_price && net_inflow_wan > 0) {
                 if (!divergence_str.empty()) divergence_str += " ";
-                divergence_str += "\033[1;32m[AV_DN/IN ]\033[0m"; // 加粗绿高亮：均价降但资金流入
+                divergence_str += "\033[1;32m[AV_DN/IN ]\033[0m"; 
             }
         }
     }
@@ -172,13 +175,15 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
     }
 
     print_data_row(date_str, valid_records_count, total_vol_wan, am_vol_wan, avg_vol_per_tick, 
-                   total_turnover_wan, am_closing_price, avg_price, closing_price, pct_str, net_inflow_wan, am_net_inflow_wan,
+                   total_turnover_wan, am_closing_price, avg_price, closing_price, pct_str, 
+                   net_inflow_wan, am_net_inflow_wan, pm_net_inflow_wan,
                    inflow_ratio, historical_total_inflow, divergence_str, row_color_start, row_color_end);
 }
 
+// ==================== 细化 parse_tick_file 里的时段流向 ====================
 void parse_tick_file(std::ifstream& infile, long long& valid_records_count, double& closing_price, double& am_closing_price,
-                     long long& total_vol, long long& am_vol, double& total_turnover, 
-                     double& total_inflow, double& total_outflow, double& am_inflow, double& am_outflow) {
+                     long long& am_vol, long long& pm_vol, double& total_turnover, 
+                     double& am_inflow, double& am_outflow, double& pm_inflow, double& pm_outflow) {
     std::string line;
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
@@ -195,30 +200,37 @@ void parse_tick_file(std::ifstream& infile, long long& valid_records_count, doub
 
         if (ss >> price >> volume >> type_count) {
             if (!(ss >> bs_type)) bs_type = "-"; 
+
+            // ==================== 🛠️ BUG 修复核心位置 ====================
+            // 拦截集合竞价虚拟快照：如果笔数(type_count)为 0，说明是 09:15-09:24 的非真实交易流
+            // 必须直接跳过，否则会让全天成交额无端膨胀几倍甚至十几倍
+            if (type_count == 0) continue; 
+            // ==========================================================
+
             valid_records_count++;
-            closing_price = price; 
+            closing_price = price; // 最后一个有效价格即为 Close
 
-            long long current_vol = static_cast<long long>(volume) * 100; 
-            total_vol += current_vol;
-
+            long long current_vol = static_cast<long long>(volume) * 100; // 现手 * 100 换算为真实股数
             double current_amount = price * current_vol;
             total_turnover += current_amount; 
 
-            if (bs_type == "B") total_inflow += current_amount;  
-            else if (bs_type == "S") total_outflow += current_amount; 
-
+            // 根据时间严格做 if-else 分流
             if (is_am_time(first_token)) {
                 am_closing_price = price; 
                 am_vol += current_vol;
                 if (bs_type == "B") am_inflow += current_amount;
                 else if (bs_type == "S") am_outflow += current_amount;
+            } else {
+                // 下午时段
+                pm_vol += current_vol;
+                if (bs_type == "B") pm_inflow += current_amount;
+                else if (bs_type == "S") pm_outflow += current_amount;
             }
         }
     }
     infile.close();
 }
 
-// ==================== 单文件流程控制：改用传递结构体或双引用带回 price ====================
 void process_single_file(const std::string& filename, double prev_closing_price, double prev_avg_price,
                          double& current_closing_price, double& current_avg_price, double& historical_total_inflow) {
     std::ifstream infile(filename);
@@ -229,14 +241,16 @@ void process_single_file(const std::string& filename, double prev_closing_price,
         return;
     }
 
-    double total_inflow = 0.0, total_outflow = 0.0, total_turnover = 0.0; 
+    double total_turnover = 0.0;
     double am_inflow = 0.0, am_outflow = 0.0;
-    long long total_vol = 0, am_vol = 0, valid_records_count = 0;
+    double pm_inflow = 0.0, pm_outflow = 0.0;
+    long long am_vol = 0, pm_vol = 0, valid_records_count = 0;
     double closing_price = 0.0; 
     double am_closing_price = 0.0; 
 
-    parse_tick_file(infile, valid_records_count, closing_price, am_closing_price, total_vol, am_vol,
-                    total_turnover, total_inflow, total_outflow, am_inflow, am_outflow);
+    // 调用解析函数
+    parse_tick_file(infile, valid_records_count, closing_price, am_closing_price, am_vol, pm_vol,
+                    total_turnover, am_inflow, am_outflow, pm_inflow, pm_outflow);
 
     if (valid_records_count == 0) {
         current_closing_price = 0.0;
@@ -244,10 +258,13 @@ void process_single_file(const std::string& filename, double prev_closing_price,
         return;
     }
 
-    double net_inflow_wan = (total_inflow - total_outflow) / 10000.0;
+    // 各项指标精准求和与换算
     double am_net_inflow_wan = (am_inflow - am_outflow) / 10000.0;
+    double pm_net_inflow_wan = (pm_inflow - pm_outflow) / 10000.0; // 纯粹从下午 Tick 块中计算得到
+    double net_inflow_wan = am_net_inflow_wan + pm_net_inflow_wan;  // 总流入由上下午无缝捏合
     
     double total_turnover_wan = total_turnover / 10000.0;
+    long long total_vol = am_vol + pm_vol;
     double total_vol_wan = total_vol / 10000.0;  
     double am_vol_wan = am_vol / 10000.0;
 
@@ -268,10 +285,9 @@ void process_single_file(const std::string& filename, double prev_closing_price,
     std::string date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
     get_and_print_signals(date_str, valid_records_count, total_vol_wan, am_vol_wan, avg_vol_per_tick, 
-                           total_turnover_wan, am_closing_price, avg_price, prev_avg_price, closing_price, prev_closing_price, 
-                           net_inflow_wan, am_net_inflow_wan, inflow_ratio, historical_total_inflow);
+                          total_turnover_wan, am_closing_price, avg_price, prev_avg_price, closing_price, prev_closing_price, 
+                          net_inflow_wan, am_net_inflow_wan, pm_net_inflow_wan, inflow_ratio, historical_total_inflow);
 
-    // 将计算出的当前价和当前均价带回给主循环
     current_closing_price = closing_price;
     current_avg_price = avg_price;
 }
@@ -326,7 +342,7 @@ int main(int argc, char* argv[]) {
     print_header();
 
     double prev_closing_price = 0.0;
-    double prev_avg_price = 0.0; // 记录前一天的成交均价
+    double prev_avg_price = 0.0; 
     double historical_total_inflow = 0.0; 
     
     for (const auto& file : files_to_process) {
@@ -335,7 +351,6 @@ int main(int argc, char* argv[]) {
         
         process_single_file(file, prev_closing_price, prev_avg_price, current_closing_price, current_avg_price, historical_total_inflow);
         
-        // 只有当文件有效解析出了价格，才更新前置对比数据
         if (current_closing_price > 0.0) {
             prev_closing_price = current_closing_price;
             prev_avg_price = current_avg_price;

@@ -28,7 +28,6 @@ for file in "$TARGET_DIR"/*; do
                 ;;
             *)
                 # 不是 txt 文件，跳过
-                #echo "跳过非文本文件: $file"
                 continue
                 ;;
         esac
@@ -38,8 +37,6 @@ for file in "$TARGET_DIR"/*; do
         if ! file "$file" | grep -q "UTF-8"; then
             echo "正在转换: $file"
             iconv -f GBK -t UTF-8 "$file" | tr '\r' '\n' > "${file}.tmp" && mv "${file}.tmp" "$file"
-        #else
-        #    echo "跳过已是 UTF-8 的文件: $file"
         fi
     fi
 done
