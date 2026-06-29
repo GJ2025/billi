@@ -12,6 +12,7 @@
 
 namespace fs = std::filesystem;
 
+// 原始定义的整个文件统计/TickData结构体（保留作扩展或外部兼容）
 struct TickData {
     std::string time;       
     double price;           
@@ -19,6 +20,26 @@ struct TickData {
     int type_count;         
     std::string bs_type;    
 };
+
+// ================== 新增：封装单行 Tick 记录的结构体 ==================
+struct TickRecord {
+    double price = 0.0;
+    int volume = 0;
+    int type_count = 0;
+    std::string bs_type = "-";
+
+    // 重载流输入运算符，实现高内聚的行数据解析
+    friend std::istream& operator>>(std::istream& is, TickRecord& record) {
+        if (is >> record.price >> record.volume >> record.type_count) {
+            // 如果行尾没有 B/S 属性，则默认为 "-"
+            if (!(is >> record.bs_type)) {
+                record.bs_type = "-";
+            }
+        }
+        return is;
+    }
+};
+// ====================================================================
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -38,22 +59,20 @@ bool is_am_time(const std::string& tick_time) {
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); // 获取不带后缀的文件名
     
-    // 智能识别命名规则：
-    // 情况 A: 2026-06-29_600000 或 sh600000_20260629 (带下划线分割)
+    // 智能识别命名规则（支持：2026-04-30_000960 或 000960_2026-04-30）
     size_t underscore_pos = pure_name.find('_');
     if (underscore_pos != std::string::npos) {
         std::string part1 = pure_name.substr(0, underscore_pos);
         std::string part2 = pure_name.substr(underscore_pos + 1);
         
-        // 含有横杠 "-" 的一般是日期，把不是日期的那部分当做公司 ID
+        // 含有横杠 "-" 的一般是日期，把另一部分当做公司 ID
         if (part1.find('-') != std::string::npos) return part2;
         if (part2.find('-') != std::string::npos) return part1;
         
-        // 如果都没横杠，长度长的一般是日期（如20260629），短的是代码（如600000）
+        // 如果都没横杠，长度短的一般是代码（如000960）
         return (part1.length() < part2.length()) ? part1 : part2;
     }
     
-    // 情况 B: 纯代码文件名，如 600000
     return pure_name;
 }
 
@@ -227,6 +246,7 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
                    inflow_ratio, historical_total_inflow, divergence_str, row_color_start, row_color_end);
 }
 
+// ================== 重构：使用 TickRecord 简化解析过程 ==================
 void parse_tick_file(std::ifstream& infile, long long& valid_records_count, double& closing_price, double& am_closing_price,
                      long long& am_vol, long long& pm_vol, double& total_turnover, 
                      double& am_inflow, double& am_outflow, double& pm_inflow, double& pm_outflow) {
@@ -238,39 +258,38 @@ void parse_tick_file(std::ifstream& infile, long long& valid_records_count, doub
         std::string first_token;
         ss >> first_token;
 
+        // 依靠首字符为数字，过滤掉末尾的 "数据来源：..." 以及空行
         if (!is_loading_data(first_token)) continue;
 
-        double price;
-        int volume, type_count;
-        std::string bs_type;
-
-        if (ss >> price >> volume >> type_count) {
-            if (!(ss >> bs_type)) bs_type = "-"; 
-
+        TickRecord record;
+        // 使用封装后的结构体直接从流中提取数据
+        if (ss >> record) {
+            
             // 拦截集合竞价虚拟快照
-            if (type_count == 0) continue; 
+            if (record.type_count == 0) continue; 
 
             valid_records_count++;
-            closing_price = price; 
+            closing_price = record.price; 
 
-            long long current_vol = static_cast<long long>(volume) * 100; 
-            double current_amount = price * current_vol;
+            long long current_vol = static_cast<long long>(record.volume) * 100; 
+            double current_amount = record.price * current_vol;
             total_turnover += current_amount; 
 
             if (is_am_time(first_token)) {
-                am_closing_price = price; 
+                am_closing_price = record.price; 
                 am_vol += current_vol;
-                if (bs_type == "B") am_inflow += current_amount;
-                else if (bs_type == "S") am_outflow += current_amount;
+                if (record.bs_type == "B") am_inflow += current_amount;
+                else if (record.bs_type == "S") am_outflow += current_amount;
             } else {
                 pm_vol += current_vol;
-                if (bs_type == "B") pm_inflow += current_amount;
-                else if (bs_type == "S") pm_outflow += current_amount;
+                if (record.bs_type == "B") pm_inflow += current_amount;
+                else if (record.bs_type == "S") pm_outflow += current_amount;
             }
         }
     }
     infile.close();
 }
+// ====================================================================
 
 void process_single_file(const std::string& filename, double prev_closing_price, double prev_avg_price,
                          double& current_closing_price, double& current_avg_price, double& historical_total_inflow) {
@@ -365,13 +384,12 @@ int main(int argc, char* argv[]) {
     double prev_avg_price = 0.0; 
     double historical_total_inflow = 0.0; 
     
-    // ================== 新增代码：确定基准公司 ID ==================
+    // 确定基准公司 ID
     std::string target_company_id = extract_company_id(files_to_process[0]);
-    // =============================================================
 
     for (const auto& file : files_to_process) {
         
-        // ================== 新增代码：过滤非同公司文件 ==================
+        // 过滤非目标公司文件并打印跳过提示
         std::string current_company_id = extract_company_id(file);
         if (current_company_id != target_company_id) {
             std::cout << "\033[33m[Skip File]\033[0m Mismatched Company (" 
@@ -379,7 +397,6 @@ int main(int argc, char* argv[]) {
                       << "): " << fs::path(file).filename().string() << std::endl;
             continue;
         }
-        // =============================================================
 
         double current_closing_price = 0.0;
         double current_avg_price = 0.0;
