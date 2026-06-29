@@ -21,16 +21,17 @@ struct TickData {
     std::string bs_type;    
 };
 
-// ================== 新增：封装单行 Tick 记录的结构体 ==================
+// ================== 单行 Tick 记录结构体 ==================
 struct TickRecord {
+    std::string time = "";
     double price = 0.0;
     int volume = 0;
     int type_count = 0;
     std::string bs_type = "-";
 
-    // 重载流输入运算符，实现高内聚的行数据解析
+    // 重载流输入运算符，一键解析整行（包括时间戳）
     friend std::istream& operator>>(std::istream& is, TickRecord& record) {
-        if (is >> record.price >> record.volume >> record.type_count) {
+        if (is >> record.time >> record.price >> record.volume >> record.type_count) {
             // 如果行尾没有 B/S 属性，则默认为 "-"
             if (!(is >> record.bs_type)) {
                 record.bs_type = "-";
@@ -38,6 +39,33 @@ struct TickRecord {
         }
         return is;
     }
+};
+
+// ================== 单日解析基础统计指标的结构体 ==================
+struct DailyMetrics {
+    long long valid_records_count = 0;
+    double closing_price = 0.0;
+    double am_closing_price = 0.0;
+    long long am_vol = 0;
+    long long pm_vol = 0;
+    double total_turnover = 0.0;
+    double am_inflow = 0.0;
+    double am_outflow = 0.0;
+    double pm_inflow = 0.0;
+    double pm_outflow = 0.0;
+};
+
+// ================== 单日衍生/计算输出指标的结构体 ==================
+struct DayOutputMetrics {
+    double am_net_inflow_wan = 0.0;
+    double pm_net_inflow_wan = 0.0;
+    double net_inflow_wan = 0.0;
+    double total_turnover_wan = 0.0;
+    double total_vol_wan = 0.0;
+    double am_vol_wan = 0.0;
+    double avg_price = 0.0;
+    double inflow_ratio = 0.0;
+    double avg_vol_per_tick = 0.0;
 };
 // ====================================================================
 
@@ -55,28 +83,23 @@ bool is_am_time(const std::string& tick_time) {
     return false;
 }
 
-// 从文件名中提取公司标识/股票代码的函数
 std::string extract_company_id(const std::string& filename) {
-    std::string pure_name = fs::path(filename).stem().string(); // 获取不带后缀的文件名
+    std::string pure_name = fs::path(filename).stem().string(); 
     
-    // 智能识别命名规则（支持：2026-04-30_000960 或 000960_2026-04-30）
     size_t underscore_pos = pure_name.find('_');
     if (underscore_pos != std::string::npos) {
         std::string part1 = pure_name.substr(0, underscore_pos);
         std::string part2 = pure_name.substr(underscore_pos + 1);
         
-        // 含有横杠 "-" 的一般是日期，把另一部分当做公司 ID
         if (part1.find('-') != std::string::npos) return part2;
         if (part2.find('-') != std::string::npos) return part1;
         
-        // 如果都没横杠，长度短的一般是代码（如000960）
         return (part1.length() < part2.length()) ? part1 : part2;
     }
     
     return pure_name;
 }
 
-// 封装的预处理函数
 void run_preprocessing(const std::string& dir_path) {
     std::cout << "======================= Pre-processing =======================" << std::endl;
     
@@ -188,10 +211,13 @@ void print_data_row(const std::string& date_str, long long valid_records_count,
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-void get_and_print_signals(const std::string& date_str, long long valid_records_count, 
-                           double total_vol_wan, double am_vol_wan, double avg_vol_per_tick, double total_turnover_wan, 
-                           double am_closing_price, double avg_price, double prev_avg_price, double closing_price, double prev_closing_price, 
-                           double net_inflow_wan, double am_net_inflow_wan, double pm_net_inflow_wan, double inflow_ratio, double historical_total_inflow) {
+// ================== 重构：直接传递结构体引用，精简参数列表 ==================
+void get_and_print_signals(const std::string& date_str, 
+                           const DailyMetrics& metrics, 
+                           const DayOutputMetrics& out,
+                           double prev_closing_price, 
+                           double prev_avg_price, 
+                           double historical_total_inflow) {
     
     bool has_prev = (prev_closing_price > 0.0);
     double pct_change = 0.0;
@@ -201,16 +227,16 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
     std::string row_color_end = "";
 
     if (has_prev) {
-        pct_change = ((closing_price - prev_closing_price) / prev_closing_price) * 100.0;
+        pct_change = ((metrics.closing_price - prev_closing_price) / prev_closing_price) * 100.0;
         
         std::stringstream pct_ss;
         pct_ss << std::fixed << std::setprecision(2) << (pct_change >= 0 ? "+" : "") << pct_change << "%";
         pct_str = pct_ss.str();
 
-        if (closing_price > prev_closing_price) {
+        if (metrics.closing_price > prev_closing_price) {
             row_color_start = "\033[31m"; 
             row_color_end = "\033[0m";
-        } else if (closing_price < prev_closing_price) {
+        } else if (metrics.closing_price < prev_closing_price) {
             row_color_start = "\033[32m"; 
             row_color_end = "\033[0m";
         }
@@ -219,17 +245,17 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
     // 组合信号判定
     std::string divergence_str = ""; 
     if (has_prev) {
-        if (pct_change > 0 && net_inflow_wan < 0) {
+        if (pct_change > 0 && out.net_inflow_wan < 0) {
             divergence_str += "\033[33m[UP/NET_OUT]\033[0m"; 
-        } else if (pct_change < 0 && net_inflow_wan > 0) {
+        } else if (pct_change < 0 && out.net_inflow_wan > 0) {
             divergence_str += "\033[35m[DN/NET_IN ]\033[0m"; 
         }
 
         if (prev_avg_price > 0.0) {
-            if (avg_price > prev_avg_price && net_inflow_wan < 0) {
+            if (out.avg_price > prev_avg_price && out.net_inflow_wan < 0) {
                 if (!divergence_str.empty()) divergence_str += " ";
                 divergence_str += "\033[1;31m[AV_UP/OUT]\033[0m"; 
-            } else if (avg_price < prev_avg_price && net_inflow_wan > 0) {
+            } else if (out.avg_price < prev_avg_price && out.net_inflow_wan > 0) {
                 if (!divergence_str.empty()) divergence_str += " ";
                 divergence_str += "\033[1;32m[AV_DN/IN ]\033[0m"; 
             }
@@ -240,56 +266,45 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
         divergence_str = "      -      ";
     }
 
-    print_data_row(date_str, valid_records_count, total_vol_wan, am_vol_wan, avg_vol_per_tick, 
-                   total_turnover_wan, am_closing_price, avg_price, closing_price, pct_str, 
-                   net_inflow_wan, am_net_inflow_wan, pm_net_inflow_wan,
-                   inflow_ratio, historical_total_inflow, divergence_str, row_color_start, row_color_end);
+    print_data_row(date_str, metrics.valid_records_count, out.total_vol_wan, out.am_vol_wan, out.avg_vol_per_tick, 
+                   out.total_turnover_wan, metrics.am_closing_price, out.avg_price, metrics.closing_price, pct_str, 
+                   out.net_inflow_wan, out.am_net_inflow_wan, out.pm_net_inflow_wan,
+                   out.inflow_ratio, historical_total_inflow, divergence_str, row_color_start, row_color_end);
 }
 
-// ================== 重构：使用 TickRecord 简化解析过程 ==================
-void parse_tick_file(std::ifstream& infile, long long& valid_records_count, double& closing_price, double& am_closing_price,
-                     long long& am_vol, long long& pm_vol, double& total_turnover, 
-                     double& am_inflow, double& am_outflow, double& pm_inflow, double& pm_outflow) {
+void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
 
         std::stringstream ss(line);
-        std::string first_token;
-        ss >> first_token;
-
-        // 依靠首字符为数字，过滤掉末尾的 "数据来源：..." 以及空行
-        if (!is_loading_data(first_token)) continue;
-
         TickRecord record;
-        // 使用封装后的结构体直接从流中提取数据
+        
         if (ss >> record) {
-            
-            // 拦截集合竞价虚拟快照
+            if (!is_loading_data(record.time)) continue;
             if (record.type_count == 0) continue; 
 
-            valid_records_count++;
-            closing_price = record.price; 
+            metrics.valid_records_count++;
+            metrics.closing_price = record.price; 
 
             long long current_vol = static_cast<long long>(record.volume) * 100; 
             double current_amount = record.price * current_vol;
-            total_turnover += current_amount; 
+            metrics.total_turnover += current_amount; 
 
-            if (is_am_time(first_token)) {
-                am_closing_price = record.price; 
-                am_vol += current_vol;
-                if (record.bs_type == "B") am_inflow += current_amount;
-                else if (record.bs_type == "S") am_outflow += current_amount;
+            if (is_am_time(record.time)) {
+                metrics.am_closing_price = record.price; 
+                metrics.am_vol += current_vol;
+                if (record.bs_type == "B") metrics.am_inflow += current_amount;
+                else if (record.bs_type == "S") metrics.am_outflow += current_amount;
             } else {
-                pm_vol += current_vol;
-                if (record.bs_type == "B") pm_inflow += current_amount;
-                else if (record.bs_type == "S") pm_outflow += current_amount;
+                metrics.pm_vol += current_vol;
+                if (record.bs_type == "B") metrics.pm_inflow += current_amount;
+                else if (record.bs_type == "S") metrics.pm_outflow += current_amount;
             }
         }
     }
     infile.close();
 }
-// ====================================================================
 
 void process_single_file(const std::string& filename, double prev_closing_price, double prev_avg_price,
                          double& current_closing_price, double& current_avg_price, double& historical_total_inflow) {
@@ -301,53 +316,44 @@ void process_single_file(const std::string& filename, double prev_closing_price,
         return;
     }
 
-    double total_turnover = 0.0;
-    double am_inflow = 0.0, am_outflow = 0.0;
-    double pm_inflow = 0.0, pm_outflow = 0.0;
-    long long am_vol = 0, pm_vol = 0, valid_records_count = 0;
-    double closing_price = 0.0; 
-    double am_closing_price = 0.0; 
+    DailyMetrics metrics; 
+    parse_tick_file(infile, metrics);
 
-    parse_tick_file(infile, valid_records_count, closing_price, am_closing_price, am_vol, pm_vol,
-                    total_turnover, am_inflow, am_outflow, pm_inflow, pm_outflow);
-
-    if (valid_records_count == 0) {
+    if (metrics.valid_records_count == 0) {
         current_closing_price = 0.0;
         current_avg_price = 0.0;
         return;
     }
 
-    double am_net_inflow_wan = (am_inflow - am_outflow) / 10000.0;
-    double pm_net_inflow_wan = (pm_inflow - pm_outflow) / 10000.0; 
-    double net_inflow_wan = am_net_inflow_wan + pm_net_inflow_wan;  
+    DayOutputMetrics out;
+    out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / 10000.0;
+    out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / 10000.0; 
+    out.net_inflow_wan = out.am_net_inflow_wan + out.pm_net_inflow_wan;  
     
-    double total_turnover_wan = total_turnover / 10000.0;
-    long long total_vol = am_vol + pm_vol;
-    double total_vol_wan = total_vol / 10000.0;  
-    double am_vol_wan = am_vol / 10000.0;
+    out.total_turnover_wan = metrics.total_turnover / 10000.0;
+    long long total_vol = metrics.am_vol + metrics.pm_vol;
+    out.total_vol_wan = total_vol / 10000.0;  
+    out.am_vol_wan = metrics.am_vol / 10000.0;
 
-    double avg_price = 0.0;
-    if (total_vol_wan > 0.0) {
-        avg_price = total_turnover_wan / total_vol_wan;
+    if (out.total_vol_wan > 0.0) {
+        out.avg_price = out.total_turnover_wan / out.total_vol_wan;
     }
 
-    double inflow_ratio = 0.0;
-    if (total_turnover_wan > 0.0) {
-        inflow_ratio = (net_inflow_wan / total_turnover_wan) * 100.0;
+    if (out.total_turnover_wan > 0.0) {
+        out.inflow_ratio = (out.net_inflow_wan / out.total_turnover_wan) * 100.0;
     }
 
-    historical_total_inflow += net_inflow_wan;
-    double avg_vol_per_tick = (total_vol_wan * 10000.0) / valid_records_count; 
+    historical_total_inflow += out.net_inflow_wan;
+    out.avg_vol_per_tick = (out.total_vol_wan * 10000.0) / metrics.valid_records_count; 
     
     std::string pure_name = fs::path(filename).filename().string();
     std::string date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
-    get_and_print_signals(date_str, valid_records_count, total_vol_wan, am_vol_wan, avg_vol_per_tick, 
-                          total_turnover_wan, am_closing_price, avg_price, prev_avg_price, closing_price, prev_closing_price, 
-                          net_inflow_wan, am_net_inflow_wan, pm_net_inflow_wan, inflow_ratio, historical_total_inflow);
+    // ================== 完美的流线型调用 ==================
+    get_and_print_signals(date_str, metrics, out, prev_closing_price, prev_avg_price, historical_total_inflow);
 
-    current_closing_price = closing_price;
-    current_avg_price = avg_price;
+    current_closing_price = metrics.closing_price;
+    current_avg_price = out.avg_price;
 }
 
 int main(int argc, char* argv[]) {
@@ -357,7 +363,6 @@ int main(int argc, char* argv[]) {
     }
 
     std::string dir_path = argv[1];
-
     run_preprocessing(dir_path);
 
     if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
@@ -384,12 +389,9 @@ int main(int argc, char* argv[]) {
     double prev_avg_price = 0.0; 
     double historical_total_inflow = 0.0; 
     
-    // 确定基准公司 ID
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
     for (const auto& file : files_to_process) {
-        
-        // 过滤非目标公司文件并打印跳过提示
         std::string current_company_id = extract_company_id(file);
         if (current_company_id != target_company_id) {
             std::cout << "\033[33m[Skip File]\033[0m Mismatched Company (" 
