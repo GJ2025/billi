@@ -34,6 +34,53 @@ bool is_am_time(const std::string& tick_time) {
     return false;
 }
 
+// 从文件名中提取公司标识/股票代码的函数
+std::string extract_company_id(const std::string& filename) {
+    std::string pure_name = fs::path(filename).stem().string(); // 获取不带后缀的文件名
+    
+    // 智能识别命名规则：
+    // 情况 A: 2026-06-29_600000 或 sh600000_20260629 (带下划线分割)
+    size_t underscore_pos = pure_name.find('_');
+    if (underscore_pos != std::string::npos) {
+        std::string part1 = pure_name.substr(0, underscore_pos);
+        std::string part2 = pure_name.substr(underscore_pos + 1);
+        
+        // 含有横杠 "-" 的一般是日期，把不是日期的那部分当做公司 ID
+        if (part1.find('-') != std::string::npos) return part2;
+        if (part2.find('-') != std::string::npos) return part1;
+        
+        // 如果都没横杠，长度长的一般是日期（如20260629），短的是代码（如600000）
+        return (part1.length() < part2.length()) ? part1 : part2;
+    }
+    
+    // 情况 B: 纯代码文件名，如 600000
+    return pure_name;
+}
+
+// 封装的预处理函数
+void run_preprocessing(const std::string& dir_path) {
+    std::cout << "======================= Pre-processing =======================" << std::endl;
+    
+    const char* c_env = std::getenv("c");
+    std::string script_dir = c_env ? c_env : "."; 
+    std::string script_path = (fs::path(script_dir) / "c.sh").string();
+
+    if (!fs::exists(script_path)) {
+        std::cerr << "Warning: Pre-processing script not found at: " << script_path  
+                  << "\nSkipping pre-processing stage..." << std::endl;
+    } else {
+        std::string shell_cmd = "sh " + script_path + " " + dir_path;
+        std::cout << "Executing: " << shell_cmd << std::endl;
+        
+        int ret = std::system(shell_cmd.c_str());
+        if (ret != 0) {
+            std::cerr << "Error: Pre-processing script exited with code " << ret << std::endl;
+        } else {
+            std::cout << "Pre-processing completed successfully.\n" << std::endl;
+        }
+    }
+}
+
 void print_header() {
     std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl; 
@@ -49,7 +96,7 @@ void print_header() {
               << std::setw(8)  << "Change%" << " | "         
               << std::setw(10) << "Net_In" << " | "     
               << std::setw(10) << "AM_Net_In" << " | "
-              << std::setw(10) << "PM_Net_In" << " | " // 显式输出下午净流入
+              << std::setw(10) << "PM_Net_In" << " | " 
               << std::setw(11) << "Net_In/Turn" << " | " 
               << std::setw(11) << "Hist_Cum" << " | "   
               << std::left  << std::setw(20) << "Signal" 
@@ -180,7 +227,6 @@ void get_and_print_signals(const std::string& date_str, long long valid_records_
                    inflow_ratio, historical_total_inflow, divergence_str, row_color_start, row_color_end);
 }
 
-// ==================== 细化 parse_tick_file 里的时段流向 ====================
 void parse_tick_file(std::ifstream& infile, long long& valid_records_count, double& closing_price, double& am_closing_price,
                      long long& am_vol, long long& pm_vol, double& total_turnover, 
                      double& am_inflow, double& am_outflow, double& pm_inflow, double& pm_outflow) {
@@ -201,27 +247,22 @@ void parse_tick_file(std::ifstream& infile, long long& valid_records_count, doub
         if (ss >> price >> volume >> type_count) {
             if (!(ss >> bs_type)) bs_type = "-"; 
 
-            // ==================== 🛠️ BUG 修复核心位置 ====================
-            // 拦截集合竞价虚拟快照：如果笔数(type_count)为 0，说明是 09:15-09:24 的非真实交易流
-            // 必须直接跳过，否则会让全天成交额无端膨胀几倍甚至十几倍
+            // 拦截集合竞价虚拟快照
             if (type_count == 0) continue; 
-            // ==========================================================
 
             valid_records_count++;
-            closing_price = price; // 最后一个有效价格即为 Close
+            closing_price = price; 
 
-            long long current_vol = static_cast<long long>(volume) * 100; // 现手 * 100 换算为真实股数
+            long long current_vol = static_cast<long long>(volume) * 100; 
             double current_amount = price * current_vol;
             total_turnover += current_amount; 
 
-            // 根据时间严格做 if-else 分流
             if (is_am_time(first_token)) {
                 am_closing_price = price; 
                 am_vol += current_vol;
                 if (bs_type == "B") am_inflow += current_amount;
                 else if (bs_type == "S") am_outflow += current_amount;
             } else {
-                // 下午时段
                 pm_vol += current_vol;
                 if (bs_type == "B") pm_inflow += current_amount;
                 else if (bs_type == "S") pm_outflow += current_amount;
@@ -248,7 +289,6 @@ void process_single_file(const std::string& filename, double prev_closing_price,
     double closing_price = 0.0; 
     double am_closing_price = 0.0; 
 
-    // 调用解析函数
     parse_tick_file(infile, valid_records_count, closing_price, am_closing_price, am_vol, pm_vol,
                     total_turnover, am_inflow, am_outflow, pm_inflow, pm_outflow);
 
@@ -258,10 +298,9 @@ void process_single_file(const std::string& filename, double prev_closing_price,
         return;
     }
 
-    // 各项指标精准求和与换算
     double am_net_inflow_wan = (am_inflow - am_outflow) / 10000.0;
-    double pm_net_inflow_wan = (pm_inflow - pm_outflow) / 10000.0; // 纯粹从下午 Tick 块中计算得到
-    double net_inflow_wan = am_net_inflow_wan + pm_net_inflow_wan;  // 总流入由上下午无缝捏合
+    double pm_net_inflow_wan = (pm_inflow - pm_outflow) / 10000.0; 
+    double net_inflow_wan = am_net_inflow_wan + pm_net_inflow_wan;  
     
     double total_turnover_wan = total_turnover / 10000.0;
     long long total_vol = am_vol + pm_vol;
@@ -300,26 +339,7 @@ int main(int argc, char* argv[]) {
 
     std::string dir_path = argv[1];
 
-    std::cout << "======================= Pre-processing =======================" << std::endl;
-    
-    const char* c_env = std::getenv("c");
-    std::string script_dir = c_env ? c_env : "."; 
-    std::string script_path = (fs::path(script_dir) / "c.sh").string();
-
-    if (!fs::exists(script_path)) {
-        std::cerr << "Warning: Pre-processing script not found at: " << script_path  
-                  << "\nSkipping pre-processing stage..." << std::endl;
-    } else {
-        std::string shell_cmd = "sh " + script_path + " " + dir_path;
-        std::cout << "Executing: " << shell_cmd << std::endl;
-        
-        int ret = std::system(shell_cmd.c_str());
-        if (ret != 0) {
-            std::cerr << "Error: Pre-processing script exited with code " << ret << std::endl;
-        } else {
-            std::cout << "Pre-processing completed successfully.\n" << std::endl;
-        }
-    }
+    run_preprocessing(dir_path);
 
     if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
         std::cerr << "Error: Invalid directory path: " << dir_path << std::endl;
@@ -345,7 +365,22 @@ int main(int argc, char* argv[]) {
     double prev_avg_price = 0.0; 
     double historical_total_inflow = 0.0; 
     
+    // ================== 新增代码：确定基准公司 ID ==================
+    std::string target_company_id = extract_company_id(files_to_process[0]);
+    // =============================================================
+
     for (const auto& file : files_to_process) {
+        
+        // ================== 新增代码：过滤非同公司文件 ==================
+        std::string current_company_id = extract_company_id(file);
+        if (current_company_id != target_company_id) {
+            std::cout << "\033[33m[Skip File]\033[0m Mismatched Company (" 
+                      << current_company_id << " != " << target_company_id 
+                      << "): " << fs::path(file).filename().string() << std::endl;
+            continue;
+        }
+        // =============================================================
+
         double current_closing_price = 0.0;
         double current_avg_price = 0.0;
         
