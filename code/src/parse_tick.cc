@@ -195,7 +195,7 @@ void print_header() {
               << std::setw(9)  << "Vol" << " | "               
               << std::setw(9)  << "AM_Vol" << " | "
               << std::setw(11) << "AM_Turnover" << " | "  
-              << std::setw(11) << "AM_Turn_Ratio" << " | " // 新增表头：上午成交额占比
+              << std::setw(11) << "AM_Turn%" << " | " // 新增表头：上午成交额占比
               << std::setw(10) << "Vol/Ticks" << " | "         
               << std::setw(11) << "Turnover" << " | "
               << std::setw(8)  << "AM_Close" << " | "  
@@ -205,7 +205,7 @@ void print_header() {
               << std::setw(10) << "Net_In" << " | "     
               << std::setw(10) << "AM_Net_In" << " | "
               << std::setw(10) << "PM_Net_In" << " | " 
-              << std::setw(11) << "Net_In/Turn" << " | " 
+              << std::setw(9) << "Net_In%" << " | " 
               << std::setw(11) << "Hist_Cum" << " | "   
               << std::left  << std::setw(20) << "Signal" 
               << std::endl;
@@ -272,7 +272,7 @@ void print_data_row(const DayOutputMetrics& out, const std::string& pct_str,
               << std::setw(10) << inflow_str << " | "
               << std::setw(10) << am_inflow_str << " | "
               << std::setw(10) << pm_inflow_str << " | " 
-              << std::setw(11) << ratio_str  << " | "
+              << std::setw(9) << ratio_str  << " | "
               << std::setw(11) << hist_str   << row_color_end << " | ";
     
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
