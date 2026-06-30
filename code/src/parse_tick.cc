@@ -72,6 +72,7 @@ struct DayOutputMetrics {
     double avg_price = 0.0;
     double inflow_ratio = 0.0;
     double avg_vol_per_tick = 0.0;
+    double net_per_change = 0.0;
 
     // ====== 新增整合字段 ======
     std::string date_str = "";
@@ -206,6 +207,7 @@ void print_header() {
               << std::setw(10) << "AM_Net_In" << " | "
               << std::setw(10) << "PM_Net_In" << " | " 
               << std::setw(9) << "Net_In%" << " | " 
+              << std::setw(9) << "Net/change" << " | " 
               << std::setw(11) << "Hist_Cum" << " | "   
               << std::left  << std::setw(20) << "Signal" 
               << std::endl;
@@ -213,72 +215,54 @@ void print_header() {
     std::cout << "----------------" << std::endl;
 }
 
+std::string format_inflow(double value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) 
+       << value;
+    return ss.str();
+}
+
+std::string format_percent_value(double value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2)
+        << value
+        << "%";
+    
+
+    
+    return ss.str();
+}
+
 void print_data_row(const DayOutputMetrics& out, const std::string& pct_str, 
                     const std::string& divergence_str, const std::string& row_color_start, const std::string& row_color_end) {
-    
-    std::stringstream inflow_ss, am_inflow_ss, pm_inflow_ss, ratio_ss, hist_ss, close_ss, am_close_ss, avg_price_ss, am_turn_ratio_ss;
-    
-    close_ss << std::fixed << std::setprecision(2) << out.closing_price;
-    std::string close_str = close_ss.str();
-
-    if (out.am_closing_price > 0.0) {
-        am_close_ss << std::fixed << std::setprecision(2) << out.am_closing_price;
-    } else {
-        am_close_ss << " - ";
-    }
-    std::string am_close_str = am_close_ss.str();
-
-    if (out.avg_price > 0.0) {
-        avg_price_ss << std::fixed << std::setprecision(2) << out.avg_price;
-    } else {
-        avg_price_ss << " - ";
-    }
-    std::string avg_price_str = avg_price_ss.str();
-
-    am_turn_ratio_ss << std::fixed << std::setprecision(2) << out.am_turnover_ratio << "%";
-    std::string am_turn_ratio_str = am_turn_ratio_ss.str();
-
-    inflow_ss << std::fixed << std::setprecision(2) << (out.net_inflow_wan >= 0 ? "+" : "") << out.net_inflow_wan;
-    std::string inflow_str = inflow_ss.str();
-
-    am_inflow_ss << std::fixed << std::setprecision(2) << (out.am_net_inflow_wan >= 0 ? "+" : "") << out.am_net_inflow_wan;
-    std::string am_inflow_str = am_inflow_ss.str();
-
-    pm_inflow_ss << std::fixed << std::setprecision(2) << (out.pm_net_inflow_wan >= 0 ? "+" : "") << out.pm_net_inflow_wan;
-    std::string pm_inflow_str = pm_inflow_ss.str();
-
-    ratio_ss << std::fixed << std::setprecision(2) << (out.inflow_ratio >= 0 ? "+" : "") << out.inflow_ratio << "%";
-    std::string ratio_str = ratio_ss.str();
-
-    hist_ss << std::fixed << std::setprecision(2) << (out.historical_total_inflow >= 0 ? "+" : "") << out.historical_total_inflow;
-    std::string hist_str = hist_ss.str();
-
+      
     std::cout << std::left << std::setw(11) << out.date_str << " | "
               << std::right << std::setw(5) << out.ticks_count << " | "
               << std::fixed << std::setprecision(2)
               << std::setw(9)  << out.total_vol_wan << " | " 
               << std::setw(9)  << out.am_vol_wan << " | "
               << std::setw(11) << out.am_turnover_wan << " | " 
-              << std::setw(11) << am_turn_ratio_str << " | " // 打印新字段：上午成交额占比
+              << std::setw(11) << format_percent_value(out.am_turnover_ratio) << " | " // 打印新字段：上午成交额占比
               << std::setw(10) << std::fixed << std::setprecision(1) << out.avg_vol_per_tick << " | " 
               << std::fixed << std::setprecision(2)
               << std::setw(11) << out.total_turnover_wan << " | "
-              << std::setw(8)  << am_close_str << " | "
-              << std::setw(9)  << avg_price_str << " | "; 
+              << std::setw(8)  << format_inflow(out.am_closing_price) << " | "
+              << std::setw(9)  << format_inflow(out.avg_price) << " | "; 
               
     std::cout << row_color_start 
-              << std::setw(7)  << close_str  << " | "
+              << std::setw(7)  << format_inflow(out.closing_price)  << " | "
               << std::setw(8)  << pct_str    << " | "
-              << std::setw(10) << inflow_str << " | "
-              << std::setw(10) << am_inflow_str << " | "
-              << std::setw(10) << pm_inflow_str << " | " 
-              << std::setw(9) << ratio_str  << " | "
-              << std::setw(11) << hist_str   << row_color_end << " | ";
+              << std::setw(10) << format_inflow(out.net_inflow_wan) << " | "
+              << std::setw(10) << format_inflow(out.am_net_inflow_wan) << " | "
+              << std::setw(10) << format_inflow(out.pm_net_inflow_wan) << " | " 
+              << std::setw(9) << format_percent_value(out.inflow_ratio)  << " | "
+              << std::setw(9) << format_percent_value(out.net_per_change)  << " | "
+              << std::setw(11) << format_inflow(out.historical_total_inflow)   << row_color_end << " | ";
     
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-void get_and_print_signals(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     bool has_prev = (prev_out.ticks_count > 0 && prev_out.closing_price > 0.0);
     double pct_change = 0.0;
     std::string pct_str = "0.00%";
@@ -325,6 +309,8 @@ void get_and_print_signals(const DayOutputMetrics& out, const DayOutputMetrics& 
         divergence_str = "      -      ";
     }
 
+    out.net_per_change = out.inflow_ratio/pct_change;
+
     print_data_row(out, pct_str, divergence_str, row_color_start, row_color_end);
 }
 
@@ -363,7 +349,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     infile.close();
 }
 
-bool process_single_file(const std::string& filename, const DayOutputMetrics& prev_out, DayOutputMetrics& out) {
+bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     std::ifstream infile(filename);
     if (!infile.is_open()) {
         std::cerr << "Error: Cannot open file " << filename << std::endl;
@@ -409,7 +395,6 @@ bool process_single_file(const std::string& filename, const DayOutputMetrics& pr
 
     out.avg_vol_per_tick = (out.total_vol_wan * 10000.0) / metrics.valid_records_count; 
 
-    out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
     
     std::string pure_name = fs::path(filename).filename().string();
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
@@ -436,9 +421,11 @@ int main(int argc, char* argv[]) {
         }
 
         DayOutputMetrics out;
-        if (!process_single_file(file, prev_out, out)) {
+        if (!process_single_file(file,  out)) {
             continue; 
         }
+
+        out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
         
         get_and_print_signals(out, prev_out);
         
