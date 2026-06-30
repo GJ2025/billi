@@ -85,10 +85,22 @@ bool is_loading_data(const std::string& str) {
 }
 
 bool is_am_time(const std::string& tick_time) {
-    std::string t = tick_time;
-    t.erase(std::remove(t.begin(), t.end(), ':'), t.end());
-    if (t.length() >= 4) {
-        return t.substr(0, 4) <= "1130";
+    // 兼容可能带有秒或不带秒的格式，标准解析小时和分钟
+    int hour = 0, minute = 0;
+    char delimiter;
+    std::stringstream ss(tick_time);
+    
+    if (ss >> hour >> delimiter >> minute) {
+        // 如果采用的是 12 小时制且数据中未标明 PM，但已知下午 1 点到 3 点交易
+        // 或者是标准的 24 小时制 09:15 - 11:30
+        if (hour >= 1 && hour <= 3) { 
+            // 假设 1, 2, 3 代表下午的 13, 14, 15 点
+            return false; 
+        }
+        
+        int total_minutes = hour * 60 + minute;
+        // 上午收盘时间 11:30 = 11 * 60 + 30 = 690 分钟
+        return total_minutes <= 690;
     }
     return false;
 }
