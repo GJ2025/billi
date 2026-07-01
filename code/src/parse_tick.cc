@@ -9,6 +9,7 @@
 #include <algorithm>  
 #include <cmath>       
 #include <cstdlib>   
+#include <unistd.h> // 这是关键头文件
 
 namespace fs = std::filesystem;
 
@@ -42,6 +43,9 @@ struct HeadTickData {
     TickRecord last_924;
     TickRecord last_2_924;
     TickRecord v_925;
+
+    double last_924_change = 0.0;
+    double last_2_924_change = 0.0;
 };
 
 
@@ -60,6 +64,7 @@ struct DailyMetrics {
     double pm_outflow = 0.0;
 
     HeadTickData head_data;
+    bool head_calculated = false;
 };
 
 
@@ -85,8 +90,22 @@ struct DayOutputMetrics {
     // ====== 新增整合字段 ======
     std::string date_str = "";
     double historical_total_inflow = 0.0;
+
+     HeadTickData head_data;
 };
 // ====================================================================
+
+void print_header_info(const DayOutputMetrics& out) {
+    std::cout << std::left  << std::setw(12) << out.date_str << " | "
+              << std::right << std::fixed << std::setprecision(2)
+              << "924-2: " << std::setw(6) << out.head_data.last_2_924.price << " | "
+              << "924-1: " << std::setw(6) << out.head_data.last_924.price << " | "
+              << "925  : " << std::setw(6) << out.head_data.v_925.price << " | "
+              << "Chg924: " << std::setw(7) << out.head_data.last_924_change << "% | "
+              << "Chg2924: " << std::setw(7) << out.head_data.last_2_924_change << "%"
+              << std::endl;
+}
+
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -167,13 +186,8 @@ void run_preprocessing(const std::string& dir_path) {
     }
 }
 
-int initialize_and_get_files(int argc, char* argv[], std::string& dir_path, std::vector<std::string>& files_to_process) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <Directory_Path>" << std::endl;
-        return 1;
-    }
+int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& files_to_process) {
 
-    dir_path = argv[1];
     run_preprocessing(dir_path);
 
     if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
@@ -197,7 +211,7 @@ int initialize_and_get_files(int argc, char* argv[], std::string& dir_path, std:
     return 0;
 }
 
-void print_header() {
+void print_all() {
     // 总长度再次扩展 14 字符以兼容新的占比列
     std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl; 
@@ -336,8 +350,51 @@ void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_o
     print_data_row(out, divergence_str, colour.start, colour.end);
 }
 
+
+void update_head_tick_data(HeadTickData& head_data, const TickRecord& record) {
+    if (record.time.find("09:24") == 0) {
+        head_data.last_2_924 = head_data.last_924;
+        head_data.last_924 = record;
+    } else if (record.time.find("09:25") == 0) {
+        head_data.v_925 = record;
+    }
+}
+
+void calculate_head_tick_changes(HeadTickData& head_data) {
+    auto calc_pct = [](double target, double base) -> double {
+        if (base <= 0.0) return 0.0; // 防止除以零及负价格异常
+        return ((target - base) / base) * 100.0;
+    };
+
+    if (!head_data.last_924.time.empty()) {
+        head_data.last_924_change = calc_pct(head_data.v_925.price, head_data.last_924.price);
+    }
+    
+    if (!head_data.last_2_924.time.empty()) {
+        // 【已修正】这里赋值给了 last_2_924_change
+        head_data.last_2_924_change = calc_pct(head_data.v_925.price, head_data.last_2_924.price);
+    }
+}
+
+void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
+    // 1. 捕获关键节点数据
+    if (metrics.head_data.v_925.time.empty()) {
+        if (record.time.find("09:24") == 0 || record.time.find("09:25") == 0) {
+            update_head_tick_data(metrics.head_data, record);
+        }
+    }
+    
+    // 2. 触发计算（当 v_925 已获取且尚未计算过时）
+    if (!metrics.head_data.v_925.time.empty() && !metrics.head_calculated) {
+        calculate_head_tick_changes(metrics.head_data);
+        metrics.head_calculated = true; // 锁定，防止后续循环重复计算
+    }
+}
+
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
+    std::getline(infile, line); 
+    std::getline(infile, line);
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
 
@@ -345,7 +402,16 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
         TickRecord record;
         
         if (ss >> record) {
+
+            if (record.time == "09:24") {
+                std::cout << "DEBUG: Successfully parsed 09:24: " << record.price << std::endl;
+            }else{
+                std::cout << "time===============: " << record.time << std::endl;
+            }
+
+
             if (!is_loading_data(record.time)) continue;
+            process_head_data(metrics, record);
             if (record.type_count == 0) continue; 
 
             metrics.valid_records_count++;
@@ -366,6 +432,10 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
                 if (record.bs_type == "B") metrics.pm_inflow += current_amount;
                 else if (record.bs_type == "S") metrics.pm_outflow += current_amount;
             }
+        }else{
+                std::cout << "failed=========== " << record.time << std::endl;
+                exit(0);
+
         }
     }
     infile.close();
@@ -421,18 +491,45 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     std::string pure_name = fs::path(filename).filename().string();
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
+    out.head_data = metrics.head_data;
+
     return true;
 }
 
 int main(int argc, char* argv[]) {
+
+    int opt;
+    bool show_head = false;
     std::string dir_path;
     std::vector<std::string> files_to_process;
 
-    int init_status = initialize_and_get_files(argc, argv, dir_path, files_to_process);
+    // "h" 表示支持 -h 选项
+    // "p:" 表示 -p 后必须带一个值 (比如 -p /data)
+    while ((opt = getopt(argc, argv, "hp:")) != -1) {
+        switch (opt) {
+            case 'h':
+                show_head = true;
+                break;
+            case 'p':
+                dir_path = optarg; // optarg 会自动指向 -p 后面的参数值
+                break;
+            default:
+                std::cerr << "Usage: " << argv[0] << " [-h] [-p path]" << std::endl;
+                return 1;
+        }
+    }
+
+
+
+    int init_status = initialize_and_get_files(dir_path, files_to_process);
     if (init_status > 0)  return init_status; 
     if (init_status < 0)  return 0;           
 
-    print_header();
+    if (show_head){
+
+    }else{
+        print_all();
+    }
 
     DayOutputMetrics prev_out; 
     std::string target_company_id = extract_company_id(files_to_process[0]);
@@ -448,14 +545,23 @@ int main(int argc, char* argv[]) {
         }
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
+
+        if (show_head){
+            print_header_info(out);
+        }else{
+             get_and_print_signals(out, prev_out);
+        }
         
-        get_and_print_signals(out, prev_out);
         
         if (out.ticks_count > 0) {
             prev_out = out;
         }
     }
 
-    print_header();
+    if (show_head){
+
+    }else{
+        print_all();
+    }
     return 0;
 }
