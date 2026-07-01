@@ -17,14 +17,6 @@ struct TerminalColor {
     std::string end;
 };
 
-// 原始定义的整个文件统计/TickData结构体（保留作扩展或外部兼容）
-struct TickData {
-    std::string time;       
-    double price;           
-    int volume;             
-    int type_count;         
-    std::string bs_type;    
-};
 
 // ================== 单行 Tick 记录结构体 ==================
 struct TickRecord {
@@ -46,6 +38,13 @@ struct TickRecord {
     }
 };
 
+struct HeadTickData {
+    TickRecord last_924;
+    TickRecord last_2_924;
+    TickRecord v_925;
+};
+
+
 // ================== 单日解析基础统计指标的结构体（局部内部使用） ==================
 struct DailyMetrics {
     long long valid_records_count = 0;
@@ -59,7 +58,10 @@ struct DailyMetrics {
     double am_outflow = 0.0;
     double pm_inflow = 0.0;
     double pm_outflow = 0.0;
+
+    HeadTickData head_data;
 };
+
 
 // ================== 单日衍生/计算输出指标的结构体 ==================
 struct DayOutputMetrics {
@@ -111,6 +113,8 @@ bool is_am_time(const std::string& tick_time) {
     }
     return false;
 }
+
+
 
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
