@@ -35,17 +35,19 @@ struct TickRecord {
                 record.bs_type = "-";
             }
         }
+
+        is.clear();
         return is;
     }
 };
 
 struct HeadTickData {
-    TickRecord last_924;
-    TickRecord last_2_924;
+    TickRecord v_924;
+    TickRecord pre_924;
     TickRecord v_925;
 
-    double last_924_change = 0.0;
-    double last_2_924_change = 0.0;
+    double ratio_change_924 = 0.0;
+    double ratio_change_pre_924 = 0.0;
 };
 
 
@@ -95,17 +97,45 @@ struct DayOutputMetrics {
 };
 // ====================================================================
 
-void print_header_info(const DayOutputMetrics& out) {
-    std::cout << std::left  << std::setw(12) << out.date_str << " | "
-              << std::right << std::fixed << std::setprecision(2)
-              << "924-2: " << std::setw(6) << out.head_data.last_2_924.price << " | "
-              << "924-1: " << std::setw(6) << out.head_data.last_924.price << " | "
-              << "925  : " << std::setw(6) << out.head_data.v_925.price << " | "
-              << "Chg924: " << std::setw(7) << out.head_data.last_924_change << "% | "
-              << "Chg2924: " << std::setw(7) << out.head_data.last_2_924_change << "%"
+void print_table_header() {
+    std::cout << std::left << std::setw(12) << "Date" << " | "
+              << std::right 
+              << std::setw(12) << "Pre924" << " | "
+              << std::setw(10) << "924"    << " | "
+              << std::setw(10) << "925"    << " | "
+              << std::setw(12) << "ChgPreDay" << " | "
+              << std::setw(12) << "ChgPre924" << " | "
+               << std::setw(6) << "b/s" << " | "
+              << std::setw(12) << "Chg924"    << " | "
+              << std::setw(12) << "PctChg" 
               << std::endl;
+    // 打印分割线，让视觉效果更专业
+    std::cout << std::string(88, '-') << std::endl;
 }
 
+void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out) {
+    double price_change_pct = 0.0;
+    double ratio_change_pre_day = 0.0;
+    if (pre_out.closing_price != 0.0) {
+        price_change_pct = ((out.closing_price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
+        ratio_change_pre_day = ((out.head_data.v_925.price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
+
+    }
+
+   
+
+    std::cout << std::left  << std::setw(12) << out.date_str << " | "
+              << std::right << std::fixed << std::setprecision(2)
+              << std::setw(12) << out.head_data.pre_924.price << " | "
+              << std::setw(10) << out.head_data.v_924.price   << " | "
+              << std::setw(10) << out.head_data.v_925.price   << " | "
+              << std::setw(11) << out.head_data.ratio_change_pre_924 << "% | "
+              << std::setw(11) << ratio_change_pre_day << "% | "
+              << std::setw(6) << out.head_data.v_925.bs_type << " | "
+              << std::setw(11) << out.head_data.ratio_change_924 << "% | "
+              << std::setw(11) << price_change_pct << "%"
+              << std::endl;
+}
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -353,8 +383,8 @@ void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_o
 
 void update_head_tick_data(HeadTickData& head_data, const TickRecord& record) {
     if (record.time.find("09:24") == 0) {
-        head_data.last_2_924 = head_data.last_924;
-        head_data.last_924 = record;
+        head_data.pre_924 = head_data.v_924;
+        head_data.v_924 = record;
     } else if (record.time.find("09:25") == 0) {
         head_data.v_925 = record;
     }
@@ -366,13 +396,13 @@ void calculate_head_tick_changes(HeadTickData& head_data) {
         return ((target - base) / base) * 100.0;
     };
 
-    if (!head_data.last_924.time.empty()) {
-        head_data.last_924_change = calc_pct(head_data.v_925.price, head_data.last_924.price);
+    if (!head_data.v_924.time.empty()) {
+        head_data.ratio_change_924 = calc_pct(head_data.v_925.price, head_data.v_924.price);
     }
     
-    if (!head_data.last_2_924.time.empty()) {
+    if (!head_data.pre_924.time.empty()) {
         // 【已修正】这里赋值给了 last_2_924_change
-        head_data.last_2_924_change = calc_pct(head_data.v_925.price, head_data.last_2_924.price);
+        head_data.ratio_change_pre_924 = calc_pct(head_data.v_925.price, head_data.pre_924.price);
     }
 }
 
@@ -402,14 +432,6 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
         TickRecord record;
         
         if (ss >> record) {
-
-            if (record.time == "09:24") {
-                std::cout << "DEBUG: Successfully parsed 09:24: " << record.price << std::endl;
-            }else{
-                std::cout << "time===============: " << record.time << std::endl;
-            }
-
-
             if (!is_loading_data(record.time)) continue;
             process_head_data(metrics, record);
             if (record.type_count == 0) continue; 
@@ -519,14 +541,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-
-
     int init_status = initialize_and_get_files(dir_path, files_to_process);
     if (init_status > 0)  return init_status; 
     if (init_status < 0)  return 0;           
 
     if (show_head){
-
+        print_table_header();
     }else{
         print_all();
     }
@@ -547,9 +567,9 @@ int main(int argc, char* argv[]) {
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
 
         if (show_head){
-            print_header_info(out);
+            print_header_info(out, prev_out);
         }else{
-             get_and_print_signals(out, prev_out);
+            get_and_print_signals(out, prev_out);
         }
         
         
@@ -559,7 +579,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (show_head){
-
+        print_table_header();
     }else{
         print_all();
     }
