@@ -88,6 +88,7 @@ struct DayOutputMetrics {
     double avg_vol_per_tick = 0.0;
     double net_per_change = 0.0;
     double pct_change = 0.0;
+    double am_pct_change = 0.0;
 
     // ====== 新增整合字段 ======
     std::string date_str = "";
@@ -185,7 +186,7 @@ std::string extract_company_id(const std::string& filename) {
 bool check_company_id_match(const std::string& file_path, const std::string& target_company_id) {
     std::string current_company_id = extract_company_id(file_path);
     if (current_company_id != target_company_id) {
-        std::cout << "\033[33m[Skip File]\033[0m Mismatched Company (" 
+        std::cout << "[Skip File] Mismatched Company (" 
                   << current_company_id << " != " << target_company_id 
                   << "): " << fs::path(file_path).filename().string() << std::endl;
         return false;
@@ -255,8 +256,9 @@ void print_all() {
               << std::setw(11) << "Turnover" << " | "
               << std::setw(8)  << "AM_Close" << " | "  
               << std::setw(9)  << "Avg_Price" << " | " 
-              << std::setw(7)  << "Close" << " | "            
-              << std::setw(8)  << "Change%" << " | "         
+              << std::setw(7)  << "Close" << " | "  
+              << std::setw(8)  << "AM_Chan%" << " | "               
+              << std::setw(8)  << "Change%" << " | "     
               << std::setw(10) << "Net_In" << " | "     
               << std::setw(10) << "AM_Net_In" << " | "
               << std::setw(10) << "PM_Net_In" << " | " 
@@ -284,8 +286,7 @@ std::string format_percent_value(double value) {
     return ss.str();
 }
 
-void print_data_row(const DayOutputMetrics& out,  
-                    const std::string& divergence_str, const std::string& row_color_start, const std::string& row_color_end) {
+void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str) {
       
     std::cout << std::left << std::setw(11) << out.date_str << " | "
               << std::right << std::setw(5) << out.ticks_count << " | "
@@ -300,47 +301,36 @@ void print_data_row(const DayOutputMetrics& out,
               << std::setw(8)  << format_inflow(out.am_closing_price) << " | "
               << std::setw(9)  << format_inflow(out.avg_price) << " | "; 
               
-    std::cout << row_color_start 
-              << std::setw(7)  << format_inflow(out.closing_price)  << " | "
+    std::cout << std::setw(7)  << format_inflow(out.closing_price)  << " | "
+              << std::setw(8)  << format_percent_value(out.am_pct_change)    << " | "
               << std::setw(8)  << format_percent_value(out.pct_change)    << " | "
               << std::setw(10) << format_inflow(out.net_inflow_wan) << " | "
               << std::setw(10) << format_inflow(out.am_net_inflow_wan) << " | "
               << std::setw(10) << format_inflow(out.pm_net_inflow_wan) << " | " 
               << std::setw(9) << format_percent_value(out.inflow_ratio)  << " | "
               << std::setw(9) << format_percent_value(out.net_per_change)  << " | "
-              << std::setw(11) << format_inflow(out.historical_total_inflow)   << row_color_end << " | ";
+              << std::setw(11) << format_inflow(out.historical_total_inflow)   <<  " | ";
     
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-void get_price_color(const DayOutputMetrics& out, const DayOutputMetrics& prev_out,TerminalColor& color) {
-    if (out.closing_price > prev_out.closing_price) {
-        color.start = "\033[31m"; // 红色
-        color.end = "\033[0m";
-    } else if (out.closing_price < prev_out.closing_price) {
-        color.start = "\033[32m"; // 绿色
-        color.end = "\033[0m";
-    }
-    
-    return ;
-}
 
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     std::vector<std::string> signals;
 
     // 1. 价格与流入背离
     if (out.pct_change > 0 && out.net_inflow_wan < 0) {
-        signals.push_back("\033[33m[UP/NET_OUT]\033[0m");
+        signals.push_back("[UP_OUT]");
     } else if (out.pct_change < 0 && out.net_inflow_wan > 0) {
-        signals.push_back("\033[35m[DN/NET_IN ]\033[0m");
+        signals.push_back("[DN_IN ]");
     }
 
     // 2. 均价与流入背离
     if (prev_out.avg_price > 0.0) {
         if (out.avg_price > prev_out.avg_price && out.net_inflow_wan < 0) {
-            signals.push_back("\033[1;31m[AV_UP/OUT]\033[0m");
+            signals.push_back("[AVUP_OUT]");
         } else if (out.avg_price < prev_out.avg_price && out.net_inflow_wan > 0) {
-            signals.push_back("\033[1;32m[AV_DN/IN ]\033[0m");
+            signals.push_back("[AVDN_IN ]");
         }
     }
 
@@ -362,12 +352,13 @@ void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_o
     
     std::string row_color_start = "";
     std::string row_color_end = "";
-    TerminalColor colour = {"", ""}; 
 
     if (has_prev) {
         out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-        get_price_color(out, prev_out, colour);
+        out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
     }
+
+    
 
     std::string divergence_str = get_divergence_string(out, prev_out); 
 
@@ -377,7 +368,7 @@ void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_o
         out.net_per_change = out.inflow_ratio/out.pct_change;
     }
 
-    print_data_row(out, divergence_str, colour.start, colour.end);
+    print_data_row(out, divergence_str);
 }
 
 
