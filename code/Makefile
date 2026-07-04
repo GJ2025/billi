@@ -1,8 +1,8 @@
 # 指定编译器
 CXX = g++
 
-# 指定编译选项 (★ 这里把 -std=c++11 修改为了 -std=c++17)
-CXXFLAGS = -O3 -Wall -std=c++17
+# 在 CXXFLAGS 中添加 -Wunused-variable 和 -Wunused-but-set-variable
+CXXFLAGS = -O3 -Wall -Wextra -Wunused-variable -Wunused-but-set-variable -std=c++17
 
 # 定义目录路径
 SRC_DIR = src

@@ -23,13 +23,13 @@ struct TerminalColor {
 struct TickRecord {
     std::string time = "";
     double price = 0.0;
-    int volume = 0;
-    int type_count = 0;
+    long long volume = 0;
+    int deal_count = 0;
     std::string bs_type = "-";
 
     // 重载流输入运算符，一键解析整行（包括时间戳）
     friend std::istream& operator>>(std::istream& is, TickRecord& record) {
-        if (is >> record.time >> record.price >> record.volume >> record.type_count) {
+        if (is >> record.time >> record.price >> record.volume >> record.deal_count) {
             // 如果行尾没有 B/S 属性，则默认为 "-"
             if (!(is >> record.bs_type)) {
                 record.bs_type = "-";
@@ -39,6 +39,25 @@ struct TickRecord {
         is.clear();
         return is;
     }
+};
+
+// ================== 单行 Tick 记录结构体 ==================
+struct stream_sum {
+   double s_up = 0.0;
+   double s_down = 0.0;
+   double s_keep = 0.0;
+
+   double b_up = 0.0;
+   double b_down = 0.0;
+   double b_keep = 0.0;
+};
+
+
+
+// ================== 单行 Tick 记录结构体 ==================
+struct StreamRecord {
+    struct TickRecord record;
+    double gap = 0.0;
 };
 
 struct HeadTickData {
@@ -67,6 +86,8 @@ struct DailyMetrics {
 
     HeadTickData head_data;
     bool head_calculated = false;
+
+    stream_sum sum_info;
 };
 
 
@@ -94,7 +115,8 @@ struct DayOutputMetrics {
     std::string date_str = "";
     double historical_total_inflow = 0.0;
 
-     HeadTickData head_data;
+    HeadTickData head_data;
+    stream_sum sum_info;
 };
 // ====================================================================
 
@@ -162,6 +184,34 @@ bool is_am_time(const std::string& tick_time) {
         return total_minutes <= 690;
     }
     return false;
+}
+
+
+void get_stream_sum(struct stream_sum& sum, StreamRecord stream){
+
+    double trade = stream.record.volume * stream.record.price * 100;
+
+    if (stream.record.bs_type == "S"){
+        if (stream.gap < 0.0){
+            sum.s_down += trade;
+        }else if (stream.gap == 0.0){
+            sum.s_keep += trade;
+        }else{
+            sum.s_up += trade;
+        }
+
+    }else if(stream.record.bs_type == "B"){
+        if (stream.gap < 0.0){
+            sum.b_down += trade;
+        }else if (stream.gap == 0.0){
+            sum.b_keep += trade;
+        }else{
+            sum.b_up += trade;
+        }
+
+    }
+
+    return;
 }
 
 
@@ -412,6 +462,34 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
     }
 }
 
+bool record_change(TickRecord this_record,TickRecord first_record){
+
+    if (first_record.price == this_record.price 
+        && (first_record.bs_type == this_record.bs_type || this_record.bs_type == "-")){
+        return false;
+    }else{
+        return true;
+    }
+}
+
+bool record_empty(TickRecord this_record){
+
+    if (this_record.deal_count == 0){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool stream_empty(StreamRecord stream){
+    return record_empty(stream.record);
+}
+
+void stream_new(StreamRecord& stream, TickRecord record, double pre_price){
+    stream.record = record;
+    stream.gap = record.price - pre_price;
+}
+
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
     std::getline(infile, line); 
@@ -421,16 +499,51 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
 
         std::stringstream ss(line);
         TickRecord record;
+        TickRecord first_record;
+        StreamRecord stream;
         
         if (ss >> record) {
             if (!is_loading_data(record.time)) continue;
             process_head_data(metrics, record);
-            if (record.type_count == 0) continue; 
+            if (record.deal_count == 0) continue; 
+
+
+            if (record_empty(first_record)){
+                first_record = record;
+            }else{
+                if (record_change(record, first_record)){
+
+                    if (!stream_empty(stream)){
+                        stream.record.volume += first_record.volume;
+                        stream.record.deal_count += first_record.deal_count;  
+
+                        get_stream_sum(metrics.sum_info, stream);
+                    }
+                    
+                    
+                    stream_new(stream, record, first_record.price);
+                    
+
+                    first_record = record;
+                     
+       
+                }else{
+
+                    if (!stream_empty(stream)){
+                        stream.record.volume += first_record.volume;
+                        stream.record.deal_count += first_record.deal_count;  
+                    }        
+
+                }   
+
+            }
+
+
 
             metrics.valid_records_count++;
             metrics.closing_price = record.price; 
 
-            long long current_vol = static_cast<long long>(record.volume) * 100; 
+            long long current_vol = record.volume * 100; 
             double current_amount = record.price * current_vol;
             metrics.total_turnover += current_amount; 
 
