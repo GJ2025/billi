@@ -364,6 +364,19 @@ void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
+void print_income(const DayOutputMetrics& out) {
+      
+    std::cout << std::left << std::setw(11) << out.date_str << " | "
+              << std::fixed << std::setprecision(2)
+              << std::setw(9)  << out.sum_info.b_down/10000 << " | "
+              << std::setw(9)  << out.sum_info.b_up/10000 << " | " 
+              << std::setw(9)  << out.sum_info.b_keep/10000 << " | " 
+              << std::setw(9)  << out.sum_info.s_down/10000 << " | " 
+              << std::setw(9)  << out.sum_info.s_up/10000 << " | " 
+              << std::setw(9)  << out.sum_info.s_keep/10000 << " | "  
+              << std::endl;
+}
+
 
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     std::vector<std::string> signals;
@@ -492,6 +505,8 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price){
 
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
+    TickRecord first_record;
+    StreamRecord stream;
     std::getline(infile, line); 
     std::getline(infile, line);
     while (std::getline(infile, line)) {
@@ -499,8 +514,6 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
 
         std::stringstream ss(line);
         TickRecord record;
-        TickRecord first_record;
-        StreamRecord stream;
         
         if (ss >> record) {
             if (!is_loading_data(record.time)) continue;
@@ -618,6 +631,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
     out.head_data = metrics.head_data;
+    out.sum_info = metrics.sum_info;
 
     return true;
 }
@@ -626,12 +640,14 @@ int main(int argc, char* argv[]) {
 
     int opt;
     bool show_head = false;
+    bool show_income = false;
+    bool show_all = false;
     std::string dir_path;
     std::vector<std::string> files_to_process;
 
     // "h" 表示支持 -h 选项
     // "p:" 表示 -p 后必须带一个值 (比如 -p /data)
-    while ((opt = getopt(argc, argv, "hp:")) != -1) {
+    while ((opt = getopt(argc, argv, "hp:ia")) != -1) {
         switch (opt) {
             case 'h':
                 show_head = true;
@@ -639,6 +655,12 @@ int main(int argc, char* argv[]) {
             case 'p':
                 dir_path = optarg; // optarg 会自动指向 -p 后面的参数值
                 break;
+            case 'i':
+                show_income = true;
+                break;
+            case 'a':
+                show_all = true;
+                break;           
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-p path]" << std::endl;
                 return 1;
@@ -651,7 +673,9 @@ int main(int argc, char* argv[]) {
 
     if (show_head){
         print_table_header();
-    }else{
+    }
+    
+    if (show_all){
         print_all();
     }
 
@@ -672,11 +696,17 @@ int main(int argc, char* argv[]) {
 
         if (show_head){
             print_header_info(out, prev_out);
-        }else{
+        }
+        
+        if (show_all){
             get_and_print_signals(out, prev_out);
         }
         
-        
+        if (show_income){
+            print_income(out);
+        }
+
+
         if (out.ticks_count > 0) {
             prev_out = out;
         }
@@ -684,7 +714,9 @@ int main(int argc, char* argv[]) {
 
     if (show_head){
         print_table_header();
-    }else{
+    }
+    
+    if (show_all){
         print_all();
     }
     return 0;
