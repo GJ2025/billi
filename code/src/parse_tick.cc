@@ -400,7 +400,8 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
                     + out.sum_info.middle.keep
                     + out.sum_info.middle.up;
 
-    double keep =   out.sum_info.buy.keep - out.sum_info.sale.keep;
+    double keep_sub =   out.sum_info.buy.keep - out.sum_info.sale.keep;
+     double keep_add =   out.sum_info.buy.keep + out.sum_info.sale.keep;
     double bs =  out.sum_info.buy.up - out.sum_info.sale.down;
     
     if (ratio){
@@ -415,11 +416,11 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
               << std::setw(9)  << out.sum_info.middle.down/all << " | "
               << std::setw(9)  << out.sum_info.middle.keep/all << " | " 
               << std::setw(9)  << out.sum_info.middle.up/all << " | " 
-              << std::setw(9)  << all/all << " | " 
+              << std::setw(9)  << all/all << " | " << std::showpos
               << std::setw(9)  << bs/all << " | "
-              << std::setw(9)  << keep/all << " | "
+              << std::setw(9)  << keep_sub/keep_add << " | "
                << std::setw(9)  << out.pct_change << " | "  
-              << std::endl;
+              << std::noshowpos<< std::endl;
     }else{
 
             std::cout << std::left << std::setw(11) << out.date_str << " | "
@@ -434,8 +435,8 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
               << std::setw(9)  << out.sum_info.middle.keep/10000 << " | " 
               << std::setw(9)  << out.sum_info.middle.up/10000 << " | " 
               << std::setw(9)  << all/10000 << " | " 
-              << std::setw(9)  << bs/10000 << " | "
-              << std::setw(9)  << keep/10000 << " | "
+              << std::setw(9)  << bs/10000 << " | " 
+              << std::setw(9)  << keep_sub/10000 << " | "
                << std::setw(9)  << out.pct_change << " | "  
               << std::endl;
     }
