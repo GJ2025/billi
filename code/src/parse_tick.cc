@@ -506,7 +506,7 @@ bool record_change(TickRecord this_record,TickRecord pre_record){
 
 bool last_record(TickRecord this_record){
 
-    if (this_record.time == "15:30"){
+    if (this_record.time == "15:00"){
         return true;
     }else{
         return false;
