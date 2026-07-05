@@ -42,17 +42,19 @@ struct TickRecord {
 };
 
 // ================== 单行 Tick 记录结构体 ==================
-struct stream_sum {
-   double s_up = 0.0;
-   double s_down = 0.0;
-   double s_keep = 0.0;
 
-   double b_up = 0.0;
-   double b_down = 0.0;
-   double b_keep = 0.0;
+struct buy_action {
+   double up = 0.0;
+   double down = 0.0;
+   double keep = 0.0;
 };
 
 
+struct stream_sum {
+   buy_action sale;
+   buy_action buy;
+   buy_action middle;
+};
 
 // ================== 单行 Tick 记录结构体 ==================
 struct StreamRecord {
@@ -186,31 +188,30 @@ bool is_am_time(const std::string& tick_time) {
     return false;
 }
 
+void collect_buy_action(buy_action& sale, double trade, double gap){
+    if (gap < 0.0){
+        sale.down += trade;
+    }else if (gap == 0.0){
+        sale.keep += trade;
+    }else{
+        sale.up += trade;
+    }
+
+    return;
+}
+
 
 void get_stream_sum(struct stream_sum& sum, StreamRecord stream){
 
     double trade = stream.record.volume * stream.record.price * 100;
 
     if (stream.record.bs_type == "S"){
-        if (stream.gap < 0.0){
-            sum.s_down += trade;
-        }else if (stream.gap == 0.0){
-            sum.s_keep += trade;
-        }else{
-            sum.s_up += trade;
-        }
-
+        collect_buy_action(sum.sale, trade, stream.gap);
     }else if(stream.record.bs_type == "B"){
-        if (stream.gap < 0.0){
-            sum.b_down += trade;
-        }else if (stream.gap == 0.0){
-            sum.b_keep += trade;
-        }else{
-            sum.b_up += trade;
-        }
-
+        collect_buy_action(sum.buy, trade, stream.gap);
+    }else{
+        collect_buy_action(sum.middle, trade, stream.gap);
     }
-
     return;
 }
 
@@ -366,16 +367,31 @@ void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_
 
 void print_income(const DayOutputMetrics& out) {
 
-    long long all = out.sum_info.b_down + out.sum_info.b_up +out.sum_info.b_keep + out.sum_info.s_down+ out.sum_info.s_up+ out.sum_info.s_keep;
+    double all = out.sum_info.sale.down 
+                    + out.sum_info.sale.keep
+                    + out.sum_info.sale.up
+
+                    + out.sum_info.buy.down
+                    + out.sum_info.buy.keep
+                    + out.sum_info.buy.up
+
+                    + out.sum_info.middle.down
+                    + out.sum_info.middle.keep
+                    + out.sum_info.middle.up;
       
-    std::cout << std::left << std::setw(11) << out.date_str << " | "
+    // std::cout << std::left << std::setw(11) << out.date_str << " | "
+    //           << std::fixed << std::setprecision(2)
+    //           << std::setw(9)  << out.sum_info.b_down/10000 << " | "
+    //           << std::setw(9)  << out.sum_info.b_up/10000 << " | " 
+    //           << std::setw(9)  << out.sum_info.b_keep/10000 << " | " 
+    //           << std::setw(9)  << out.sum_info.s_down/10000 << " | " 
+    //           << std::setw(9)  << out.sum_info.s_up/10000 << " | " 
+    //           << std::setw(9)  << out.sum_info.s_keep/10000 << " | " 
+    //           << std::setw(9)  << all/10000 << " | "   
+    //           << std::endl;
+
+        std::cout << std::left << std::setw(11) << out.date_str << " | "
               << std::fixed << std::setprecision(2)
-              << std::setw(9)  << out.sum_info.b_down/10000 << " | "
-              << std::setw(9)  << out.sum_info.b_up/10000 << " | " 
-              << std::setw(9)  << out.sum_info.b_keep/10000 << " | " 
-              << std::setw(9)  << out.sum_info.s_down/10000 << " | " 
-              << std::setw(9)  << out.sum_info.s_up/10000 << " | " 
-              << std::setw(9)  << out.sum_info.s_keep/10000 << " | " 
               << std::setw(9)  << all/10000 << " | "   
               << std::endl;
 }
@@ -478,10 +494,10 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
     }
 }
 
-bool record_change(TickRecord this_record,TickRecord first_record){
+bool record_change(TickRecord this_record,TickRecord pre_record){
 
-    if (first_record.price == this_record.price 
-        && (first_record.bs_type == this_record.bs_type || this_record.bs_type == "-")){
+    if (pre_record.price == this_record.price 
+        && (pre_record.bs_type == this_record.bs_type || this_record.bs_type == "-")){
         return false;
     }else{
         return true;
@@ -497,6 +513,17 @@ bool last_record(TickRecord this_record){
     }
 
 }
+
+bool first_record(TickRecord this_record){
+
+    if (this_record.time == "09:25"){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+
 
 bool record_empty(TickRecord this_record){
 
@@ -535,22 +562,23 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             if (record.deal_count == 0) continue; 
 
 
-            if (record_empty(pre_record)){
+            if (first_record(record)){
                 pre_record = record;
                 stream_new(stream, record, record.price);
             }
 
-            if (last_record(record)){
-                stream.record.volume += record.volume;
-                stream.record.deal_count += record.deal_count; 
-                get_stream_sum(metrics.sum_info, stream);
-            }else if (record_change(record, pre_record)){
+            if (record_change(record, pre_record)){
                 get_stream_sum(metrics.sum_info, stream);
                 stream_new(stream, record, pre_record.price);
             }else{
-                stream.record.volume += record.volume;
-                stream.record.deal_count += record.deal_count;  
-            } 
+                if (!first_record(record)){
+                    stream.record.volume += record.volume;    
+                }
+            }
+            
+            if (last_record(record)){
+                get_stream_sum(metrics.sum_info, stream);
+            }
             
             metrics.valid_records_count++;
             metrics.closing_price = record.price; 
