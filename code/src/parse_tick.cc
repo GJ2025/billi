@@ -365,7 +365,28 @@ void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-void print_income(const DayOutputMetrics& out) {
+void print_income_header() {
+    std::cout << std::left 
+              << std::setw(11) << "Date"        << " | "
+              << std::setw(9)  << "Buy-Dn"      << " | "
+              << std::setw(9)  << "Buy-Kp"      << " | "
+              << std::setw(9)  << "Buy-Up"      << " | "
+              << std::setw(9)  << "Sale-Dn"     << " | "
+              << std::setw(9)  << "Sale-Kp"     << " | "
+              << std::setw(9)  << "Sale-Up"     << " | "
+              << std::setw(9)  << "Mid-Dn"      << " | "
+              << std::setw(9)  << "Mid-Kp"      << " | "
+              << std::setw(9)  << "Mid-Up"      << " | "
+              << std::setw(9)  << "Total"       << " | " 
+               << std::setw(9)  << "Bs   "       << " | "
+              << std::setw(9)  << "Keep "       << " | "
+              << std::setw(9)  << "Chang"       << " | "
+              << std::endl;
+    std::cout << std::string(135, '-') << std::endl; // 分割线
+}
+
+
+void print_income(const DayOutputMetrics& out, bool ratio) {
 
     double all = out.sum_info.sale.down 
                     + out.sum_info.sale.keep
@@ -378,22 +399,46 @@ void print_income(const DayOutputMetrics& out) {
                     + out.sum_info.middle.down
                     + out.sum_info.middle.keep
                     + out.sum_info.middle.up;
-      
-    // std::cout << std::left << std::setw(11) << out.date_str << " | "
-    //           << std::fixed << std::setprecision(2)
-    //           << std::setw(9)  << out.sum_info.b_down/10000 << " | "
-    //           << std::setw(9)  << out.sum_info.b_up/10000 << " | " 
-    //           << std::setw(9)  << out.sum_info.b_keep/10000 << " | " 
-    //           << std::setw(9)  << out.sum_info.s_down/10000 << " | " 
-    //           << std::setw(9)  << out.sum_info.s_up/10000 << " | " 
-    //           << std::setw(9)  << out.sum_info.s_keep/10000 << " | " 
-    //           << std::setw(9)  << all/10000 << " | "   
-    //           << std::endl;
 
-        std::cout << std::left << std::setw(11) << out.date_str << " | "
-              << std::fixed << std::setprecision(2)
-              << std::setw(9)  << all/10000 << " | "   
+    double keep =   out.sum_info.buy.keep - out.sum_info.sale.keep;
+    double bs =  out.sum_info.buy.up - out.sum_info.sale.down;
+    
+    if (ratio){
+            std::cout << std::left << std::setw(11) << out.date_str << " | "
+              << std::fixed << std::setprecision(3)
+              << std::setw(9)  << out.sum_info.buy.down/all << " | "
+              << std::setw(9)  << out.sum_info.buy.keep/all << " | " 
+              << std::setw(9)  << out.sum_info.buy.up/all << " | " 
+              << std::setw(9)  << out.sum_info.sale.down/all << " | "
+              << std::setw(9)  << out.sum_info.sale.keep/all << " | " 
+              << std::setw(9)  << out.sum_info.sale.up/all << " | " 
+              << std::setw(9)  << out.sum_info.middle.down/all << " | "
+              << std::setw(9)  << out.sum_info.middle.keep/all << " | " 
+              << std::setw(9)  << out.sum_info.middle.up/all << " | " 
+              << std::setw(9)  << all/all << " | " 
+              << std::setw(9)  << bs/all << " | "
+              << std::setw(9)  << keep/all << " | "
+               << std::setw(9)  << out.pct_change << " | "  
               << std::endl;
+    }else{
+
+            std::cout << std::left << std::setw(11) << out.date_str << " | "
+              << std::fixed << std::setprecision(2)
+              << std::setw(9)  << out.sum_info.buy.down/10000 << " | "
+              << std::setw(9)  << out.sum_info.buy.keep/10000 << " | " 
+              << std::setw(9)  << out.sum_info.buy.up/10000 << " | " 
+              << std::setw(9)  << out.sum_info.sale.down/10000 << " | "
+              << std::setw(9)  << out.sum_info.sale.keep/10000 << " | " 
+              << std::setw(9)  << out.sum_info.sale.up/10000 << " | " 
+              << std::setw(9)  << out.sum_info.middle.down/10000 << " | "
+              << std::setw(9)  << out.sum_info.middle.keep/10000 << " | " 
+              << std::setw(9)  << out.sum_info.middle.up/10000 << " | " 
+              << std::setw(9)  << all/10000 << " | " 
+              << std::setw(9)  << bs/10000 << " | "
+              << std::setw(9)  << keep/10000 << " | "
+               << std::setw(9)  << out.pct_change << " | "  
+              << std::endl;
+    }
 }
 
 
@@ -429,26 +474,14 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     return result;
 }
 
+bool out_is_full(const DayOutputMetrics& out){
+    bool had_one = (out.ticks_count > 0 && out.closing_price > 0.0);
+    return had_one;
+}
+
 void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
-    bool has_prev = (prev_out.ticks_count > 0 && prev_out.closing_price > 0.0);
-    
-    std::string row_color_start = "";
-    std::string row_color_end = "";
-
-    if (has_prev) {
-        out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-        out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-    }
-
-    
 
     std::string divergence_str = get_divergence_string(out, prev_out); 
-
-    if (std::abs(out.pct_change) <= 1.0) {
-        out.net_per_change = 0.0;
-    }else{
-        out.net_per_change = out.inflow_ratio/out.pct_change;
-    }
 
     print_data_row(out, divergence_str);
 }
@@ -665,18 +698,20 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     return true;
 }
 
+
 int main(int argc, char* argv[]) {
 
     int opt;
     bool show_head = false;
     bool show_income = false;
     bool show_all = false;
+    bool show_income_ratio = false;
     std::string dir_path;
     std::vector<std::string> files_to_process;
 
     // "h" 表示支持 -h 选项
     // "p:" 表示 -p 后必须带一个值 (比如 -p /data)
-    while ((opt = getopt(argc, argv, "hp:ia")) != -1) {
+    while ((opt = getopt(argc, argv, "hp:iar")) != -1) {
         switch (opt) {
             case 'h':
                 show_head = true;
@@ -687,6 +722,9 @@ int main(int argc, char* argv[]) {
             case 'i':
                 show_income = true;
                 break;
+            case 'r':
+                show_income_ratio = true;
+            break;
             case 'a':
                 show_all = true;
                 break;           
@@ -702,6 +740,10 @@ int main(int argc, char* argv[]) {
 
     if (show_head){
         print_table_header();
+    }
+
+    if (show_income){
+        print_income_header();
     }
     
     if (show_all){
@@ -722,6 +764,16 @@ int main(int argc, char* argv[]) {
         }
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
+        if (out_is_full(prev_out)) {
+            out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
+            out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
+        }
+
+        if (std::abs(out.pct_change) <= 1.0) {
+            out.net_per_change = 0.0;
+        }else{
+            out.net_per_change = out.inflow_ratio/out.pct_change;
+        }
 
         if (show_head){
             print_header_info(out, prev_out);
@@ -732,7 +784,7 @@ int main(int argc, char* argv[]) {
         }
         
         if (show_income){
-            print_income(out);
+            print_income(out,show_income_ratio);
         }
 
 
@@ -743,6 +795,10 @@ int main(int argc, char* argv[]) {
 
     if (show_head){
         print_table_header();
+    }
+
+    if (show_income){
+        print_income_header();
     }
     
     if (show_all){
