@@ -365,6 +365,8 @@ void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_
 }
 
 void print_income(const DayOutputMetrics& out) {
+
+    long long all = out.sum_info.b_down + out.sum_info.b_up +out.sum_info.b_keep + out.sum_info.s_down+ out.sum_info.s_up+ out.sum_info.s_keep;
       
     std::cout << std::left << std::setw(11) << out.date_str << " | "
               << std::fixed << std::setprecision(2)
@@ -373,7 +375,8 @@ void print_income(const DayOutputMetrics& out) {
               << std::setw(9)  << out.sum_info.b_keep/10000 << " | " 
               << std::setw(9)  << out.sum_info.s_down/10000 << " | " 
               << std::setw(9)  << out.sum_info.s_up/10000 << " | " 
-              << std::setw(9)  << out.sum_info.s_keep/10000 << " | "  
+              << std::setw(9)  << out.sum_info.s_keep/10000 << " | " 
+              << std::setw(9)  << all/10000 << " | "   
               << std::endl;
 }
 
@@ -385,7 +388,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     if (out.pct_change > 0 && out.net_inflow_wan < 0) {
         signals.push_back("[UP_OUT]");
     } else if (out.pct_change < 0 && out.net_inflow_wan > 0) {
-        signals.push_back("[DN_IN ]");
+        signals.push_back("[DN_IN]");
     }
 
     // 2. 均价与流入背离
@@ -393,7 +396,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
         if (out.avg_price > prev_out.avg_price && out.net_inflow_wan < 0) {
             signals.push_back("[AVUP_OUT]");
         } else if (out.avg_price < prev_out.avg_price && out.net_inflow_wan > 0) {
-            signals.push_back("[AVDN_IN ]");
+            signals.push_back("[AVDN_IN]");
         }
     }
 
@@ -485,6 +488,16 @@ bool record_change(TickRecord this_record,TickRecord first_record){
     }
 }
 
+bool last_record(TickRecord this_record){
+
+    if (this_record.time == "15:30"){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+
 bool record_empty(TickRecord this_record){
 
     if (this_record.deal_count == 0){
@@ -505,8 +518,9 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price){
 
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
-    TickRecord first_record;
+    TickRecord pre_record;
     StreamRecord stream;
+
     std::getline(infile, line); 
     std::getline(infile, line);
     while (std::getline(infile, line)) {
@@ -521,38 +535,23 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             if (record.deal_count == 0) continue; 
 
 
-            if (record_empty(first_record)){
-                first_record = record;
-            }else{
-                if (record_change(record, first_record)){
-
-                    if (!stream_empty(stream)){
-                        stream.record.volume += first_record.volume;
-                        stream.record.deal_count += first_record.deal_count;  
-
-                        get_stream_sum(metrics.sum_info, stream);
-                    }
-                    
-                    
-                    stream_new(stream, record, first_record.price);
-                    
-
-                    first_record = record;
-                     
-       
-                }else{
-
-                    if (!stream_empty(stream)){
-                        stream.record.volume += first_record.volume;
-                        stream.record.deal_count += first_record.deal_count;  
-                    }        
-
-                }   
-
+            if (record_empty(pre_record)){
+                pre_record = record;
+                stream_new(stream, record, record.price);
             }
 
-
-
+            if (last_record(record)){
+                stream.record.volume += record.volume;
+                stream.record.deal_count += record.deal_count; 
+                get_stream_sum(metrics.sum_info, stream);
+            }else if (record_change(record, pre_record)){
+                get_stream_sum(metrics.sum_info, stream);
+                stream_new(stream, record, pre_record.price);
+            }else{
+                stream.record.volume += record.volume;
+                stream.record.deal_count += record.deal_count;  
+            } 
+            
             metrics.valid_records_count++;
             metrics.closing_price = record.price; 
 
@@ -576,6 +575,8 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
                 exit(0);
 
         }
+
+        pre_record = record;
     }
     infile.close();
 }
