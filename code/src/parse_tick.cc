@@ -88,6 +88,8 @@ struct DailyMetrics {
 
     HeadTickData head_data;
     bool head_calculated = false;
+    TickRecord first_record;
+    TickRecord last_record;
 
     stream_sum sum_info;
 };
@@ -95,7 +97,8 @@ struct DailyMetrics {
 
 // ================== 单日衍生/计算输出指标的结构体 ==================
 struct DayOutputMetrics {
-    long long ticks_count = 0;         
+    long long ticks_count = 0;  
+    double pre_closing_price = 0.0;       
     double closing_price = 0.0;        
     double am_closing_price = 0.0;     
     double am_net_inflow_wan = 0.0;
@@ -112,10 +115,14 @@ struct DayOutputMetrics {
     double net_per_change = 0.0;
     double pct_change = 0.0;
     double am_pct_change = 0.0;
+    double start_change = 0.0;
 
     // ====== 新增整合字段 ======
     std::string date_str = "";
     double historical_total_inflow = 0.0;
+
+    TickRecord first_record;
+    TickRecord last_record;
 
     HeadTickData head_data;
     stream_sum sum_info;
@@ -377,12 +384,14 @@ void print_income_header() {
               << std::setw(9)  << "Mid-Dn"      << " | "
               << std::setw(9)  << "Mid-Kp"      << " | "
               << std::setw(9)  << "Mid-Up"      << " | "
-              << std::setw(9)  << "Total"       << " | " 
+              << std::setw(9)  << "Total"       << " | "
+              << std::setw(9)  << "Closing"       << " | "
+              << std::setw(9)  << "Start_CH"  << " | " 
                << std::setw(9)  << "Bs   "       << " | "
               << std::setw(9)  << "Keep "       << " | "
               << std::setw(9)  << "Chang"       << " | "
               << std::endl;
-    std::cout << std::string(135, '-') << std::endl; // 分割线
+    std::cout << std::string(196, '-') << std::endl; // 分割线
 }
 
 
@@ -416,10 +425,12 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
               << std::setw(9)  << out.sum_info.middle.down/all << " | "
               << std::setw(9)  << out.sum_info.middle.keep/all << " | " 
               << std::setw(9)  << out.sum_info.middle.up/all << " | " 
-              << std::setw(9)  << all/all << " | " << std::showpos
+              << std::setw(9)  << all/all << " | " 
+            << std::setw(9)  << out.pre_closing_price << " | "   << std::showpos
+              << std::setw(9)  << out.start_change << " | "
               << std::setw(9)  << bs/all << " | "
               << std::setw(9)  << keep_sub/keep_add << " | "
-               << std::setw(9)  << out.pct_change << " | "  
+               << std::setw(9)  << out.pct_change << " | " 
               << std::noshowpos<< std::endl;
     }else{
 
@@ -435,10 +446,12 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
               << std::setw(9)  << out.sum_info.middle.keep/10000 << " | " 
               << std::setw(9)  << out.sum_info.middle.up/10000 << " | " 
               << std::setw(9)  << all/10000 << " | " 
+              << std::setw(9)  << out.pre_closing_price << " | " << std::showpos   
+              << std::setw(9)  << out.start_change << " | "
               << std::setw(9)  << bs/10000 << " | " 
               << std::setw(9)  << keep_sub/10000 << " | "
-               << std::setw(9)  << out.pct_change << " | "  
-              << std::endl;
+               << std::setw(9)  << out.pct_change << " | "
+               << std::noshowpos << std::endl;
     }
 }
 
@@ -598,6 +611,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
 
             if (first_record(record)){
                 pre_record = record;
+                metrics.first_record = record;
                 stream_new(stream, record, record.price);
             }
 
@@ -611,6 +625,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             }
             
             if (last_record(record)){
+                metrics.last_record = record;
                 get_stream_sum(metrics.sum_info, stream);
             }
             
@@ -695,6 +710,8 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
 
     out.head_data = metrics.head_data;
     out.sum_info = metrics.sum_info;
+    out.first_record = metrics.first_record;
+    out.last_record = metrics.last_record;
 
     return true;
 }
@@ -768,6 +785,8 @@ int main(int argc, char* argv[]) {
         if (out_is_full(prev_out)) {
             out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
             out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
+            out.start_change = ((out.first_record.price - prev_out.closing_price)/prev_out.closing_price) *100;
+            out.pre_closing_price = prev_out.closing_price;
         }
 
         if (std::abs(out.pct_change) <= 1.0) {
