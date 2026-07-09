@@ -49,7 +49,7 @@ struct stream_sum {
 };
 
 struct StreamRecord {
-    TickRecord record;
+    std::vector<TickRecord> records;
     double gap = 0.0;
 };
 
