@@ -13,9 +13,9 @@
 
 namespace fs = std::filesystem;
 
-struct TerminalColor {
-    std::string start;
-    std::string end;
+struct tickTime {
+    int hour = 0;
+    int minute = 0;
 };
 
 
@@ -26,6 +26,7 @@ struct TickRecord {
     long long volume = 0;
     int deal_count = 0;
     std::string bs_type = "-";
+    tickTime t;
 
     // 重载流输入运算符，一键解析整行（包括时间戳）
     friend std::istream& operator>>(std::istream& is, TickRecord& record) {
@@ -36,6 +37,11 @@ struct TickRecord {
             }
         }
 
+        std::stringstream ss(record.time);
+        char delimiter; // 
+        if (ss >> record.t.hour >> delimiter >> record.t.minute) {
+            // 解析成功
+        }
         is.clear();
         return is;
     }
@@ -174,25 +180,22 @@ bool is_loading_data(const std::string& str) {
     return std::isdigit(static_cast<unsigned char>(str[0]));
 }
 
-bool is_am_time(const std::string& tick_time) {
-    // 兼容可能带有秒或不带秒的格式，标准解析小时和分钟
-    int hour = 0, minute = 0;
-    char delimiter;
-    std::stringstream ss(tick_time);
-    
-    if (ss >> hour >> delimiter >> minute) {
-        // 如果采用的是 12 小时制且数据中未标明 PM，但已知下午 1 点到 3 点交易
-        // 或者是标准的 24 小时制 09:15 - 11:30
-        if (hour >= 1 && hour <= 3) { 
-            // 假设 1, 2, 3 代表下午的 13, 14, 15 点
-            return false; 
-        }
-        
-        int total_minutes = hour * 60 + minute;
-        // 上午收盘时间 11:30 = 11 * 60 + 30 = 690 分钟
-        return total_minutes <= 690;
+
+
+bool is_am_time(const tickTime& t) {
+    if (t.hour< 12){
+        return true;
+    }else{
+        return false;
     }
-    return false;
+}
+
+bool after_15(const tickTime& t) {
+    if (t.hour == 15 && t.minute !=0){
+        return true;
+    }else{
+        return false;
+    }
 }
 
 void collect_buy_action(buy_action& sale, double trade, double gap){
@@ -385,7 +388,7 @@ void print_income_header() {
               << std::setw(9)  << "Mid-Kp"      << " | "
               << std::setw(9)  << "Mid-Up"      << " | "
               << std::setw(9)  << "Total"       << " | "
-              << std::setw(9)  << "Closing"       << " | "
+              << std::setw(9)  << "Pre_CLo"       << " | "
               << std::setw(9)  << "Start_CH"  << " | " 
                << std::setw(9)  << "Bs   "       << " | "
               << std::setw(9)  << "Keep "       << " | "
@@ -543,11 +546,10 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
 
 bool record_change(TickRecord this_record,TickRecord pre_record){
 
-    if (pre_record.price == this_record.price 
-        && (pre_record.bs_type == this_record.bs_type || this_record.bs_type == "-")){
-        return false;
-    }else{
+    if (pre_record.price != this_record.price || pre_record.bs_type != this_record.bs_type){
         return true;
+    }else{
+        return false;
     }
 }
 
@@ -590,6 +592,29 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price){
     stream.gap = record.price - pre_price;
 }
 
+void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
+                               TickRecord& record, TickRecord& pre_record) {
+    if (first_record(record)) {
+        pre_record = record;
+        metrics.first_record = record;
+        stream_new(stream, record, record.price);
+    }
+
+    if (record_change(record, pre_record)) {
+        get_stream_sum(metrics.sum_info, stream);
+        stream_new(stream, record, pre_record.price);
+    } else {
+        if (!first_record(record)) {
+            stream.record.volume += record.volume;
+        }
+    }
+
+    if (last_record(record)) {
+        metrics.last_record = record;
+        get_stream_sum(metrics.sum_info, stream);
+    }
+}
+
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
     TickRecord pre_record;
@@ -607,27 +632,10 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             if (!is_loading_data(record.time)) continue;
             process_head_data(metrics, record);
             if (record.deal_count == 0) continue; 
+            if (after_15(record.t)) continue;
 
 
-            if (first_record(record)){
-                pre_record = record;
-                metrics.first_record = record;
-                stream_new(stream, record, record.price);
-            }
-
-            if (record_change(record, pre_record)){
-                get_stream_sum(metrics.sum_info, stream);
-                stream_new(stream, record, pre_record.price);
-            }else{
-                if (!first_record(record)){
-                    stream.record.volume += record.volume;    
-                }
-            }
-            
-            if (last_record(record)){
-                metrics.last_record = record;
-                get_stream_sum(metrics.sum_info, stream);
-            }
+            update_stream_and_metrics(metrics, stream, record, pre_record);
             
             metrics.valid_records_count++;
             metrics.closing_price = record.price; 
@@ -636,7 +644,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             double current_amount = record.price * current_vol;
             metrics.total_turnover += current_amount; 
 
-            if (is_am_time(record.time)) {
+            if (is_am_time(record.t)) {
                 metrics.am_closing_price = record.price; 
                 metrics.am_vol += current_vol;
                 metrics.am_turnover += current_amount; 
