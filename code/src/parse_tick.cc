@@ -428,10 +428,10 @@ void print_classfy( DayOutputMetrics& out) {
 
     std::cout << std::left << std::setw(11) << out.date_str << " | "
                 << std::fixed << std::setprecision(2)
-                << std::setw(9)  << out.deal_super.buy/10000 << " | "
+                << std::setw(12)  << out.deal_super.buy/10000 << " | "
                 << std::setw(9)  << out.deal_super.sale/10000 << " | "
 
-                << std::setw(9)  << out.deal_big.buy/10000 << " | "
+                << std::setw(12)  << out.deal_big.buy/10000 << " | "
                 << std::setw(9)  << out.deal_big.sale/10000 << " | "
 
                 << std::setw(9)  << out.deal_middle.buy/10000 << " | "
