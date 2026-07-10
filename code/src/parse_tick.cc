@@ -78,7 +78,7 @@ bool after_15(const tickTime& t) {
     }
 }
 
-void collect_buy_action(buy_action& sale, double trade, double gap){
+void collect_price_action(buy_action& sale, double trade, double gap){
     if (gap < 0.0){
         sale.down += trade;
     }else if (gap == 0.0){
@@ -87,8 +87,25 @@ void collect_buy_action(buy_action& sale, double trade, double gap){
         sale.up += trade;
     }
 
+
     return;
 }
+
+void collect_classfy_action(classfy_action& deal, double trade, double gap){
+
+    if (trade > 500000){
+        collect_price_action(deal.super, trade, gap);
+    }else if (trade > 200000){
+        collect_price_action(deal.big, trade, gap);
+    }else if (trade > 50000){
+        collect_price_action(deal.middle, trade, gap);
+    }else{
+        collect_price_action(deal.small, trade, gap);
+    }
+
+    return;
+}
+
 
 
 void get_stream_sum(struct stream_sum& sum, StreamRecord& stream) {
@@ -107,11 +124,14 @@ void get_stream_sum(struct stream_sum& sum, StreamRecord& stream) {
     const std::string& bs_type = stream.records[0].bs_type;
 
     if (bs_type == "S") {
-        collect_buy_action(sum.sale, total_stream_trade, stream.gap);
+        collect_price_action(sum.sale, total_stream_trade, stream.gap);
+        collect_classfy_action(sum.classfy_s, total_stream_trade,stream.gap);
     } else if (bs_type == "B") {
-        collect_buy_action(sum.buy, total_stream_trade, stream.gap);
+        collect_price_action(sum.buy, total_stream_trade, stream.gap);
+        collect_classfy_action(sum.classfy_b, total_stream_trade,stream.gap);
     } else {
-        collect_buy_action(sum.middle, total_stream_trade, stream.gap);
+        collect_price_action(sum.middle, total_stream_trade, stream.gap);
+        collect_classfy_action(sum.classfy_m, total_stream_trade,stream.gap);
     }
 }
 
@@ -362,6 +382,83 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
               << are_signs_same(bs, out.pct_change) << " | "
               << std::endl;
     }
+}
+
+
+double sum_action(buy_action& deal){
+    return deal.down+deal.keep+deal.up;
+}
+
+void deal_classfy(DayOutputMetrics& out) {
+
+
+
+    out.deal_super.buy = sum_action(out.sum_info.classfy_b.super);
+    out.deal_super.sale = sum_action(out.sum_info.classfy_s.super);
+    out.deal_super.middle = sum_action(out.sum_info.classfy_m.super);
+
+    out.deal_big.buy = sum_action(out.sum_info.classfy_b.big);
+    out.deal_big.sale = sum_action(out.sum_info.classfy_s.big);
+    out.deal_big.middle = sum_action(out.sum_info.classfy_m.big);
+
+    out.deal_middle.buy = sum_action(out.sum_info.classfy_b.middle);
+    out.deal_middle.sale = sum_action(out.sum_info.classfy_s.middle);
+    out.deal_middle.middle = sum_action(out.sum_info.classfy_m.middle);
+
+    out.deal_small.buy = sum_action(out.sum_info.classfy_b.small);
+    out.deal_small.sale = sum_action(out.sum_info.classfy_s.small);
+    out.deal_small.middle = sum_action(out.sum_info.classfy_m.small);
+
+    out.deal_total.buy = out.deal_super.buy +  out.deal_big.buy + out.deal_middle.buy + out.deal_small.buy;
+    out.deal_total.sale = out.deal_super.sale +  out.deal_big.sale + out.deal_middle.sale + out.deal_small.sale;
+    out.deal_total.middle = out.deal_super.middle +  out.deal_big.middle + out.deal_middle.middle + out.deal_small.middle;
+
+    return;
+            
+}
+
+
+void print_classfy( DayOutputMetrics& out) {
+
+    double jing_super = out.deal_super.buy - out.deal_super.sale;
+    double jing_big = out.deal_big.buy - out.deal_big.sale;
+    double jing_middle = out.deal_middle.buy - out.deal_middle.sale;
+    double jing_small = out.deal_small.buy - out.deal_small.sale;
+    double jing_total = out.deal_total.buy - out.deal_total.sale;
+
+    std::cout << std::left << std::setw(11) << out.date_str << " | "
+                << std::fixed << std::setprecision(2)
+                << std::setw(9)  << out.deal_super.buy/10000 << " | "
+                << std::setw(9)  << out.deal_super.sale/10000 << " | "
+
+                << std::setw(9)  << out.deal_big.buy/10000 << " | "
+                << std::setw(9)  << out.deal_big.sale/10000 << " | "
+
+                << std::setw(9)  << out.deal_middle.buy/10000 << " | "
+                << std::setw(9)  << out.deal_middle.sale/10000 << " | "
+
+                << std::setw(9)  << out.deal_small.buy/10000 << " | "
+                << std::setw(9)  << out.deal_small.sale/10000 << " | "
+
+                << std::setw(9)  << out.deal_total.buy/10000 << " | "
+                << std::setw(9)  << out.deal_total.sale/10000 << " | "
+                 << std::setw(12)  << (out.deal_total.buy+out.deal_total.sale+out.deal_total.middle)/10000 << " | "  
+                 << std::setw(12)  << out.total_vol_wan << " | " 
+
+                << std::showpos
+                << std::setw(9)  << jing_super/10000 << " | "
+                << std::setw(9)  << jing_big/10000 << " | "
+                << std::setw(9)  << jing_middle/10000 << " | "
+                << std::setw(9)  << jing_small/10000 << " | "
+                << std::setw(9)  << jing_total/10000 << " | "
+                << std::noshowpos
+
+                << std::setw(5)  << out.pre_closing_price << " | " 
+                << std::setw(9)  << std::showpos << out.start_change << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos << out.pct_change << " | "  << std::noshowpos
+                << std::setw(5)  << out.closing_price << " | " 
+                << std::endl;
+
 }
 
 
@@ -651,13 +748,14 @@ int main(int argc, char* argv[]) {
     bool show_head = false;
     bool show_income = false;
     bool show_all = false;
+    bool show_classfy = false;
     bool show_income_ratio = false;
     std::string dir_path;
     std::vector<std::string> files_to_process;
 
     // "h" 表示支持 -h 选项
     // "p:" 表示 -p 后必须带一个值 (比如 -p /data)
-    while ((opt = getopt(argc, argv, "hp:iar")) != -1) {
+    while ((opt = getopt(argc, argv, "hp:iarc")) != -1) {
         switch (opt) {
             case 'h':
                 show_head = true;
@@ -673,7 +771,10 @@ int main(int argc, char* argv[]) {
             break;
             case 'a':
                 show_all = true;
-                break;           
+                break;
+            case 'c':
+                show_classfy = true;
+                break;               
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-p path]" << std::endl;
                 return 1;
@@ -723,6 +824,8 @@ int main(int argc, char* argv[]) {
             out.net_per_change = out.inflow_ratio/out.pct_change;
         }
 
+        deal_classfy(out);
+
         if (show_head){
             print_header_info(out, prev_out);
         }
@@ -733,6 +836,10 @@ int main(int argc, char* argv[]) {
         
         if (show_income){
             print_income(out,show_income_ratio);
+        }
+
+        if (show_classfy){
+            print_classfy(out);
         }
 
 

@@ -42,10 +42,22 @@ struct buy_action {
     double keep = 0.0;
 };
 
-struct stream_sum {
-    buy_action sale;
-    buy_action buy;
+struct classfy_action{
+    buy_action super;
+    buy_action big;
     buy_action middle;
+    buy_action small; 
+};
+
+struct stream_sum {
+    buy_action buy;
+    buy_action sale;
+    buy_action middle;
+
+    classfy_action classfy_b;
+    classfy_action classfy_s;
+   
+    classfy_action classfy_m;
 };
 
 struct StreamRecord {
@@ -81,6 +93,12 @@ struct DailyMetrics {
     stream_sum sum_info;
 };
 
+struct classfy_bs_action{
+    double buy = 0.0;
+    double sale = 0.0;
+    double middle = 0.0;
+};
+
 struct DayOutputMetrics {
     long long ticks_count = 0;  
     double pre_closing_price = 0.0;        
@@ -110,6 +128,14 @@ struct DayOutputMetrics {
 
     HeadTickData head_data;
     stream_sum sum_info;
+
+    classfy_bs_action deal_super;
+    classfy_bs_action deal_big;
+    classfy_bs_action deal_middle;
+    classfy_bs_action deal_small;
+
+    classfy_bs_action deal_total;
+    
 };
 
 #endif // TICK_TYPES_H
