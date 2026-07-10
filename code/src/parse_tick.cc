@@ -342,12 +342,12 @@ void print_income(const DayOutputMetrics& out, bool ratio) {
     if (ratio){
             std::cout << std::left << std::setw(11) << out.date_str << " | "
               << std::fixed << std::setprecision(3)
-              << std::setw(9)  << out.sum_info.buy.down/all << " | "
+              << std::setw(9)  << out.sum_info.buy.down*1000/(out.sum_info.sale.down) << " | "
               << std::setw(9)  << out.sum_info.buy.keep/all << " | " 
               << std::setw(9)  << out.sum_info.buy.up/all << " | " 
               << std::setw(9)  << out.sum_info.sale.down/all << " | "
               << std::setw(9)  << out.sum_info.sale.keep/all << " | " 
-              << std::setw(9)  << out.sum_info.sale.up/all << " | " 
+              << std::setw(9)  << out.sum_info.sale.up/out.sum_info.buy.up << " | " 
               << std::setw(9)  << out.sum_info.middle.down/all << " | "
               << std::setw(9)  << out.sum_info.middle.keep/all << " | " 
               << std::setw(9)  << out.sum_info.middle.up/all << " | " 
