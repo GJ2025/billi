@@ -117,7 +117,9 @@ void collect_bs_action(bs_action_group& group, const std::string& bs_type, doubl
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
 void print_classfy(DayOutputMetrics& out);
-void print_price_classfy(DayOutputMetrics& out);
-void print_income_header();
+void print_super_price(DayOutputMetrics& out);
+void print_super_price_header();
+void print_price( DayOutputMetrics& out);
+void print_merge( DayOutputMetrics& out);
 
 #endif // COLLECT_STREAM_H

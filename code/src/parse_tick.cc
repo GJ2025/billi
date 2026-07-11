@@ -426,16 +426,18 @@ int main(int argc, char* argv[]) {
 
     int opt;
     bool show_head = false;
-    bool show_price_classfy = false;
+    bool show_price = false;
     bool show_all = false;
     bool show_classfy = false;
     bool show_income_ratio = false;
+    bool show_super = false;
+    bool show_merge = false;
     std::string dir_path;
     std::vector<std::string> files_to_process;
 
     // "h" 表示支持 -h 选项
     // "p:" 表示 -p 后必须带一个值 (比如 -p /data)
-    while ((opt = getopt(argc, argv, "hp:iarc")) != -1) {
+    while ((opt = getopt(argc, argv, "hp:iarcsm")) != -1) {
         switch (opt) {
             case 'h':
                 show_head = true;
@@ -444,7 +446,7 @@ int main(int argc, char* argv[]) {
                 dir_path = optarg; // optarg 会自动指向 -p 后面的参数值
                 break;
             case 'i':
-                show_price_classfy = true;
+                show_price = true;
                 break;
             case 'r':
                 show_income_ratio = true;
@@ -454,7 +456,13 @@ int main(int argc, char* argv[]) {
                 break;
             case 'c':
                 show_classfy = true;
-                break;               
+                break;
+            case 's':
+                show_super = true;
+                break; 
+            case 'm':
+                show_merge = true;
+                break;                         
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-p path]" << std::endl;
                 return 1;
@@ -469,8 +477,8 @@ int main(int argc, char* argv[]) {
         print_table_header();
     }
 
-    if (show_price_classfy){
-        print_income_header();
+    if (show_super){
+        print_super_price_header();
     }
     
     if (show_all){
@@ -514,12 +522,20 @@ int main(int argc, char* argv[]) {
             get_and_print_signals(out, prev_out);
         }
         
-        if (show_price_classfy){
-            print_price_classfy(out);
+        if (show_super){
+            print_super_price(out);
         }
 
         if (show_classfy){
             print_classfy(out);
+        }
+
+        if (show_price){
+            print_price(out);
+        }
+
+        if (show_merge){
+            print_merge(out);
         }
 
         if (out.ticks_count > 0) {
@@ -531,8 +547,8 @@ int main(int argc, char* argv[]) {
         print_table_header();
     }
 
-    if (show_price_classfy){
-        print_income_header();
+    if (show_super){
+        print_super_price_header();
     }
     
     if (show_all){

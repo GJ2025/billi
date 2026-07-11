@@ -144,7 +144,78 @@ void print_classfy( DayOutputMetrics& out) {
 
 }
 
-void print_income_header() {
+void print_price( DayOutputMetrics& out) {
+
+
+    std::cout << std::left << std::setw(11) << out.date_str << " | "
+                << std::fixed << std::setprecision(2)
+                << std::setw(9)  << out.price_deal_super.down/WAN << " | "
+                << std::setw(9)  << out.price_deal_super.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_super.keep/WAN << " | "
+                << std::setw(9)  << std::showpos <<(out.price_deal_super.up - out.price_deal_super.down)/WAN << " | " << std::noshowpos
+
+                << std::setw(9)  << out.price_deal_big.down/WAN << " | "
+                << std::setw(9)  << out.price_deal_big.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_big.keep/WAN << " | "
+                 << std::setw(9)  << std::showpos <<(out.price_deal_big.up - out.price_deal_big.down)/WAN << " | " << std::noshowpos
+
+                << std::setw(9)  << out.price_deal_middle.down/WAN << " | "
+                << std::setw(9)  << out.price_deal_middle.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_middle.keep/WAN << " | "
+                 << std::setw(9)  << std::showpos <<(out.price_deal_middle.up - out.price_deal_middle.down)/WAN << " | " << std::noshowpos
+
+                << std::setw(9)  << out.price_deal_small.down/WAN << " | "
+                << std::setw(9)  << out.price_deal_small.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_small.keep/WAN << " | "
+                 << std::setw(9)  << std::showpos <<(out.price_deal_small.up - out.price_deal_small.down)/WAN << " | " << std::noshowpos
+
+                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.up/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.keep/WAN << " | "
+                 << std::setw(12)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
+
+  
+                << std::setw(12)  << (out.price_deal_total.down+out.price_deal_total.up+out.price_deal_total.keep)/WAN << " | "  
+                << std::setw(12)  << out.total_vol_wan << " | " 
+
+                << std::setw(5)  << out.pre_closing_price << " | " 
+                << std::setw(9)  << std::showpos << out.start_change << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos << out.pct_change << " | "  << std::noshowpos
+                << std::setw(5)  << out.closing_price << " | " 
+                << std::endl;
+
+}
+
+void print_merge( DayOutputMetrics& out) {
+
+
+    std::cout << std::left << std::setw(11) << out.date_str << " | "
+                << std::fixed << std::setprecision(2)
+
+                << std::setw(12)  << out.deal_total.buy/WAN << " | "
+                << std::setw(12)  << out.deal_total.sale/WAN << " | "
+                << std::setw(12)  << out.deal_total.middle/WAN << " | "
+                << std::setw(12)  << std::showpos <<(out.deal_total.buy - out.deal_total.sale)/WAN << " | " << std::noshowpos
+
+
+                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.up/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.keep/WAN << " | "
+                << std::setw(12)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
+
+  
+                << std::setw(12)  << (out.price_deal_total.down+out.price_deal_total.up+out.price_deal_total.keep)/WAN << " | "  
+                << std::setw(12)  << out.total_vol_wan << " | " 
+
+                << std::setw(5)  << out.pre_closing_price << " | " 
+                << std::setw(9)  << std::showpos << out.start_change << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos << out.pct_change << " | "  << std::noshowpos
+                << std::setw(5)  << out.closing_price << " | " 
+                << std::endl;
+
+}
+
+void print_super_price_header() {
     std::cout << std::left 
               << std::setw(11) << "Date"        << " | "
               // 下面这些宽度调整为与数据打印的 12/9/9 保持一致
@@ -171,7 +242,7 @@ void print_income_header() {
     std::cout << std::string(250, '-') << std::endl; 
 }
 
-void print_price_classfy(DayOutputMetrics& out){
+void print_super_price(DayOutputMetrics& out){
 
     double price_up = 0.0;
     double price_down = 0.0;
