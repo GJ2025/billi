@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 
+#define WAN 10000
+
 struct tickTime {
     int hour = 0;
     int minute = 0;

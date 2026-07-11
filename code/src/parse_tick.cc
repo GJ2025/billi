@@ -222,29 +222,6 @@ void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_
     std::cout << std::left << std::setw(20) << divergence_str << std::endl;
 }
 
-void print_income_header() {
-    std::cout << std::left 
-              << std::setw(11) << "Date"        << " | "
-              << std::setw(9)  << "Buy-Dn"      << " | "
-              << std::setw(9)  << "Buy-Kp"      << " | "
-              << std::setw(9)  << "Buy-Up"      << " | "
-              << std::setw(9)  << "Sale-Dn"     << " | "
-              << std::setw(9)  << "Sale-Kp"     << " | "
-              << std::setw(9)  << "Sale-Up"     << " | "
-              << std::setw(9)  << "Mid-Dn"      << " | "
-              << std::setw(9)  << "Mid-Kp"      << " | "
-              << std::setw(9)  << "Mid-Up"      << " | "
-              << std::setw(9)  << "Total"       << " | "
-              << std::setw(9)  << "Pre_CLo"       << " | "
-              << std::setw(9)  << "Start_CH"  << " | " 
-               << std::setw(9)  << "Bs   "       << " | "
-              << std::setw(16)  << "Keep "       << " | "
-              << std::setw(12)  << "Chang"       << " | "
-              << std::setw(9)  << "direction"       << " | "
-              << std::endl;
-    std::cout << std::string(196, '-') << std::endl; // 分割线
-}
-
 std::string are_signs_same(double a, double b) {
     if  (std::signbit(a) == std::signbit(b)){
         return "SAME";
@@ -449,7 +426,7 @@ int main(int argc, char* argv[]) {
 
     int opt;
     bool show_head = false;
-    bool show_income = false;
+    bool show_price_classfy = false;
     bool show_all = false;
     bool show_classfy = false;
     bool show_income_ratio = false;
@@ -467,7 +444,7 @@ int main(int argc, char* argv[]) {
                 dir_path = optarg; // optarg 会自动指向 -p 后面的参数值
                 break;
             case 'i':
-                show_income = true;
+                show_price_classfy = true;
                 break;
             case 'r':
                 show_income_ratio = true;
@@ -492,7 +469,7 @@ int main(int argc, char* argv[]) {
         print_table_header();
     }
 
-    if (show_income){
+    if (show_price_classfy){
         print_income_header();
     }
     
@@ -537,8 +514,8 @@ int main(int argc, char* argv[]) {
             get_and_print_signals(out, prev_out);
         }
         
-        if (show_income){
-            // print_income(out);
+        if (show_price_classfy){
+            print_price_classfy(out);
         }
 
         if (show_classfy){
@@ -554,7 +531,7 @@ int main(int argc, char* argv[]) {
         print_table_header();
     }
 
-    if (show_income){
+    if (show_price_classfy){
         print_income_header();
     }
     

@@ -2,29 +2,36 @@
 #define COLLECT_STREAM_H
 
 #include <string>
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include "tick_types.h"
 
-struct range_price {
+// --- 基础结构 ---
+struct by_price {
     double up = 0.0;
     double down = 0.0;
     double keep = 0.0;
 };
 
-struct deal_range{
-    range_price super;
-    range_price big;
-    range_price middle;
-    range_price small; 
+// 规模下的行为组：先按规模分，内部再分买/卖/中性
+struct bs_action_group {
+    by_price buy;
+    by_price sale;
+    by_price neutral; 
 };
 
+// 顶层汇总：按规模区分
 struct stream_sum {
+    bs_action_group super;
+    bs_action_group big;
+    bs_action_group middle;
+    bs_action_group small;
+};
 
-    deal_range classfy_b;
-    deal_range classfy_s;
-    deal_range classfy_m;
+// 汇总用的辅助结构
+struct classfy_bs_action {
+    double buy = 0.0;
+    double sale = 0.0;
+    double middle = 0.0;
 };
 
 struct StreamRecord {
@@ -60,22 +67,16 @@ struct DailyMetrics {
     stream_sum stream_sum_info;
 };
 
-struct classfy_bs_action{
-    double buy = 0.0;
-    double sale = 0.0;
-    double middle = 0.0;
-};
-
 struct DayOutputMetrics {
     long long ticks_count = 0;  
     double pre_closing_price = 0.0;        
-    double closing_price = 0.0;       
+    double closing_price = 0.0;        
     double am_closing_price = 0.0;     
     double am_net_inflow_wan = 0.0;
     double pm_net_inflow_wan = 0.0;
     double net_inflow_wan = 0.0;
     double total_turnover_wan = 0.0;
-    double am_turnover_wan = 0.0;     
+    double am_turnover_wan = 0.0;      
     double am_turnover_ratio = 0.0;
     double total_vol_wan = 0.0;
     double am_vol_wan = 0.0;
@@ -100,17 +101,23 @@ struct DayOutputMetrics {
     classfy_bs_action deal_big;
     classfy_bs_action deal_middle;
     classfy_bs_action deal_small;
-
     classfy_bs_action deal_total;
+
+    by_price price_deal_super;
+    by_price price_deal_big;
+    by_price price_deal_middle;
+    by_price price_deal_small;
+    by_price price_deal_total;
+
     
 };
 
-
-void collect_classfy_action(deal_range& deal, double trade, double gap);
-void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
-                               TickRecord& record, TickRecord& pre_record);
-
+// --- 函数声明 ---
+void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
+void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
+void print_classfy(DayOutputMetrics& out);
+void print_price_classfy(DayOutputMetrics& out);
+void print_income_header();
 
-void print_classfy( DayOutputMetrics& out);
 #endif // COLLECT_STREAM_H
