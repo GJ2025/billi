@@ -11,9 +11,9 @@
 #include <cstdlib>   
 #include <unistd.h> // 这是关键头文件
 #include "tick_types.h"
+#include "collect_stream.h"
 
 namespace fs = std::filesystem;
-
 
 void print_table_header() {
     std::cout << std::left << std::setw(12) << "Date" << " | "
@@ -40,8 +40,6 @@ void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_
 
     }
 
-   
-
     std::cout << std::left  << std::setw(12) << out.date_str << " | "
               << std::right << std::fixed << std::setprecision(2)
               << std::setw(12) << out.head_data.pre_924.price << " | "
@@ -60,8 +58,6 @@ bool is_loading_data(const std::string& str) {
     return std::isdigit(static_cast<unsigned char>(str[0]));
 }
 
-
-
 bool is_am_time(const tickTime& t) {
     if (t.hour< 12){
         return true;
@@ -77,65 +73,6 @@ bool after_15(const tickTime& t) {
         return false;
     }
 }
-
-void collect_price_action(buy_action& sale, double trade, double gap){
-    if (gap < 0.0){
-        sale.down += trade;
-    }else if (gap == 0.0){
-        sale.keep += trade;
-    }else{
-        sale.up += trade;
-    }
-
-
-    return;
-}
-
-void collect_classfy_action(classfy_action& deal, double trade, double gap){
-
-    if (trade > 500000){
-        collect_price_action(deal.super, trade, gap);
-    }else if (trade > 200000){
-        collect_price_action(deal.big, trade, gap);
-    }else if (trade > 50000){
-        collect_price_action(deal.middle, trade, gap);
-    }else{
-        collect_price_action(deal.small, trade, gap);
-    }
-
-    return;
-}
-
-
-
-void get_stream_sum(struct stream_sum& sum, StreamRecord& stream) {
-
-    if (stream.records.empty()) return; 
-
-    // 遍历该 stream 中所有的 tick 记录，累加它们的成交额
-    double total_stream_trade = 0.0;
-    for (const auto& r : stream.records) {
-        total_stream_trade += (r.volume * r.price * 100.0);
-    }
-
-    // 使用流中第一条记录的 bs_type 作为该流的买卖属性
-    // (通常在逻辑上，合并的 stream 其 bs_type 是一致的)
-    
-    const std::string& bs_type = stream.records[0].bs_type;
-
-    if (bs_type == "S") {
-        collect_price_action(sum.sale, total_stream_trade, stream.gap);
-        collect_classfy_action(sum.classfy_s, total_stream_trade,stream.gap);
-    } else if (bs_type == "B") {
-        collect_price_action(sum.buy, total_stream_trade, stream.gap);
-        collect_classfy_action(sum.classfy_b, total_stream_trade,stream.gap);
-    } else {
-        collect_price_action(sum.middle, total_stream_trade, stream.gap);
-        collect_classfy_action(sum.classfy_m, total_stream_trade,stream.gap);
-    }
-}
-
-
 
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
@@ -309,7 +246,6 @@ void print_income_header() {
 }
 
 std::string are_signs_same(double a, double b) {
-    // signbit 返回非零值表示符号位为 1 (负数)，返回 0 表示符号位为 0 (正数)
     if  (std::signbit(a) == std::signbit(b)){
         return "SAME";
     }else{
@@ -318,161 +254,15 @@ std::string are_signs_same(double a, double b) {
 }
 
 
-void print_income(const DayOutputMetrics& out, bool ratio) {
-
-    double all = out.sum_info.sale.down 
-                    + out.sum_info.sale.keep
-                    + out.sum_info.sale.up
-
-                    + out.sum_info.buy.down
-                    + out.sum_info.buy.keep
-                    + out.sum_info.buy.up
-
-                    + out.sum_info.middle.down
-                    + out.sum_info.middle.keep
-                    + out.sum_info.middle.up;
-
-    double keep_sub =   out.sum_info.buy.keep - out.sum_info.sale.keep;
-     double keep_add =   out.sum_info.buy.keep + out.sum_info.sale.keep;
-    double bs =  out.sum_info.buy.up
-                - out.sum_info.buy.down 
-                + out.sum_info.sale.up
-                - out.sum_info.sale.down;
-    
-    if (ratio){
-            std::cout << std::left << std::setw(11) << out.date_str << " | "
-              << std::fixed << std::setprecision(3)
-              << std::setw(9)  << out.sum_info.buy.down*1000/(out.sum_info.sale.down) << " | "
-              << std::setw(9)  << out.sum_info.buy.keep/all << " | " 
-              << std::setw(9)  << out.sum_info.buy.up/all << " | " 
-              << std::setw(9)  << out.sum_info.sale.down/all << " | "
-              << std::setw(9)  << out.sum_info.sale.keep/all << " | " 
-              << std::setw(9)  << out.sum_info.sale.up/out.sum_info.buy.up << " | " 
-              << std::setw(9)  << out.sum_info.middle.down/all << " | "
-              << std::setw(9)  << out.sum_info.middle.keep/all << " | " 
-              << std::setw(9)  << out.sum_info.middle.up/all << " | " 
-              << std::setw(9)  << all/all << " | " 
-            << std::setw(9)  << out.pre_closing_price << " | "   << std::showpos
-              << std::setw(9)  << out.start_change << " | "
-              << std::setw(16)  << bs/all << " | "
-              << std::setw(12)  << keep_sub/keep_add << " | "
-               << std::setw(9)  << out.pct_change << " | "
-               << are_signs_same(bs, out.pct_change) << " | "
-              << std::noshowpos<< std::endl;
-    }else{
-
-            std::cout << std::left << std::setw(11) << out.date_str << " | "
-              << std::fixed << std::setprecision(2)
-              << std::setw(9)  << out.sum_info.buy.down/10000 << " | "
-              << std::setw(9)  << out.sum_info.buy.keep/10000 << " | " 
-              << std::setw(9)  << out.sum_info.buy.up/10000 << " | " 
-              << std::setw(9)  << out.sum_info.sale.down/10000 << " | "
-              << std::setw(9)  << out.sum_info.sale.keep/10000 << " | " 
-              << std::setw(9)  << out.sum_info.sale.up/10000 << " | " 
-              << std::setw(9)  << out.sum_info.middle.down/10000 << " | "
-              << std::setw(9)  << out.sum_info.middle.keep/10000 << " | " 
-              << std::setw(9)  << out.sum_info.middle.up/10000 << " | " 
-              << std::setw(9)  << all/10000 << " | " 
-              << std::setw(9)  << out.pre_closing_price << " | " << std::showpos   
-              << std::setw(9)  << out.start_change << " | "
-              << std::setw(9)  << bs/10000 << " | " 
-              << std::setw(9)  << keep_sub/10000 << " | "
-              << std::setw(9)  << out.pct_change << " | "
-              << std::noshowpos 
-              << are_signs_same(bs, out.pct_change) << " | "
-              << std::endl;
-    }
-}
-
-
-double sum_action(buy_action& deal){
-    return deal.down+deal.keep+deal.up;
-}
-
-void deal_classfy(DayOutputMetrics& out) {
-
-
-
-    out.deal_super.buy = sum_action(out.sum_info.classfy_b.super);
-    out.deal_super.sale = sum_action(out.sum_info.classfy_s.super);
-    out.deal_super.middle = sum_action(out.sum_info.classfy_m.super);
-
-    out.deal_big.buy = sum_action(out.sum_info.classfy_b.big);
-    out.deal_big.sale = sum_action(out.sum_info.classfy_s.big);
-    out.deal_big.middle = sum_action(out.sum_info.classfy_m.big);
-
-    out.deal_middle.buy = sum_action(out.sum_info.classfy_b.middle);
-    out.deal_middle.sale = sum_action(out.sum_info.classfy_s.middle);
-    out.deal_middle.middle = sum_action(out.sum_info.classfy_m.middle);
-
-    out.deal_small.buy = sum_action(out.sum_info.classfy_b.small);
-    out.deal_small.sale = sum_action(out.sum_info.classfy_s.small);
-    out.deal_small.middle = sum_action(out.sum_info.classfy_m.small);
-
-    out.deal_total.buy = out.deal_super.buy +  out.deal_big.buy + out.deal_middle.buy + out.deal_small.buy;
-    out.deal_total.sale = out.deal_super.sale +  out.deal_big.sale + out.deal_middle.sale + out.deal_small.sale;
-    out.deal_total.middle = out.deal_super.middle +  out.deal_big.middle + out.deal_middle.middle + out.deal_small.middle;
-
-    return;
-            
-}
-
-
-void print_classfy( DayOutputMetrics& out) {
-
-    double jing_super = out.deal_super.buy - out.deal_super.sale;
-    double jing_big = out.deal_big.buy - out.deal_big.sale;
-    double jing_middle = out.deal_middle.buy - out.deal_middle.sale;
-    double jing_small = out.deal_small.buy - out.deal_small.sale;
-    double jing_total = out.deal_total.buy - out.deal_total.sale;
-
-    std::cout << std::left << std::setw(11) << out.date_str << " | "
-                << std::fixed << std::setprecision(2)
-                << std::setw(12)  << out.deal_super.buy/10000 << " | "
-                << std::setw(9)  << out.deal_super.sale/10000 << " | "
-
-                << std::setw(12)  << out.deal_big.buy/10000 << " | "
-                << std::setw(9)  << out.deal_big.sale/10000 << " | "
-
-                << std::setw(9)  << out.deal_middle.buy/10000 << " | "
-                << std::setw(9)  << out.deal_middle.sale/10000 << " | "
-
-                << std::setw(9)  << out.deal_small.buy/10000 << " | "
-                << std::setw(9)  << out.deal_small.sale/10000 << " | "
-
-                << std::setw(9)  << out.deal_total.buy/10000 << " | "
-                << std::setw(9)  << out.deal_total.sale/10000 << " | "
-                 << std::setw(12)  << (out.deal_total.buy+out.deal_total.sale+out.deal_total.middle)/10000 << " | "  
-                 << std::setw(12)  << out.total_vol_wan << " | " 
-
-                << std::showpos
-                << std::setw(9)  << jing_super/10000 << " | "
-                << std::setw(9)  << jing_big/10000 << " | "
-                << std::setw(9)  << jing_middle/10000 << " | "
-                << std::setw(9)  << jing_small/10000 << " | "
-                << std::setw(9)  << jing_total/10000 << " | "
-                << std::noshowpos
-
-                << std::setw(5)  << out.pre_closing_price << " | " 
-                << std::setw(9)  << std::showpos << out.start_change << " | " << std::noshowpos
-                << std::setw(9)  << std::showpos << out.pct_change << " | "  << std::noshowpos
-                << std::setw(5)  << out.closing_price << " | " 
-                << std::endl;
-
-}
-
-
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     std::vector<std::string> signals;
 
-    // 1. 价格与流入背离
     if (out.pct_change > 0 && out.net_inflow_wan < 0) {
         signals.push_back("[UP_OUT]");
     } else if (out.pct_change < 0 && out.net_inflow_wan > 0) {
         signals.push_back("[DN_IN]");
     }
 
-    // 2. 均价与流入背离
     if (prev_out.avg_price > 0.0) {
         if (out.avg_price > prev_out.avg_price && out.net_inflow_wan < 0) {
             signals.push_back("[AVUP_OUT]");
@@ -481,7 +271,6 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
         }
     }
 
-    // 3. 结果合并
     if (signals.empty()) {
         return "      -      ";
     }
@@ -527,7 +316,6 @@ void calculate_head_tick_changes(HeadTickData& head_data) {
     }
     
     if (!head_data.pre_924.time.empty()) {
-        // 【已修正】这里赋值给了 last_2_924_change
         head_data.ratio_change_pre_924 = calc_pct(head_data.v_925.price, head_data.pre_924.price);
     }
 }
@@ -547,90 +335,6 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
     }
 }
 
-bool record_change(TickRecord this_record,TickRecord pre_record){
-
-    if (this_record.bs_type != pre_record.bs_type){
-        return true;
-    }
-
-    if (this_record.bs_type == "S"){
-
-        if (this_record.price <= pre_record.price){
-            return false;
-        }else{
-            return true;
-        }
-
-    }else if (this_record.bs_type == "B"){
-
-        if (this_record.price >= pre_record.price){
-            return false;
-        }else{
-            return true;
-        }
-
-    }else{
-        return true;
-    }
-
-
-
-    if (pre_record.price != this_record.price || pre_record.bs_type != this_record.bs_type){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-bool last_record(TickRecord this_record){
-
-    if (this_record.time == "15:00"){
-        return true;
-    }else{
-        return false;
-    }
-
-}
-
-bool first_record(TickRecord this_record){
-
-    if (this_record.time == "09:25"){
-        return true;
-    }else{
-        return false;
-    }
-
-}
-
-
-void stream_new(StreamRecord& stream, TickRecord record, double pre_price){
-    stream.records.clear();
-    stream.records.push_back(record);
-    stream.gap = record.price - pre_price;
-}
-
-void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
-                               TickRecord& record, TickRecord& pre_record) {
-    if (first_record(record)) {
-        pre_record = record;
-        metrics.first_record = record;
-        stream_new(stream, record, record.price);
-    }
-
-    if (record_change(record, pre_record)) {
-        get_stream_sum(metrics.sum_info, stream);
-        stream_new(stream, record, pre_record.price);
-    } else {
-        if (!first_record(record)) {
-            stream.records.push_back(record);
-        }
-    }
-
-    if (last_record(record)) {
-        metrics.last_record = record;
-        get_stream_sum(metrics.sum_info, stream);
-    }
-}
 
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
@@ -708,7 +412,6 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     out.total_turnover_wan = metrics.total_turnover / 10000.0;
     out.am_turnover_wan = metrics.am_turnover / 10000.0; 
     
-    // 计算上午成交额在全天成交额中的占比
     if (metrics.total_turnover > 0.0) {
         out.am_turnover_ratio = (metrics.am_turnover / metrics.total_turnover) * 100.0;
     } else {
@@ -734,7 +437,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
     out.head_data = metrics.head_data;
-    out.sum_info = metrics.sum_info;
+    out.stream_sum_info = metrics.stream_sum_info;
     out.first_record = metrics.first_record;
     out.last_record = metrics.last_record;
 
@@ -835,13 +538,12 @@ int main(int argc, char* argv[]) {
         }
         
         if (show_income){
-            print_income(out,show_income_ratio);
+            // print_income(out);
         }
 
         if (show_classfy){
             print_classfy(out);
         }
-
 
         if (out.ticks_count > 0) {
             prev_out = out;
