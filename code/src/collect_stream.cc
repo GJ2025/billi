@@ -192,16 +192,17 @@ void print_merge( DayOutputMetrics& out) {
     std::cout << std::left << std::setw(11) << out.date_str << " | "
                 << std::fixed << std::setprecision(2)
 
+                << "buy "
                 << std::setw(12)  << out.deal_total.buy/WAN << " | "
                 << std::setw(12)  << out.deal_total.sale/WAN << " | "
                 << std::setw(12)  << out.deal_total.middle/WAN << " | "
-                << std::setw(12)  << std::showpos <<(out.deal_total.buy - out.deal_total.sale)/WAN << " | " << std::noshowpos
-
-
-                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
+                << "up "
                 << std::setw(12)  << out.price_deal_total.up/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
                 << std::setw(12)  << out.price_deal_total.keep/WAN << " | "
-                << std::setw(12)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
+
+                << std::setw(16)  << std::showpos <<(out.deal_total.buy - out.deal_total.sale)/WAN << " | " << std::noshowpos
+                << std::setw(16)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
 
   
                 << std::setw(12)  << (out.price_deal_total.down+out.price_deal_total.up+out.price_deal_total.keep)/WAN << " | "  
