@@ -113,6 +113,7 @@ void print_will( DayOutputMetrics& out) {
 
     std::cout << std::left << std::setw(11) << out.date_str << " | "
                 << std::fixed << std::setprecision(2)
+                << "buy "
                 << std::setw(12)  << out.deal_super.buy/WAN << " | "
                 << std::setw(9)  << out.deal_super.sale/WAN << " | "
                 << std::showpos << std::setw(9)  << jing_super/WAN  << std::noshowpos << " | "
@@ -149,30 +150,31 @@ void print_price( DayOutputMetrics& out) {
 
     std::cout << std::left << std::setw(11) << out.date_str << " | "
                 << std::fixed << std::setprecision(2)
-                << std::setw(9)  << out.price_deal_super.down/WAN << " | "
+                << "up "
                 << std::setw(9)  << out.price_deal_super.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_super.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_super.keep/WAN << " | "
                 << std::setw(9)  << std::showpos <<(out.price_deal_super.up - out.price_deal_super.down)/WAN << " | " << std::noshowpos
 
-                << std::setw(9)  << out.price_deal_big.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_big.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_big.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_big.keep/WAN << " | "
-                 << std::setw(9)  << std::showpos <<(out.price_deal_big.up - out.price_deal_big.down)/WAN << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos <<(out.price_deal_big.up - out.price_deal_big.down)/WAN << " | " << std::noshowpos
 
-                << std::setw(9)  << out.price_deal_middle.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_middle.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_middle.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_middle.keep/WAN << " | "
-                 << std::setw(9)  << std::showpos <<(out.price_deal_middle.up - out.price_deal_middle.down)/WAN << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos <<(out.price_deal_middle.up - out.price_deal_middle.down)/WAN << " | " << std::noshowpos
 
-                << std::setw(9)  << out.price_deal_small.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_small.up/WAN << " | "
+                << std::setw(9)  << out.price_deal_small.down/WAN << " | "
                 << std::setw(9)  << out.price_deal_small.keep/WAN << " | "
-                 << std::setw(9)  << std::showpos <<(out.price_deal_small.up - out.price_deal_small.down)/WAN << " | " << std::noshowpos
+                << std::setw(9)  << std::showpos <<(out.price_deal_small.up - out.price_deal_small.down)/WAN << " | " << std::noshowpos
 
-                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
                 << std::setw(12)  << out.price_deal_total.up/WAN << " | "
+                << std::setw(12)  << out.price_deal_total.down/WAN << " | "
                 << std::setw(12)  << out.price_deal_total.keep/WAN << " | "
-                 << std::setw(12)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
+                << std::setw(12)  << std::showpos <<(out.price_deal_total.up - out.price_deal_total.down)/WAN << " | " << std::noshowpos
 
   
                 << std::setw(12)  << (out.price_deal_total.down+out.price_deal_total.up+out.price_deal_total.keep)/WAN << " | "  

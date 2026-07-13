@@ -179,6 +179,33 @@ void print_all() {
     std::cout << "----------------" << std::endl;
 }
 
+void show_will_header() {
+    // 总长度再次扩展 14 字符以兼容新的占比列
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl; 
+    std::cout << "SHOW WILL HEADER================="<< std::endl;
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl;
+}
+
+void show_price_header() {
+    // 总长度再次扩展 14 字符以兼容新的占比列
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl; 
+    std::cout << "SHOW PRICE HEADER================="<< std::endl;
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl;
+}
+
+void show_merge_header() {
+    // 总长度再次扩展 14 字符以兼容新的占比列
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl; 
+    std::cout << "SHOW MERGE HEADER================="<< std::endl;
+    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    std::cout << "----------------" << std::endl;
+}
+
 std::string format_inflow(double value) {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2) 
@@ -422,9 +449,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
 }
 
 
-int main(int argc, char* argv[]) {
-
-    int opt;
+struct ProgramOptions {
     bool show_head = false;
     bool show_price = false;
     bool show_all = false;
@@ -433,125 +458,96 @@ int main(int argc, char* argv[]) {
     bool show_super = false;
     bool show_merge = false;
     std::string dir_path;
-    std::vector<std::string> files_to_process;
+};
 
+
+void print_headers(const ProgramOptions& opts) {
+    if (opts.show_head)  print_table_header();
+    if (opts.show_all)   print_all();
+    if (opts.show_will)   show_will_header();
+    if (opts.show_price)   show_price_header();
+    if (opts.show_merge)   show_merge_header();
+    if (opts.show_super) print_super_price_header();
+
+}
+
+void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+        if (opts.show_head)  print_header_info(out, prev_out);
+        if (opts.show_all)   get_and_print_signals(out, prev_out);
+        if (opts.show_will)  print_will(out);
+        if (opts.show_price) print_price(out);
+        if (opts.show_merge) print_merge(out);
+        if (opts.show_super) print_super_price(out);
+}
+
+int main(int argc, char* argv[]) {
+    ProgramOptions opts;
+    std::vector<std::string> files_to_process;
+    int opt;
+
+    // 解析命令行参数
     while ((opt = getopt(argc, argv, "hd:parwsm")) != -1) {
         switch (opt) {
-            case 'h':
-                show_head = true;
-                break;
-            case 'd':
-                dir_path = optarg; // optarg 会自动指向 -p 后面的参数值
-                break;
-            case 'r':
-                show_income_ratio = true;
-                break;
-            case 'a':
-                show_all = true;
-                break;
-            case 'w':
-                show_will = true;
-                break;
-            case 'p':
-                show_price = true;
-                break;
-            case 'm':
-                show_merge = true;
-                break;
-            case 's':
-                show_super = true;
-                break;                              
+            case 'h': opts.show_head = true; break;
+            case 'd': opts.dir_path = optarg; break;
+            case 'r': opts.show_income_ratio = true; break;
+            case 'a': opts.show_all = true; break;
+            case 'w': opts.show_will = true; break;
+            case 'p': opts.show_price = true; break;
+            case 'm': opts.show_merge = true; break;
+            case 's': opts.show_super = true; break;
             default:
-                std::cerr << "Usage: " << argv[0] << " [-h] [-p path]" << std::endl;
+                std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
                 return 1;
         }
     }
 
-    int init_status = initialize_and_get_files(dir_path, files_to_process);
-    if (init_status > 0)  return init_status; 
-    if (init_status < 0)  return 0;           
+    // 初始化文件列表
+    int init_status = initialize_and_get_files(opts.dir_path, files_to_process);
+    if (init_status > 0) return init_status;
+    if (init_status < 0) return 0;
 
-    if (show_head){
-        print_table_header();
-    }
+    // 前置表头输出
+    print_headers(opts);
 
-    if (show_super){
-        print_super_price_header();
-    }
-    
-    if (show_all){
-        print_all();
-    }
-
-    DayOutputMetrics prev_out; 
+    DayOutputMetrics prev_out;
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
+    // 处理文件
     for (const auto& file : files_to_process) {
         if (!check_company_id_match(file, target_company_id)) {
             continue;
         }
 
         DayOutputMetrics out;
-        if (!process_single_file(file,  out)) {
-            continue; 
+        if (!process_single_file(file, out)) {
+            continue;
         }
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
         if (out_is_full(prev_out)) {
             out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
             out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-            out.start_change = ((out.first_record.price - prev_out.closing_price)/prev_out.closing_price) *100;
+            out.start_change = ((out.first_record.price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
             out.pre_closing_price = prev_out.closing_price;
         }
 
         if (std::abs(out.pct_change) <= 1.0) {
             out.net_per_change = 0.0;
-        }else{
-            out.net_per_change = out.inflow_ratio/out.pct_change;
+        } else {
+            out.net_per_change = out.inflow_ratio / out.pct_change;
         }
 
         deal_classfy(out);
 
-        if (show_head){
-            print_header_info(out, prev_out);
-        }
-        
-        if (show_all){
-            get_and_print_signals(out, prev_out);
-        }
-        
-        if (show_will){
-            print_will(out);
-        }
-
-        if (show_price){
-            print_price(out);
-        }
-
-        if (show_merge){
-            print_merge(out);
-        }
-
-        if (show_super){
-            print_super_price(out);
-        }
+        print_bodys(opts, out, prev_out);
 
         if (out.ticks_count > 0) {
             prev_out = out;
         }
     }
 
-    if (show_head){
-        print_table_header();
-    }
-
-    if (show_super){
-        print_super_price_header();
-    }
-    
-    if (show_all){
-        print_all();
-    }
+    print_headers(opts);
 
     return 0;
 }
