@@ -116,7 +116,7 @@ struct DayOutputMetrics {
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
-void print_classfy(DayOutputMetrics& out);
+void print_will(DayOutputMetrics& out);
 void print_super_price(DayOutputMetrics& out);
 void print_super_price_header();
 void print_price( DayOutputMetrics& out);

@@ -103,7 +103,7 @@ void deal_classfy(DayOutputMetrics& out) {
     out.price_deal_total.keep = out.price_deal_super.keep + out.price_deal_big.keep + out.price_deal_middle.keep + out.price_deal_small.keep;
 }
 
-void print_classfy( DayOutputMetrics& out) {
+void print_will( DayOutputMetrics& out) {
 
     double jing_super = out.deal_super.buy - out.deal_super.sale;
     double jing_big = out.deal_big.buy - out.deal_big.sale;
