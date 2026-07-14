@@ -11,5 +11,7 @@ output="$s/${target}.txt"
 ./bin/parse_tick -d "$d/$target/" -p >> "$output"
 ./bin/parse_tick -d "$d/$target/" -m >> "$output"
 ./bin/parse_tick -d "$d/$target/" -s >> "$output"
+./bin/parse_tick -d "$d/$target/" -b >> "$output"
 
 echo "Done: $output"
+

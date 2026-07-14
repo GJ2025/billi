@@ -179,32 +179,15 @@ void print_all() {
     std::cout << "----------------" << std::endl;
 }
 
-void show_will_header() {
+void show_margin_header(const std::string& margin) {
     // 总长度再次扩展 14 字符以兼容新的占比列
     std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl; 
-    std::cout << "SHOW WILL HEADER================="<< std::endl;
+    std::cout << margin << "================="<< std::endl;
     std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl;
 }
 
-void show_price_header() {
-    // 总长度再次扩展 14 字符以兼容新的占比列
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl; 
-    std::cout << "SHOW PRICE HEADER================="<< std::endl;
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl;
-}
-
-void show_merge_header() {
-    // 总长度再次扩展 14 字符以兼容新的占比列
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl; 
-    std::cout << "SHOW MERGE HEADER================="<< std::endl;
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl;
-}
 
 std::string format_inflow(double value) {
     std::stringstream ss;
@@ -456,6 +439,7 @@ struct ProgramOptions {
     bool show_will = false;
     bool show_income_ratio = false;
     bool show_super = false;
+    bool show_big = false;
     bool show_merge = false;
     std::string dir_path;
 };
@@ -464,10 +448,18 @@ struct ProgramOptions {
 void print_headers(const ProgramOptions& opts) {
     if (opts.show_head)  print_table_header();
     if (opts.show_all)   print_all();
-    if (opts.show_will)   show_will_header();
-    if (opts.show_price)   show_price_header();
-    if (opts.show_merge)   show_merge_header();
-    if (opts.show_super) print_super_price_header();
+    if (opts.show_will)   show_margin_header("SHOW WILL WILL WILL");
+    if (opts.show_price)   show_margin_header("SHOW PRICE PRICE PRICE ");
+    if (opts.show_merge)   show_margin_header("SHOW MERGE MERGE MERGE ");
+    if (opts.show_super ){
+        show_margin_header("SHOW SLIM SUPER SUPER");
+        print_will_price_header();
+    }
+    
+    if (opts.show_big){
+        show_margin_header("SHOW SLIM BIG BIG");
+        print_will_price_header();
+    } 
 
 }
 
@@ -477,7 +469,8 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         if (opts.show_will)  print_will(out);
         if (opts.show_price) print_price(out);
         if (opts.show_merge) print_merge(out);
-        if (opts.show_super) print_super_price(out);
+        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super);
+        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big);
 }
 
 int main(int argc, char* argv[]) {
@@ -486,7 +479,7 @@ int main(int argc, char* argv[]) {
     int opt;
 
     // 解析命令行参数
-    while ((opt = getopt(argc, argv, "hd:parwsm")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsmb")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -496,6 +489,7 @@ int main(int argc, char* argv[]) {
             case 'p': opts.show_price = true; break;
             case 'm': opts.show_merge = true; break;
             case 's': opts.show_super = true; break;
+            case 'b': opts.show_big = true; break;
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
                 return 1;
