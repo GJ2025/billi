@@ -9,49 +9,14 @@
 #include <algorithm>  
 #include <cmath>       
 #include <cstdlib>   
-#include <unistd.h> // 这是关键头文件
+#include <unistd.h> 
+#include "common.h"
 #include "tick_types.h"
 #include "collect_stream.h"
+#include "tick_print.h"
 
 namespace fs = std::filesystem;
 
-void print_table_header() {
-    std::cout << std::left << std::setw(12) << "Date" << " | "
-              << std::right 
-              << std::setw(12) << "Pre924" << " | "
-              << std::setw(10) << "924"    << " | "
-              << std::setw(10) << "925"    << " | "
-              << std::setw(12) << "ChgPreDay" << " | "
-              << std::setw(12) << "ChgPre924" << " | "
-               << std::setw(6) << "b/s" << " | "
-              << std::setw(12) << "Chg924"    << " | "
-              << std::setw(12) << "PctChg" 
-              << std::endl;
-    // 打印分割线，让视觉效果更专业
-    std::cout << std::string(88, '-') << std::endl;
-}
-
-void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out) {
-    double price_change_pct = 0.0;
-    double ratio_change_pre_day = 0.0;
-    if (pre_out.closing_price != 0.0) {
-        price_change_pct = ((out.closing_price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
-        ratio_change_pre_day = ((out.head_data.v_925.price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
-
-    }
-
-    std::cout << std::left  << std::setw(12) << out.date_str << " | "
-              << std::right << std::fixed << std::setprecision(2)
-              << std::setw(12) << out.head_data.pre_924.price << " | "
-              << std::setw(10) << out.head_data.v_924.price   << " | "
-              << std::setw(10) << out.head_data.v_925.price   << " | "
-              << std::setw(11) << out.head_data.ratio_change_pre_924 << "% | "
-              << std::setw(11) << ratio_change_pre_day << "% | "
-              << std::setw(6) << out.head_data.v_925.bs_type << " | "
-              << std::setw(11) << out.head_data.ratio_change_924 << "% | "
-              << std::setw(11) << price_change_pct << "%"
-              << std::endl;
-}
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -150,88 +115,6 @@ int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& fi
     return 0;
 }
 
-void print_all() {
-    // 总长度再次扩展 14 字符以兼容新的占比列
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl; 
-    std::cout << std::left  << std::setw(11) << "Date" << " | "
-              << std::right << std::setw(5)  << "Ticks" << " | "
-              << std::setw(9)  << "Vol" << " | "               
-              << std::setw(9)  << "AM_Vol" << " | "
-              << std::setw(11) << "AM_Turnover" << " | "  
-              << std::setw(11) << "AM_Turn%" << " | " // 新增表头：上午成交额占比
-              << std::setw(10) << "Vol/Ticks" << " | "         
-              << std::setw(11) << "Turnover" << " | "
-              << std::setw(8)  << "AM_Close" << " | "  
-              << std::setw(9)  << "Avg_Price" << " | " 
-              << std::setw(7)  << "Close" << " | "  
-              << std::setw(8)  << "AM_Chan%" << " | "               
-              << std::setw(8)  << "Change%" << " | "     
-              << std::setw(10) << "Net_In" << " | "     
-              << std::setw(10) << "AM_Net_In" << " | "
-              << std::setw(10) << "PM_Net_In" << " | " 
-              << std::setw(9) << "Net_In%" << " | " 
-              << std::setw(9) << "Net/change" << " | " 
-              << std::setw(11) << "Hist_Cum" << " | "   
-              << std::left  << std::setw(20) << "Signal" 
-              << std::endl;
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl;
-}
-
-void show_margin_header(const std::string& margin) {
-    // 总长度再次扩展 14 字符以兼容新的占比列
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl; 
-    std::cout << margin << "================="<< std::endl;
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl;
-}
-
-
-std::string format_inflow(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) 
-       << value;
-    return ss.str();
-}
-
-std::string format_percent_value(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2)
-        << value
-        << "%";
-    return ss.str();
-}
-
-void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str) {
-      
-    std::cout << std::left << std::setw(11) << out.date_str << " | "
-              << std::right << std::setw(5) << out.ticks_count << " | "
-              << std::fixed << std::setprecision(2)
-              << std::setw(9)  << out.total_vol_wan << " | " 
-              << std::setw(9)  << out.am_vol_wan << " | "
-              << std::setw(11) << out.am_turnover_wan << " | " 
-              << std::setw(11) << format_percent_value(out.am_turnover_ratio) << " | " // 打印新字段：上午成交额占比
-              << std::setw(10) << std::fixed << std::setprecision(1) << out.avg_vol_per_tick << " | " 
-              << std::fixed << std::setprecision(2)
-              << std::setw(11) << out.total_turnover_wan << " | "
-              << std::setw(8)  << format_inflow(out.am_closing_price) << " | "
-              << std::setw(9)  << format_inflow(out.avg_price) << " | "; 
-              
-    std::cout << std::setw(7)  << format_inflow(out.closing_price)  << " | "
-              << std::setw(8)  << format_percent_value(out.am_pct_change)    << " | "
-              << std::setw(8)  << format_percent_value(out.pct_change)    << " | "
-              << std::setw(10) << format_inflow(out.net_inflow_wan) << " | "
-              << std::setw(10) << format_inflow(out.am_net_inflow_wan) << " | "
-              << std::setw(10) << format_inflow(out.pm_net_inflow_wan) << " | " 
-              << std::setw(9) << format_percent_value(out.inflow_ratio)  << " | "
-              << std::setw(9) << format_percent_value(out.net_per_change)  << " | "
-              << std::setw(11) << format_inflow(out.historical_total_inflow)   <<  " | ";
-    
-    std::cout << std::left << std::setw(20) << divergence_str << std::endl;
-}
-
 std::string are_signs_same(double a, double b) {
     if  (std::signbit(a) == std::signbit(b)){
         return "SAME";
@@ -270,16 +153,15 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     return result;
 }
 
-bool out_is_full(const DayOutputMetrics& out){
+bool is_filled_tick(const DayOutputMetrics& out){
     bool had_one = (out.ticks_count > 0 && out.closing_price > 0.0);
     return had_one;
 }
 
-void get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+std::string get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
 
     std::string divergence_str = get_divergence_string(out, prev_out); 
-
-    print_data_row(out, divergence_str);
+    return divergence_str;
 }
 
 
@@ -294,7 +176,10 @@ void update_head_tick_data(HeadTickData& head_data, const TickRecord& record) {
 
 void calculate_head_tick_changes(HeadTickData& head_data) {
     auto calc_pct = [](double target, double base) -> double {
-        if (base <= 0.0) return 0.0; // 防止除以零及负价格异常
+        if (base <= 0.0){
+            return 0.0;
+        }    
+        
         return ((target - base) / base) * 100.0;
     };
 
@@ -308,20 +193,17 @@ void calculate_head_tick_changes(HeadTickData& head_data) {
 }
 
 void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
-    // 1. 捕获关键节点数据
     if (metrics.head_data.v_925.time.empty()) {
         if (record.time.find("09:24") == 0 || record.time.find("09:25") == 0) {
             update_head_tick_data(metrics.head_data, record);
         }
     }
     
-    // 2. 触发计算（当 v_925 已获取且尚未计算过时）
     if (!metrics.head_data.v_925.time.empty() && !metrics.head_calculated) {
         calculate_head_tick_changes(metrics.head_data);
-        metrics.head_calculated = true; // 锁定，防止后续循环重复计算
+        metrics.head_calculated = true; 
     }
 }
-
 
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
@@ -392,29 +274,29 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     out.closing_price = metrics.closing_price;
     out.am_closing_price = metrics.am_closing_price;
 
-    out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / 10000.0;
-    out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / 10000.0; 
+    out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / WAN;
+    out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / WAN; 
     out.net_inflow_wan = out.am_net_inflow_wan + out.pm_net_inflow_wan;  
     
-    out.total_turnover_wan = metrics.total_turnover / 10000.0;
-    out.am_turnover_wan = metrics.am_turnover / 10000.0; 
+    out.total_turnover_wan = metrics.total_turnover / WAN;
+    out.am_turnover_wan = metrics.am_turnover / WAN; 
     
     if (metrics.total_turnover > 0.0) {
-        out.am_turnover_ratio = (metrics.am_turnover / metrics.total_turnover) * 100.0;
+        out.am_turnover_ratio = (metrics.am_turnover / metrics.total_turnover) * BAI;
     } else {
         out.am_turnover_ratio = 0.0;
     }
 
     long long total_vol = metrics.am_vol + metrics.pm_vol;
-    out.total_vol_wan = total_vol / 10000.0;  
-    out.am_vol_wan = metrics.am_vol / 10000.0;
+    out.total_vol_wan = total_vol / WAN;  
+    out.am_vol_wan = metrics.am_vol / WAN;
 
     if (out.total_vol_wan > 0.0) {
         out.avg_price = out.total_turnover_wan / out.total_vol_wan;
     }
 
     if (out.total_turnover_wan > 0.0) {
-        out.inflow_ratio = (out.net_inflow_wan / out.total_turnover_wan) * 100.0;
+        out.inflow_ratio = (out.net_inflow_wan / out.total_turnover_wan) * BAI;
     }
 
     out.avg_vol_per_tick = (out.total_vol_wan * 10000.0) / metrics.valid_records_count; 
@@ -431,54 +313,11 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     return true;
 }
 
-
-struct ProgramOptions {
-    bool show_head = false;
-    bool show_price = false;
-    bool show_all = false;
-    bool show_will = false;
-    bool show_income_ratio = false;
-    bool show_super = false;
-    bool show_big = false;
-    bool show_merge = false;
-    std::string dir_path;
-};
-
-
-void print_headers(const ProgramOptions& opts) {
-    if (opts.show_head)  print_table_header();
-    if (opts.show_all)   print_all();
-    if (opts.show_will)   show_margin_header("SHOW WILL WILL WILL");
-    if (opts.show_price)   show_margin_header("SHOW PRICE PRICE PRICE ");
-    if (opts.show_merge)   show_margin_header("SHOW MERGE MERGE MERGE ");
-    if (opts.show_super ){
-        show_margin_header("SHOW SLIM SUPER SUPER");
-        print_will_price_header();
-    }
-    
-    if (opts.show_big){
-        show_margin_header("SHOW SLIM BIG BIG");
-        print_will_price_header();
-    } 
-
-}
-
-void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
-        if (opts.show_head)  print_header_info(out, prev_out);
-        if (opts.show_all)   get_and_print_signals(out, prev_out);
-        if (opts.show_will)  print_will(out);
-        if (opts.show_price) print_price(out);
-        if (opts.show_merge) print_merge(out);
-        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super);
-        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big);
-}
-
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     std::vector<std::string> files_to_process;
     int opt;
 
-    // 解析命令行参数
     while ((opt = getopt(argc, argv, "hd:parwsmb")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
@@ -496,18 +335,16 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // 初始化文件列表
     int init_status = initialize_and_get_files(opts.dir_path, files_to_process);
     if (init_status > 0) return init_status;
     if (init_status < 0) return 0;
 
-    // 前置表头输出
     print_headers(opts);
 
     DayOutputMetrics prev_out;
+    std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
-    // 处理文件
     for (const auto& file : files_to_process) {
         if (!check_company_id_match(file, target_company_id)) {
             continue;
@@ -519,10 +356,10 @@ int main(int argc, char* argv[]) {
         }
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
-        if (out_is_full(prev_out)) {
-            out.pct_change = ((out.closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-            out.am_pct_change = ((out.am_closing_price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
-            out.start_change = ((out.first_record.price - prev_out.closing_price) / prev_out.closing_price) * 100.0;
+        if (is_filled_tick(prev_out)) {
+            out.pct_change =pct(out.closing_price, prev_out.closing_price);
+            out.am_pct_change = pct(out.am_closing_price, prev_out.closing_price);
+            out.start_change = pct(out.first_record.price, prev_out.closing_price);
             out.pre_closing_price = prev_out.closing_price;
         }
 
@@ -533,8 +370,9 @@ int main(int argc, char* argv[]) {
         }
 
         deal_classfy(out);
+        divergengce = get_and_print_signals(out, prev_out);
 
-        print_bodys(opts, out, prev_out);
+        print_bodys(opts, out, prev_out, divergengce);
 
         if (out.ticks_count > 0) {
             prev_out = out;

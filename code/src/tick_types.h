@@ -6,8 +6,6 @@
 #include <sstream>
 #include <vector>
 
-#define WAN 10000
-
 struct tickTime {
     int hour = 0;
     int minute = 0;
@@ -36,6 +34,18 @@ struct TickRecord {
         is.clear();
         return is;
     }
+};
+
+struct ProgramOptions {
+    bool show_head = false;
+    bool show_price = false;
+    bool show_all = false;
+    bool show_will = false;
+    bool show_income_ratio = false;
+    bool show_super = false;
+    bool show_big = false;
+    bool show_merge = false;
+    std::string dir_path;
 };
 
 
