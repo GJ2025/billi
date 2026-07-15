@@ -2,6 +2,7 @@
 #include "collect_stream.h"
 #include <iostream>
 #include <iomanip>
+#include "common.h"
 
 // --- 辅助逻辑 ---
 bool record_change(TickRecord this_record, TickRecord pre_record) {
@@ -38,9 +39,9 @@ void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
     double total_trade = 0.0;
     for (const auto& r : stream.records) total_trade += (r.volume * r.price * 100.0);
     
-    bs_action_group* group = (total_trade > 500000) ? &sum.super :
-                             (total_trade > 200000) ? &sum.big :
-                             (total_trade > 50000)  ? &sum.middle : &sum.small;
+    bs_action_group* group = (total_trade > 100 * WAN) ? &sum.super :
+                             (total_trade > 30 * WAN) ? &sum.big :
+                             (total_trade > 5 * WAN)  ? &sum.middle : &sum.small;
     
     collect_bs_action(*group, stream.records[0].bs_type, total_trade, stream.gap);
 }
