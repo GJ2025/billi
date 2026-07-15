@@ -14,6 +14,7 @@
 #include "tick_types.h"
 #include "collect_stream.h"
 #include "tick_print.h"
+#include "process_files.h"
 
 namespace fs = std::filesystem;
 
@@ -67,53 +68,6 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
     return true;
 }
 
-void run_preprocessing(const std::string& dir_path) {
-    std::cout << "======================= Pre-processing =======================" << std::endl;
-    
-    const char* c_env = std::getenv("c");
-    std::string script_dir = c_env ? c_env : "."; 
-    std::string script_path = (fs::path(script_dir) / "c.sh").string();
-
-    if (!fs::exists(script_path)) {
-        std::cerr << "Warning: Pre-processing script not found at: " << script_path  
-                  << "\nSkipping pre-processing stage..." << std::endl;
-    } else {
-        std::string shell_cmd = "sh " + script_path + " " + dir_path;
-        std::cout << "Executing: " << shell_cmd << std::endl;
-        
-        int ret = std::system(shell_cmd.c_str());
-        if (ret != 0) {
-            std::cerr << "Error: Pre-processing script exited with code " << ret << std::endl;
-        } else {
-            std::cout << "Pre-processing completed successfully.\n" << std::endl;
-        }
-    }
-}
-
-int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& files_to_process) {
-
-    run_preprocessing(dir_path);
-
-    if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
-        std::cerr << "Error: Invalid directory path: " << dir_path << std::endl;
-        return 1;
-    }
-
-    files_to_process.clear();
-    for (const auto& entry : fs::directory_iterator(dir_path)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".txt") {
-            files_to_process.push_back(entry.path().string());
-        }
-    }
-    std::sort(files_to_process.begin(), files_to_process.end());
-
-    if (files_to_process.empty()) {
-        std::cout << "Info: No valid .txt data files found." << std::endl;
-        return -1; 
-    }
-
-    return 0;
-}
 
 std::string are_signs_same(double a, double b) {
     if  (std::signbit(a) == std::signbit(b)){
@@ -122,7 +76,6 @@ std::string are_signs_same(double a, double b) {
         return "DIFF";
     }
 }
-
 
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     std::vector<std::string> signals;
@@ -163,7 +116,6 @@ std::string get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics&
     std::string divergence_str = get_divergence_string(out, prev_out); 
     return divergence_str;
 }
-
 
 void update_head_tick_data(HeadTickData& head_data, const TickRecord& record) {
     if (record.time.find("09:24") == 0) {
