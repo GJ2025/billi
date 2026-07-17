@@ -53,30 +53,24 @@ void print_price( DayOutputMetrics& out) {
                 << "up "
                 << std::setw(9)  << out.deal_super_price.up/WAN << " | "
                 << std::setw(9)  << out.deal_super_price.down/WAN << " | "
-                // << std::setw(9)  << out.deal_super_price.keep/WAN << " | "
                 << std::setw(9)  << std::showpos <<(out.deal_super_price.up - out.deal_super_price.down)/WAN << " | " << std::noshowpos
 
                 << std::setw(9)  << out.deal_big_price.up/WAN << " | "
                 << std::setw(9)  << out.deal_big_price.down/WAN << " | "
-                // << std::setw(9)  << out.deal_big_price.keep/WAN << " | "
                 << std::setw(9)  << std::showpos <<(out.deal_big_price.up - out.deal_big_price.down)/WAN << " | " << std::noshowpos
 
                 << std::setw(9)  << out.deal_middle_price.up/WAN << " | "
                 << std::setw(9)  << out.deal_middle_price.down/WAN << " | "
-                // << std::setw(9)  << out.deal_middle_price.keep/WAN << " | "
                 << std::setw(9)  << std::showpos <<(out.deal_middle_price.up - out.deal_middle_price.down)/WAN << " | " << std::noshowpos
 
                 << std::setw(9)  << out.deal_small_price.up/WAN << " | "
                 << std::setw(9)  << out.deal_small_price.down/WAN << " | "
-                // << std::setw(9)  << out.deal_small_price.keep/WAN << " | "
                 << std::setw(9)  << std::showpos <<(out.deal_small_price.up - out.deal_small_price.down)/WAN << " | " << std::noshowpos
 
                 << std::setw(12)  << out.deal_total_price.up/WAN << " | "
                 << std::setw(12)  << out.deal_total_price.down/WAN << " | "
-                // << std::setw(12)  << out.deal_total_price.keep/WAN << " | "
                 << std::setw(12)  << std::showpos <<(out.deal_total_price.up - out.deal_total_price.down)/WAN << " | " << std::noshowpos
 
-  
                 << std::setw(12)  << (out.deal_total_price.down+out.deal_total_price.up+out.deal_total_price.keep)/WAN << " | "  
                 << std::setw(12)  << out.total_vol_wan << " | " 
 
