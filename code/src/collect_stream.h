@@ -6,7 +6,7 @@
 #include "tick_types.h"
 
 // --- 基础结构 ---
-struct by_price {
+struct deal_price {
     double up = 0.0;
     double down = 0.0;
     double keep = 0.0;
@@ -14,9 +14,9 @@ struct by_price {
 
 // 规模下的行为组：先按规模分，内部再分买/卖/中性
 struct bs_action_group {
-    by_price buy;
-    by_price sale;
-    by_price neutral; 
+    deal_price buy;
+    deal_price sale;
+    deal_price neutral; 
 };
 
 // 顶层汇总：按规模区分
@@ -28,10 +28,10 @@ struct stream_sum {
 };
 
 // 汇总用的辅助结构
-struct classfy_bs_action {
+struct deal_bsn {
     double buy = 0.0;
     double sale = 0.0;
-    double middle = 0.0;
+    double neutral = 0.0;
 };
 
 struct StreamRecord {
@@ -97,19 +97,17 @@ struct DayOutputMetrics {
     HeadTickData head_data;
     stream_sum stream_sum_info;
 
-    classfy_bs_action deal_super;
-    classfy_bs_action deal_big;
-    classfy_bs_action deal_middle;
-    classfy_bs_action deal_small;
-    classfy_bs_action deal_total;
+    deal_bsn deal_super_bsn;
+    deal_bsn deal_big_bsn;
+    deal_bsn deal_middle_bsn;
+    deal_bsn deal_small_bsn;
+    deal_bsn deal_total_bsn;
 
-    by_price price_deal_super;
-    by_price price_deal_big;
-    by_price price_deal_middle;
-    by_price price_deal_small;
-    by_price price_deal_total;
-
-    
+    deal_price deal_super_price;
+    deal_price deal_big_price;
+    deal_price deal_middle_price;
+    deal_price deal_small_price;
+    deal_price deal_total_price;    
 };
 
 // --- 函数声明 ---

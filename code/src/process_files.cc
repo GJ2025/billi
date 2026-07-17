@@ -18,7 +18,6 @@
 namespace fs = std::filesystem;
 
 void run_preprocessing(const std::string& dir_path) {
-    std::cout << "======================= Pre-processing =======================" << std::endl;
     
     const char* c_env = std::getenv("c");
     std::string script_dir = c_env ? c_env : "."; 
@@ -34,9 +33,7 @@ void run_preprocessing(const std::string& dir_path) {
         int ret = std::system(shell_cmd.c_str());
         if (ret != 0) {
             std::cerr << "Error: Pre-processing script exited with code " << ret << std::endl;
-        } else {
-            std::cout << "Pre-processing completed successfully.\n" << std::endl;
-        }
+        } 
     }
 }
 

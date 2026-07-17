@@ -159,10 +159,36 @@ void print_headers(const ProgramOptions& opts) {
     }
     
     if (opts.show_big){
+        show_margin_header("SHOW SLIM BIG BIG");
+        print_will_price_header();
+    } 
+}
+
+void print_tailer(const ProgramOptions& opts) {
+    if (opts.show_head){
+        print_table_header();
+    }  
+    if (opts.show_all){
+        print_all();
+    }   
+    if (opts.show_will){
+        show_margin_header("SHOW WILL WILL WILL");
+    }   
+    if (opts.show_price){
+        show_margin_header("SHOW PRICE PRICE PRICE ");
+    }   
+    if (opts.show_merge){
+        show_margin_header("SHOW MERGE MERGE MERGE ");
+    }   
+    if (opts.show_super ){
+        print_will_price_header();
+        show_margin_header("SHOW SLIM SUPER SUPER");
+    }
+    
+    if (opts.show_big){
         print_will_price_header();
         show_margin_header("SHOW SLIM BIG BIG");
     } 
-
 }
 
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {

@@ -9,6 +9,7 @@ void print_all();
 void show_margin_header(const std::string& margin);
 void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str);
 void print_headers(const ProgramOptions& opts);
+void print_tailer(const ProgramOptions& opts);
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence) ;
 
 
