@@ -5,21 +5,18 @@
 #include <vector>
 #include "tick_types.h"
 
-// --- 基础结构 ---
 struct deal_price {
     double up = 0.0;
     double down = 0.0;
     double keep = 0.0;
 };
 
-// 规模下的行为组：先按规模分，内部再分买/卖/中性
 struct bs_action_group {
     deal_price buy;
     deal_price sale;
     deal_price neutral; 
 };
 
-// 顶层汇总：按规模区分
 struct stream_sum {
     bs_action_group super;
     bs_action_group big;
@@ -27,7 +24,7 @@ struct stream_sum {
     bs_action_group small;
 };
 
-// 汇总用的辅助结构
+
 struct deal_bsn {
     double buy = 0.0;
     double sale = 0.0;
@@ -110,7 +107,6 @@ struct DayOutputMetrics {
     deal_price deal_total_price;    
 };
 
-// --- 函数声明 ---
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
