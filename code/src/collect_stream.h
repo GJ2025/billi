@@ -24,7 +24,6 @@ struct stream_sum {
     bs_action_group small;
 };
 
-
 struct deal_bsn {
     double buy = 0.0;
     double sale = 0.0;
@@ -106,6 +105,26 @@ struct DayOutputMetrics {
     deal_price deal_small_price;
     deal_price deal_total_price;    
 };
+
+inline double sum_price(const deal_price& price) { return price.up + price.down + price.keep; }
+inline double sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
+    return super.buy + big.buy + middle.buy + small.buy ;
+}
+inline double sum_bsn_sale(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
+    return super.sale + big.sale + middle.sale + small.sale ;
+}
+inline double sum_bsn_neutral(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
+    return super.neutral + big.neutral + middle.neutral + small.neutral ;
+}
+inline double sum_price_up(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
+    return super.up + big.up + middle.up + small.up ;
+}
+inline double sum_price_down(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
+    return super.down + big.down + middle.down + small.down ;
+}
+inline double sum_price_keep(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
+    return super.keep + big.keep + middle.keep + small.keep ;
+}
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);

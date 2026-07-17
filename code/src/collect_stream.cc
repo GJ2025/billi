@@ -66,41 +66,39 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
     pre_record = record;
 }
 
-double sum_rp(const deal_price& rp) { return rp.up + rp.down + rp.keep; }
-
 void deal_classfy(DayOutputMetrics& out) {
     // 1. 已有的 fill 逻辑 (保持不变)
-    auto fill = [&](deal_bsn& dest, const bs_action_group& src) {
-        dest.buy = sum_rp(src.buy);
-        dest.sale = sum_rp(src.sale);
-        dest.neutral = sum_rp(src.neutral);
+    auto fill_bsn = [&](deal_bsn& dest, const bs_action_group& src) {
+        dest.buy = sum_price(src.buy);
+        dest.sale = sum_price(src.sale);
+        dest.neutral = sum_price(src.neutral);
     };
 
-    fill(out.deal_super_bsn, out.stream_sum_info.super);
-    fill(out.deal_big_bsn, out.stream_sum_info.big);
-    fill(out.deal_middle_bsn, out.stream_sum_info.middle);
-    fill(out.deal_small_bsn, out.stream_sum_info.small);
+    fill_bsn(out.deal_super_bsn, out.stream_sum_info.super);
+    fill_bsn(out.deal_big_bsn, out.stream_sum_info.big);
+    fill_bsn(out.deal_middle_bsn, out.stream_sum_info.middle);
+    fill_bsn(out.deal_small_bsn, out.stream_sum_info.small);
 
     // 计算总计
-    out.deal_total_bsn.buy = out.deal_super_bsn.buy + out.deal_big_bsn.buy + out.deal_middle_bsn.buy + out.deal_small_bsn.buy;
-    out.deal_total_bsn.sale = out.deal_super_bsn.sale + out.deal_big_bsn.sale + out.deal_middle_bsn.sale + out.deal_small_bsn.sale;
-    out.deal_total_bsn.neutral = out.deal_super_bsn.neutral + out.deal_big_bsn.neutral + out.deal_middle_bsn.neutral + out.deal_small_bsn.neutral;
+    out.deal_total_bsn.buy = sum_bsn_buy(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
+    out.deal_total_bsn.sale = sum_bsn_sale(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
+    out.deal_total_bsn.neutral = sum_bsn_neutral(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
 
     // 2. 新增：封装后的价格汇总逻辑
-    auto sum_group = [](deal_price& dest, const bs_action_group& src) {
+    auto fill_price = [](deal_price& dest, const bs_action_group& src) {
         dest.up   = src.buy.up   + src.sale.up   + src.neutral.up;
         dest.down = src.buy.down + src.sale.down + src.neutral.down;
         dest.keep = src.buy.keep + src.sale.keep + src.neutral.keep;
     };
 
-    sum_group(out.deal_super_price,  out.stream_sum_info.super);
-    sum_group(out.deal_big_price,    out.stream_sum_info.big);
-    sum_group(out.deal_middle_price, out.stream_sum_info.middle);
-    sum_group(out.deal_small_price,  out.stream_sum_info.small);
+    fill_price(out.deal_super_price,  out.stream_sum_info.super);
+    fill_price(out.deal_big_price,    out.stream_sum_info.big);
+    fill_price(out.deal_middle_price, out.stream_sum_info.middle);
+    fill_price(out.deal_small_price,  out.stream_sum_info.small);
 
     // 计算总计价格分布
-    out.deal_total_price.up   = out.deal_super_price.up   + out.deal_big_price.up   + out.deal_middle_price.up   + out.deal_small_price.up;
-    out.deal_total_price.down = out.deal_super_price.down + out.deal_big_price.down + out.deal_middle_price.down + out.deal_small_price.down;
-    out.deal_total_price.keep = out.deal_super_price.keep + out.deal_big_price.keep + out.deal_middle_price.keep + out.deal_small_price.keep;
+    out.deal_total_price.up   = sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    out.deal_total_price.down = sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    out.deal_total_price.keep = sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
 }
 
