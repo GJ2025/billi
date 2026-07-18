@@ -110,26 +110,27 @@ struct DayOutputMetrics {
 struct Col {
     std::string name;
     int width;
+    bool visible = true;
 };
 
 static const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12}, 
-    {"Buy-Kp", 9},  
+    {"Buy-Dn", 12, false}, 
+    {"Buy-Kp", 9, false},  
     {"Buy-Up", 9},
-    {"Sale-Dn", 12}, 
-    {"Sale-Kp", 9}, 
-    {"Sale-Up", 9}, 
-    {"Neutral-Dn", 10},
-    {"Neutral-Kp", 10},  
-    {"Neutral-Up", 10},
+    {"Sale-Dn", 12,true}, 
+    {"Sale-Kp", 9, false}, 
+    {"Sale-Up", 9,false}, 
+    {"Neutral-Dn", 10, false},
+    {"Neutral-Kp", 10, false},  
+    {"Neutral-Up", 10, false},
     {"Tot-Buy", 12}, 
     {"Tot-Sale", 9},
-    {"Tot-Neutral", 12},    
+    {"Tot-Neutral", 12, true},    
     {"Tot-Up", 9}, 
     {"Tot-Dn", 9},
     {"Tot-Kp", 9}, 
-    {"Price-WILL", 10}, 
+    {"WILL-Net", 10}, 
     {"Price-Net", 9},     
     {"Total", 12},  
     {"Volume", 12},
@@ -140,14 +141,21 @@ static const std::vector<Col> will_price_table_cols = {
 };
 
 template<typename T>
-void print_next(const T& val, int& index) {
-    std::cout << std::setw(will_price_table_cols[index++].width) << val << " | ";
+inline void print_next(const T& val, int& index) {
+    // 仅当当前列可见时执行打印
+    if (index < (int)will_price_table_cols.size() && will_price_table_cols[index].visible) {
+        std::cout << std::setw(will_price_table_cols[index].width) << val << " | ";
+    }
+    // 索引始终递增，以匹配 print_slim_price 中的调用序列
+    index++;
 }
 
-// 针对需要 showpos 的特殊情况重载
 template<typename T>
-void print_next_pos(const T& val, int& index) {
-    std::cout << std::showpos << std::setw(will_price_table_cols[index++].width) << val << " | " << std::noshowpos;
+inline void print_next_pos(const T& val, int& index) {
+    if (index < (int)will_price_table_cols.size() && will_price_table_cols[index].visible) {
+        std::cout << std::showpos << std::setw(will_price_table_cols[index].width) << val << " | " << std::noshowpos;
+    }
+    index++;
 }
 
 
@@ -169,6 +177,44 @@ inline double sum_price_down(deal_price& super, deal_price& big, deal_price& mid
 }
 inline double sum_price_keep(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
     return super.keep + big.keep + middle.keep + small.keep ;
+}
+
+
+// 专门负责打印带有标题的装饰线
+inline void print_decorative_line(int total_width, const std::string& left_title, const std::string& right_title) {
+    // 扣除掉分隔符引起的额外长度，并计算可用的线条空间
+    int line_len = total_width - 3;
+    
+    // 计算标题占用的长度
+    int left_len = static_cast<int>(left_title.length());
+    int right_len = static_cast<int>(right_title.length());
+    
+    // 计算中间剩余的横线长度
+    int mid_space = line_len - left_len - right_len - 4; // 4 为左右两侧括号和空格的预留
+    if (mid_space < 2) mid_space = 2;
+
+    std::cout << "[ " << left_title << " ]" 
+              << std::string(mid_space, '-') 
+              << "[ " << right_title << " ]" 
+              << std::endl;
+}
+
+
+inline void print_will_price_header(const std::string& title) {
+    std::cout << std::left;
+    int total_width = 0;
+
+    // 打印表头：仅遍历可见列
+    for (const auto& col : will_price_table_cols) {
+        if (col.visible) {
+            std::cout << std::setw(col.width) << col.name << " | ";
+            total_width += (col.width + 3);
+        }
+    }
+    std::cout << std::endl;
+
+    // 打印对齐的装饰线
+    print_decorative_line(total_width, title, title);
 }
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
