@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include "common.h"
 #include "tick_types.h"
 
 struct deal_price {
@@ -140,24 +141,48 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Close", 5}
 };
 
+static const std::vector<Col> price_table_cols = {
+    {"Date", 11}, 
+    {"Super-Up", 9}, 
+    {"Super-Dn", 9}, 
+    {"Super-Net", 9},
+    {"Big-Up", 9},   
+    {"Big-Dn", 9},   
+    {"Big-Net", 9},
+    {"Mid-Up", 9},   
+    {"Mid-Dn", 9},   
+    {"Mid-Net", 9},
+    {"Small-Up", 9}, 
+    {"Small-Dn", 9}, 
+    {"Small-Net", 9},
+    {"Tot-Up", 12},  
+    {"Tot-Dn", 12},  
+    {"Tot-Net", 12},
+    {"Total", 12},   
+    {"Volume", 12},
+    {"Pre", 5},      
+    {"StartCh", 9},  
+    {"PctCh", 9}, 
+    {"Close", 5}
+};
+
 template<typename T>
-inline void print_next(const T& val, int& index) {
+inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
     // 仅当当前列可见时执行打印
-    if (index < (int)will_price_table_cols.size() && will_price_table_cols[index].visible) {
-        std::cout << std::setw(will_price_table_cols[index].width) << val << " | ";
+    if (index < (int)cols.size() && cols[index].visible) {
+        std::cout << std::setw(cols[index].width) << val << " | ";
     }
-    // 索引始终递增，以匹配 print_slim_price 中的调用序列
+    // 索引始终递增，以匹配调用序列
     index++;
 }
 
 template<typename T>
-inline void print_next_pos(const T& val, int& index) {
-    if (index < (int)will_price_table_cols.size() && will_price_table_cols[index].visible) {
-        std::cout << std::showpos << std::setw(will_price_table_cols[index].width) << val << " | " << std::noshowpos;
+inline void print_next_pos(const T& val, int& index, const std::vector<Col>& cols) {
+    if (index < (int)cols.size() && cols[index].visible) {
+        std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
     }
     index++;
 }
-
 
 inline double sum_price(const deal_price& price) { return price.up + price.down + price.keep; }
 inline double sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
@@ -217,13 +242,80 @@ inline void print_will_price_header(const std::string& title, const std::vector<
     print_decorative_line(total_width, title, title);
 }
 
+inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
+    print_next(out.date_str, i, cols);
+    print_next(out.deal_super_price.up / WAN, i, cols);
+    print_next(out.deal_super_price.down / WAN, i, cols);
+    print_next_pos((out.deal_super_price.up - out.deal_super_price.down) / WAN, i, cols);
+    print_next(out.deal_big_price.up / WAN, i, cols);
+    print_next(out.deal_big_price.down / WAN, i, cols);
+    print_next_pos((out.deal_big_price.up - out.deal_big_price.down) / WAN, i, cols);
+    print_next(out.deal_middle_price.up / WAN, i, cols);
+    print_next(out.deal_middle_price.down / WAN, i, cols);
+    print_next_pos((out.deal_middle_price.up - out.deal_middle_price.down) / WAN, i, cols);
+    print_next(out.deal_small_price.up / WAN, i, cols);
+    print_next(out.deal_small_price.down / WAN, i, cols);
+    print_next_pos((out.deal_small_price.up - out.deal_small_price.down) / WAN, i, cols);
+    print_next(out.deal_total_price.up / WAN, i, cols);
+    print_next(out.deal_total_price.down / WAN, i, cols);
+    print_next_pos((out.deal_total_price.up - out.deal_total_price.down) / WAN, i, cols);
+    print_next((out.deal_total_price.down + out.deal_total_price.up + out.deal_total_price.keep) / WAN, i, cols);
+    print_next(out.total_vol_wan, i, cols);
+    print_next(out.pre_closing_price, i, cols);
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.pct_change, i, cols);
+    print_next(out.closing_price, i, cols);
+    std::cout << std::endl;
+}
+
+inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    print_next(out.date_str, i, cols);
+    print_next(super.buy.down / WAN, i, cols);
+    print_next(super.buy.keep / WAN, i, cols);
+    print_next(super.buy.up / WAN, i, cols);
+
+    print_next(super.sale.down / WAN, i, cols);
+    print_next(super.sale.keep / WAN, i, cols);
+    print_next(super.sale.up / WAN, i, cols);
+
+    print_next(super.neutral.down / WAN, i, cols);
+    print_next(super.neutral.keep / WAN, i, cols);
+    print_next(super.neutral.up / WAN, i, cols);
+
+    print_next(bsn.buy / WAN, i, cols);
+    print_next(bsn.sale / WAN, i, cols);
+    print_next(bsn.neutral / WAN, i, cols);
+
+    print_next(price.up / WAN, i, cols);
+    print_next(price.down / WAN, i, cols);
+    print_next(price.keep / WAN, i, cols);
+
+    print_next_pos((bsn.buy - bsn.sale) / WAN, i, cols);
+    print_next_pos((price.up - price.down) / WAN, i, cols);
+    print_next((out.deal_total_bsn.buy + out.deal_total_bsn.sale + out.deal_total_bsn.neutral) / WAN, i, cols);
+    print_next(out.total_vol_wan, i, cols);
+    print_next(out.pre_closing_price, i, cols);
+
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.pct_change, i, cols);
+
+    print_next(out.closing_price, i, cols);
+
+    std::cout << std::endl;
+}
+
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
 void print_will(DayOutputMetrics& out);
-void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price); 
+inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
 void print_will_price_header(const std::string& title, const std::vector<Col>& cols) ;
-void print_price( DayOutputMetrics& out);
+inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);
 void print_merge( DayOutputMetrics& out);
 
 #endif // COLLECT_STREAM_H

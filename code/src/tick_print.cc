@@ -148,7 +148,7 @@ void print_headers(const ProgramOptions& opts) {
         show_margin_header("SHOW WILL WILL WILL");
     }   
     if (opts.show_price){
-        show_margin_header("SHOW PRICE PRICE PRICE ");
+        print_will_price_header("price ", price_table_cols);
     }   
     if (opts.show_merge){
         show_margin_header("SHOW MERGE MERGE MERGE ");
@@ -173,7 +173,7 @@ void print_tailer(const ProgramOptions& opts) {
         show_margin_header("SHOW WILL WILL WILL");
     }   
     if (opts.show_price){
-        show_margin_header("SHOW PRICE PRICE PRICE ");
+        print_will_price_header("price ", price_table_cols);
     }   
     if (opts.show_merge){
         show_margin_header("SHOW MERGE MERGE MERGE ");
@@ -191,8 +191,8 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         if (opts.show_head)  print_header_info(out, prev_out);
         if (opts.show_all)   print_data_row(out, divergence);;
         if (opts.show_will)  print_will(out);
-        if (opts.show_price) print_price(out);
+        if (opts.show_price) print_price(out, price_table_cols);
         if (opts.show_merge) print_merge(out);
-        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price);
-        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price);
+        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
+        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
 }
