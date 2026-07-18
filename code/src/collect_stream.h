@@ -191,6 +191,25 @@ static const std::vector<Col> will_table_cols = {
     {"Close", 5}
 };
 
+// 专为 print_merge 准备的配置
+static const std::vector<Col> merge_table_cols = {
+    {"Date", 11},
+    {"TotBuy(BSN)", 12}, 
+    {"TotSale(BSN)", 12}, 
+    {"TotNeu(BSN)", 12},
+    {"TotUp(PRC)", 12},  
+    {"TotDn(PRC)", 12},   
+    {"TotKp(PRC)", 12},
+    {"BSN-Net", 16},     
+    {"PRC-Net", 16},
+    {"Total", 12},       
+    {"Volume", 12},
+    {"Pre", 5},          
+    {"StartCh", 9},       
+    {"PctCh", 9}, 
+    {"Close", 5}
+};
+
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
     // 仅当当前列可见时执行打印
@@ -385,6 +404,40 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     std::cout << std::endl;
 }
 
+inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    // 1. 日期
+    print_next(out.date_str, i, cols);
+
+    // 2. BSN 汇总 (对应原代码 "buy" 后的三项)
+    print_next(out.deal_total_bsn.buy / WAN, i, cols);
+    print_next(out.deal_total_bsn.sale / WAN, i, cols);
+    print_next(out.deal_total_bsn.neutral / WAN, i, cols);
+
+    // 3. Price 汇总 (对应原代码 "up" 后的三项)
+    print_next(out.deal_total_price.up / WAN, i, cols);
+    print_next(out.deal_total_price.down / WAN, i, cols);
+    print_next(out.deal_total_price.keep / WAN, i, cols);
+
+    // 4. 净额 (带有正负号)
+    print_next_pos((out.deal_total_bsn.buy - out.deal_total_bsn.sale) / WAN, i, cols);
+    print_next_pos((out.deal_total_price.up - out.deal_total_price.down) / WAN, i, cols);
+
+    // 5. 成交总量相关
+    print_next((out.deal_total_price.down + out.deal_total_price.up + out.deal_total_price.keep) / WAN, i, cols);
+    print_next(out.total_vol_wan, i, cols);
+
+    // 6. 价格与涨跌幅
+    print_next(out.pre_closing_price, i, cols);
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.pct_change, i, cols);
+    print_next(out.closing_price, i, cols);
+
+    std::cout << std::endl;
+}
+
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
@@ -392,6 +445,6 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols);
 inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
 void print_will_price_header(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);
-void print_merge( DayOutputMetrics& out);
+inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols);
 
 #endif // COLLECT_STREAM_H
