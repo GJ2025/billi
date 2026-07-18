@@ -200,23 +200,6 @@ inline void print_decorative_line(int total_width, const std::string& left_title
 }
 
 
-// inline void print_will_price_header(const std::string& title) {
-//     std::cout << std::left;
-//     int total_width = 0;
-
-//     // 打印表头：仅遍历可见列
-//     for (const auto& col : will_price_table_cols) {
-//         if (col.visible) {
-//             std::cout << std::setw(col.width) << col.name << " | ";
-//             total_width += (col.width + 3);
-//         }
-//     }
-//     std::cout << std::endl;
-
-//     // 打印对齐的装饰线
-//     print_decorative_line(total_width, title, title);
-// }
-
 inline void print_will_price_header(const std::string& title, const std::vector<Col>& cols) {
     std::cout << std::left;
     int total_width = 0;
