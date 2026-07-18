@@ -166,6 +166,31 @@ static const std::vector<Col> price_table_cols = {
     {"Close", 5}
 };
 
+static const std::vector<Col> will_table_cols = {
+    {"Date", 11}, 
+    {"Super-Buy", 12}, 
+    {"Super-Sale", 10}, 
+    {"Super-Net", 9},
+    {"Big-Buy", 12},  
+    {"Big-Sale", 9},   
+    {"Big-Net", 9},
+    {"Mid-Buy", 9},    
+    {"Mid-Sale", 9},   
+    {"Mid-Net", 9},
+    {"Small-Buy", 9},  
+    {"Small-Sale", 10}, 
+    {"Small-Net", 9},
+    {"Tot-Buy", 9},    
+    {"Tot-Sale", 9},   
+    {"Tot-Net", 9},
+    {"Total", 12},     
+    {"Volume", 12},
+    {"Pre", 5},        
+    {"StartCh", 9},    
+    {"PctCh", 9}, 
+    {"Close", 5}
+};
+
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
     // 仅当当前列可见时执行打印
@@ -309,10 +334,61 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
     std::cout << std::endl;
 }
 
+
+inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    // 计算净额
+    double jing_super = out.deal_super_bsn.buy - out.deal_super_bsn.sale;
+    double jing_big = out.deal_big_bsn.buy - out.deal_big_bsn.sale;
+    double jing_middle = out.deal_middle_bsn.buy - out.deal_middle_bsn.sale;
+    double jing_small = out.deal_small_bsn.buy - out.deal_small_bsn.sale;
+    double jing_total = out.deal_total_bsn.buy - out.deal_total_bsn.sale;
+
+    // 顺序打印 (需严格对应 cols 定义的顺序)
+    print_next(out.date_str, i, cols);
+
+    // Super
+    print_next(out.deal_super_bsn.buy / WAN, i, cols);
+    print_next(out.deal_super_bsn.sale / WAN, i, cols);
+    print_next_pos(jing_super / WAN, i, cols);
+
+    // Big
+    print_next(out.deal_big_bsn.buy / WAN, i, cols);
+    print_next(out.deal_big_bsn.sale / WAN, i, cols);
+    print_next_pos(jing_big / WAN, i, cols);
+
+    // Middle
+    print_next(out.deal_middle_bsn.buy / WAN, i, cols);
+    print_next(out.deal_middle_bsn.sale / WAN, i, cols);
+    print_next_pos(jing_middle / WAN, i, cols);
+
+    // Small
+    print_next(out.deal_small_bsn.buy / WAN, i, cols);
+    print_next(out.deal_small_bsn.sale / WAN, i, cols);
+    print_next_pos(jing_small / WAN, i, cols);
+
+    // Total
+    print_next(out.deal_total_bsn.buy / WAN, i, cols);
+    print_next(out.deal_total_bsn.sale / WAN, i, cols);
+    print_next_pos(jing_total / WAN, i, cols);
+
+    // 其余统计项
+    print_next((out.deal_total_bsn.buy + out.deal_total_bsn.sale + out.deal_total_bsn.neutral) / WAN, i, cols);
+    print_next(out.total_vol_wan, i, cols);
+    print_next(out.pre_closing_price, i, cols);
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.pct_change, i, cols);
+    print_next(out.closing_price, i, cols);
+
+    std::cout << std::endl;
+}
+
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
-void print_will(DayOutputMetrics& out);
+inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols);
 inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
 void print_will_price_header(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);

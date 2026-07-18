@@ -145,7 +145,7 @@ void print_headers(const ProgramOptions& opts) {
         print_all();
     }   
     if (opts.show_will){
-        show_margin_header("SHOW WILL WILL WILL");
+        print_will_price_header("will", will_table_cols);
     }   
     if (opts.show_price){
         print_will_price_header("price ", price_table_cols);
@@ -170,7 +170,7 @@ void print_tailer(const ProgramOptions& opts) {
         print_all();
     }   
     if (opts.show_will){
-        show_margin_header("SHOW WILL WILL WILL");
+        print_will_price_header("will", will_table_cols);
     }   
     if (opts.show_price){
         print_will_price_header("price ", price_table_cols);
@@ -190,7 +190,7 @@ void print_tailer(const ProgramOptions& opts) {
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
         if (opts.show_head)  print_header_info(out, prev_out);
         if (opts.show_all)   print_data_row(out, divergence);;
-        if (opts.show_will)  print_will(out);
+        if (opts.show_will)  print_will(out, will_table_cols);
         if (opts.show_price) print_price(out, price_table_cols);
         if (opts.show_merge) print_merge(out);
         if (opts.show_super) print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
