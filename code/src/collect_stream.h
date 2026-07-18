@@ -483,18 +483,13 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    // 1. 基础数据
     print_next(out.date_str, i, cols);
     print_next(out.ticks_count, i, cols);
     print_next(out.am_vol_wan, i, cols);
     
-    // 2. 金额与成交指标
     print_next(out.am_turnover_wan, i, cols);
-    print_next(format_percent_value(out.am_turnover_ratio), i, cols);
-    
-    std::cout << std::fixed << std::setprecision(1); // AvgVol/Tick 精度特殊
+    print_next(out.am_turnover_ratio, i, cols);
     print_next(out.avg_vol_per_tick, i, cols);
-    std::cout << std::fixed << std::setprecision(2);
     
     print_next(out.total_turnover_wan, i, cols);
     print_next(out.total_vol_wan, i, cols);
@@ -513,7 +508,6 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     print_next_pos(out.am_pct_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
     
-    // 5. 尾部字符串 (Divergence)
     print_next(divergence_str, i, cols);
 
     std::cout << std::endl;
