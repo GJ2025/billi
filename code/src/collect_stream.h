@@ -213,23 +213,26 @@ static const std::vector<Col> merge_table_cols = {
 static const std::vector<Col> data_row_table_cols = {
     {"Date", 11}, 
     {"Ticks", 5}, 
-    {"Vol(W)", 9}, 
-    {"AM-Vol(W)", 9},
-    {"AM-Turn(W)", 11}, 
+    {"AM-Vol(W)", 9, false},
+    {"AM-Turn(W)", 11, false}, 
     {"AM-Turn%", 11}, 
-    {"AvgVol/Tick", 10},
-    {"TotTurn(W)", 11}, 
-    {"AM-Close", 8}, 
+    {"AvgVol/Tick", 11},
+    {"TotTurn(W)", 11},
+    {"Vol(W)", 9},  
+    {"AM-Close", 8, false}, 
+
+    {"NetIn(W)", 10},
+    {"AM-NetIn(W)", 11}, 
+    {"PM-NetIn(W)", 11}, 
+    {"Inflow%", 9, false},
+    {"NetPer%", 9,false}, 
+    {"HistNetIn(W)", 11, false}, 
+
     {"AvgPrice", 9},
     {"Close", 7}, 
-    {"AM-Pct%", 8}, 
+    {"AM-Pct%", 8, false}, 
     {"Pct%", 8}, 
-    {"NetIn(W)", 10},
-    {"AM-NetIn(W)", 10}, 
-    {"PM-NetIn(W)", 10}, 
-    {"Inflow%", 9},
-    {"NetPer%", 9}, 
-    {"HistNetIn(W)", 11}, 
+
     {"Divergence", 20}
 };
 
@@ -483,7 +486,6 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     // 1. 基础数据
     print_next(out.date_str, i, cols);
     print_next(out.ticks_count, i, cols);
-    print_next(out.total_vol_wan, i, cols);
     print_next(out.am_vol_wan, i, cols);
     
     // 2. 金额与成交指标
@@ -495,21 +497,21 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     std::cout << std::fixed << std::setprecision(2);
     
     print_next(out.total_turnover_wan, i, cols);
-    print_next(format_inflow(out.am_closing_price), i, cols);
-    print_next(format_inflow(out.avg_price), i, cols);
+    print_next(out.total_vol_wan, i, cols);
+    print_next(out.am_closing_price, i, cols);
+
     
-    // 3. 价格与涨跌幅
-    print_next(format_inflow(out.closing_price), i, cols);
-    print_next(format_percent_value(out.am_pct_change), i, cols);
-    print_next(format_percent_value(out.pct_change), i, cols);
-    
-    // 4. 净流入系列
-    print_next(format_inflow(out.net_inflow_wan), i, cols);
-    print_next(format_inflow(out.am_net_inflow_wan), i, cols);
-    print_next(format_inflow(out.pm_net_inflow_wan), i, cols);
-    print_next(format_percent_value(out.inflow_ratio), i, cols);
-    print_next(format_percent_value(out.net_per_change), i, cols);
-    print_next(format_inflow(out.historical_total_inflow), i, cols);
+    print_next_pos(out.net_inflow_wan, i, cols);
+    print_next_pos(out.am_net_inflow_wan, i, cols);
+    print_next_pos(out.pm_net_inflow_wan, i, cols);
+    print_next_pos(out.inflow_ratio, i, cols);
+    print_next_pos(out.net_per_change, i, cols);
+    print_next(out.historical_total_inflow, i, cols);
+
+    print_next(out.avg_price, i, cols);
+    print_next(out.closing_price, i, cols);
+    print_next_pos(out.am_pct_change, i, cols);
+    print_next_pos(out.pct_change, i, cols);
     
     // 5. 尾部字符串 (Divergence)
     print_next(divergence_str, i, cols);
