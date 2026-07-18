@@ -113,7 +113,7 @@ struct Col {
     bool visible = true;
 };
 
-static const std::vector<Col> will_price_table_cols = {
+inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
     {"Buy-Dn", 12, false}, 
     {"Buy-Kp", 9, false},  
@@ -200,12 +200,29 @@ inline void print_decorative_line(int total_width, const std::string& left_title
 }
 
 
-inline void print_will_price_header(const std::string& title) {
+// inline void print_will_price_header(const std::string& title) {
+//     std::cout << std::left;
+//     int total_width = 0;
+
+//     // 打印表头：仅遍历可见列
+//     for (const auto& col : will_price_table_cols) {
+//         if (col.visible) {
+//             std::cout << std::setw(col.width) << col.name << " | ";
+//             total_width += (col.width + 3);
+//         }
+//     }
+//     std::cout << std::endl;
+
+//     // 打印对齐的装饰线
+//     print_decorative_line(total_width, title, title);
+// }
+
+inline void print_will_price_header(const std::string& title, const std::vector<Col>& cols) {
     std::cout << std::left;
     int total_width = 0;
 
-    // 打印表头：仅遍历可见列
-    for (const auto& col : will_price_table_cols) {
+    // 1. 打印表头：仅遍历可见列
+    for (const auto& col : cols) {
         if (col.visible) {
             std::cout << std::setw(col.width) << col.name << " | ";
             total_width += (col.width + 3);
@@ -213,7 +230,7 @@ inline void print_will_price_header(const std::string& title) {
     }
     std::cout << std::endl;
 
-    // 打印对齐的装饰线
+    // 2. 打印对齐的装饰线
     print_decorative_line(total_width, title, title);
 }
 
@@ -222,7 +239,7 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, Tick
 void deal_classfy(DayOutputMetrics& out);
 void print_will(DayOutputMetrics& out);
 void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price); 
-void print_will_price_header(const std::string& title) ;
+void print_will_price_header(const std::string& title, const std::vector<Col>& cols) ;
 void print_price( DayOutputMetrics& out);
 void print_merge( DayOutputMetrics& out);
 

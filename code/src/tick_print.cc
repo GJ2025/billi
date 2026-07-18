@@ -154,11 +154,11 @@ void print_headers(const ProgramOptions& opts) {
         show_margin_header("SHOW MERGE MERGE MERGE ");
     }   
     if (opts.show_super ){
-        print_will_price_header("super");
+        print_will_price_header("super",will_price_table_cols);
     }
     
     if (opts.show_big){
-        print_will_price_header("big");
+        print_will_price_header("big",will_price_table_cols);
     } 
 }
 
@@ -179,11 +179,11 @@ void print_tailer(const ProgramOptions& opts) {
         show_margin_header("SHOW MERGE MERGE MERGE ");
     }   
     if (opts.show_super ){
-        print_will_price_header("super");
+        print_will_price_header("super",will_price_table_cols);
     }
     
     if (opts.show_big){
-        print_will_price_header("big");
+        print_will_price_header("big",will_price_table_cols);
     } 
 }
 
