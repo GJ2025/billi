@@ -112,73 +112,50 @@ void print_merge( DayOutputMetrics& out) {
 
 }
 
+
 void print_will_price_header() {
-    std::cout << std::left 
-              << std::setw(11) << "Date"        << " | "
-              << std::setw(12) << "Buy-Dn"      << " | "
-              << std::setw(9)  << "Buy-Kp"      << " | "
-              << std::setw(9)  << "Buy-Up"      << " | "
-              << std::setw(12) << "Sale-Dn"     << " | "
-              << std::setw(9)  << "Sale-Kp"     << " | "
-              << std::setw(9)  << "Sale-Up"     << " | "
-              << std::setw(12) << "Mid-Dn"      << " | "
-              << std::setw(9)  << "Mid-Kp"      << " | "
-              << std::setw(9)  << "Mid-Up"      << " | "
-              << std::setw(12) << "Tot-Up"      << " | "
-              << std::setw(9)  << "Tot-Dn"      << " | "
-              << std::setw(9)  << "Tot-Kp"      << " | "
-              << std::setw(9)  << "Net"         << " | "
-              << std::setw(12) << "Total"       << " | "
-              << std::setw(12) << "Volume"      << " | "
-              << std::setw(5)  << "Pre"         << " | "
-              << std::setw(9)  << "StartCh"     << " | " 
-              << std::setw(9)  << "PctCh"       << " | "
-              << std::setw(5)  << "Close"       << " | "
-              << std::endl;
-    std::cout << std::string(250, '-') << std::endl; 
+    std::cout << std::left;
+    for (const auto& col : will_price_table_cols) {
+        std::cout << std::setw(col.width) << col.name << " | ";
+    }
+    std::cout << std::endl << std::string(250, '-') << std::endl;
 }
 
-void print_slim_price(DayOutputMetrics& out, bs_action_group& super){
+void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
 
-    double price_up = 0.0;
-    double price_down = 0.0;
-    double price_keep = 0.0;
-    double total = 0.0;
+    print_next(out.date_str, i);
+    print_next(super.buy.down / WAN, i);
+    print_next(super.buy.keep / WAN, i);
+    print_next(super.buy.up / WAN, i);
 
-    price_up = super.buy.up + super.sale.up + super.neutral.up;
-    price_down = super.buy.down + super.sale.down + super.neutral.down;
-    price_keep = super.buy.keep + super.sale.keep + super.neutral.keep;
+    print_next(super.sale.down / WAN, i);
+    print_next(super.sale.keep / WAN, i);
+    print_next(super.sale.up / WAN, i);
 
-    total = price_up - price_down;
+    print_next(super.neutral.down / WAN, i);
+    print_next(super.neutral.keep / WAN, i);
+    print_next(super.neutral.up / WAN, i);
 
+    print_next(bsn.buy / WAN, i);
+    print_next(bsn.sale / WAN, i);
+    print_next(bsn.neutral / WAN, i);
 
-    std::cout << std::left << std::setw(11) << out.date_str << " | "
-                << std::fixed << std::setprecision(2)
-                << std::setw(12)  << super.buy.down/WAN << " | "
-                << std::setw(9)  << super.buy.keep/WAN << " | "
-                << std::setw(9)  << super.buy.up/WAN << " | "
+    print_next(price.up / WAN, i);
+    print_next(price.down / WAN, i);
+    print_next(price.keep / WAN, i);
 
-                << std::setw(12)  << super.sale.down/WAN << " | "
-                << std::setw(9)  << super.sale.keep/WAN << " | "
-                << std::setw(9)  << super.sale.up/WAN << " | "
+    print_next_pos((bsn.buy - bsn.sale) / WAN, i);
+    print_next_pos((price.up - price.down) / WAN, i);
+    print_next((out.deal_total_bsn.buy + out.deal_total_bsn.sale + out.deal_total_bsn.neutral) / WAN, i);
+    print_next(out.total_vol_wan, i);
+    print_next(out.pre_closing_price, i);
 
-                << std::setw(12)  << super.neutral.down/WAN << " | "
-                << std::setw(9)  << super.neutral.keep/WAN << " | "
-                << std::setw(9)  << super.neutral.up/WAN << " | "
+    print_next_pos(out.start_change, i);
+    print_next_pos(out.pct_change, i);
 
-                << std::setw(12)  << price_up/WAN << " | "
-                << std::setw(9)  << price_down/WAN << " | "
-                << std::setw(9)  << price_keep/WAN << " | "
+    print_next(out.closing_price, i);
 
-                << std::setw(9)  << total/WAN << " | "
-
-                 << std::setw(12)  << (out.deal_total_bsn.buy+out.deal_total_bsn.sale+out.deal_total_bsn.neutral)/WAN << " | "  
-                 << std::setw(12)  << out.total_vol_wan << " | " 
-
-
-                << std::setw(5)  << out.pre_closing_price << " | " 
-                << std::setw(9)  << std::showpos << out.start_change << " | " << std::noshowpos
-                << std::setw(9)  << std::showpos << out.pct_change << " | "  << std::noshowpos
-                << std::setw(5)  << out.closing_price << " | " 
-                << std::endl;
+    std::cout << std::endl;
 }

@@ -197,6 +197,6 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         if (opts.show_will)  print_will(out);
         if (opts.show_price) print_price(out);
         if (opts.show_merge) print_merge(out);
-        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super);
-        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big);
+        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price);
+        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price);
 }

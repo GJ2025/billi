@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <iomanip>
 #include "tick_types.h"
 
 struct deal_price {
@@ -106,6 +107,50 @@ struct DayOutputMetrics {
     deal_price deal_total_price;    
 };
 
+struct Col {
+    std::string name;
+    int width;
+};
+
+static const std::vector<Col> will_price_table_cols = {
+    {"Date", 11}, 
+    {"Buy-Dn", 12}, 
+    {"Buy-Kp", 9},  
+    {"Buy-Up", 9},
+    {"Sale-Dn", 12}, 
+    {"Sale-Kp", 9}, 
+    {"Sale-Up", 9}, 
+    {"Neutral-Dn", 10},
+    {"Neutral-Kp", 10},  
+    {"Neutral-Up", 10},
+    {"Tot-Buy", 12}, 
+    {"Tot-Sale", 9},
+    {"Tot-Neutral", 12},    
+    {"Tot-Up", 9}, 
+    {"Tot-Dn", 9},
+    {"Tot-Kp", 9}, 
+    {"Price-WILL", 10}, 
+    {"Price-Net", 9},     
+    {"Total", 12},  
+    {"Volume", 12},
+    {"Pre", 5},     
+    {"StartCh", 9}, 
+    {"PctCh", 9},   
+    {"Close", 5}
+};
+
+template<typename T>
+void print_next(const T& val, int& index) {
+    std::cout << std::setw(will_price_table_cols[index++].width) << val << " | ";
+}
+
+// 针对需要 showpos 的特殊情况重载
+template<typename T>
+void print_next_pos(const T& val, int& index) {
+    std::cout << std::showpos << std::setw(will_price_table_cols[index++].width) << val << " | " << std::noshowpos;
+}
+
+
 inline double sum_price(const deal_price& price) { return price.up + price.down + price.keep; }
 inline double sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
     return super.buy + big.buy + middle.buy + small.buy ;
@@ -130,7 +175,7 @@ void collect_bs_action(bs_action_group& group, const std::string& bs_type, doubl
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
 void print_will(DayOutputMetrics& out);
-void print_slim_price(DayOutputMetrics& out, bs_action_group& super);
+void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price); 
 void print_will_price_header();
 void print_price( DayOutputMetrics& out);
 void print_merge( DayOutputMetrics& out);
