@@ -297,8 +297,17 @@ int main(int argc, char* argv[]) {
     std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
+    size_t total_files = files_to_process.size();
+    size_t start_index = (total_files > 10) ? (total_files - 10) : 0;
+    size_t current_idx = 0;
+
     for (const auto& file : files_to_process) {
+        current_idx++;
         if (!check_company_id_match(file, target_company_id)) {
+            continue;
+        }
+
+        if (current_idx < start_index){
             continue;
         }
 
