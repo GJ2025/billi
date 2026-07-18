@@ -154,13 +154,11 @@ void print_headers(const ProgramOptions& opts) {
         show_margin_header("SHOW MERGE MERGE MERGE ");
     }   
     if (opts.show_super ){
-        show_margin_header("SHOW SLIM SUPER SUPER");
-        print_will_price_header();
+        print_will_price_header("super");
     }
     
     if (opts.show_big){
-        show_margin_header("SHOW SLIM BIG BIG");
-        print_will_price_header();
+        print_will_price_header("big");
     } 
 }
 
@@ -181,13 +179,11 @@ void print_tailer(const ProgramOptions& opts) {
         show_margin_header("SHOW MERGE MERGE MERGE ");
     }   
     if (opts.show_super ){
-        print_will_price_header();
-        show_margin_header("SHOW SLIM SUPER SUPER");
+        print_will_price_header("super");
     }
     
     if (opts.show_big){
-        print_will_price_header();
-        show_margin_header("SHOW SLIM BIG BIG");
+        print_will_price_header("big");
     } 
 }
 

@@ -176,7 +176,7 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, Tick
 void deal_classfy(DayOutputMetrics& out);
 void print_will(DayOutputMetrics& out);
 void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price); 
-void print_will_price_header();
+void print_will_price_header(const std::string& title) ;
 void print_price( DayOutputMetrics& out);
 void print_merge( DayOutputMetrics& out);
 

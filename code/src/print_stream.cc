@@ -113,12 +113,39 @@ void print_merge( DayOutputMetrics& out) {
 }
 
 
-void print_will_price_header() {
+// 专门负责打印带有标题的装饰线
+void print_decorative_line(int total_width, const std::string& left_title, const std::string& right_title) {
+    // 扣除掉分隔符引起的额外长度，并计算可用的线条空间
+    int line_len = total_width - 3;
+    
+    // 计算标题占用的长度
+    int left_len = static_cast<int>(left_title.length());
+    int right_len = static_cast<int>(right_title.length());
+    
+    // 计算中间剩余的横线长度
+    int mid_space = line_len - left_len - right_len - 4; // 4 为左右两侧括号和空格的预留
+    if (mid_space < 2) mid_space = 2;
+
+    std::cout << "[ " << left_title << " ]" 
+              << std::string(mid_space, '-') 
+              << "[ " << right_title << " ]" 
+              << std::endl;
+}
+
+
+void print_will_price_header(const std::string& title) {
     std::cout << std::left;
+    int total_width = 0;
+
+    // 1. 打印表头
     for (const auto& col : will_price_table_cols) {
         std::cout << std::setw(col.width) << col.name << " | ";
+        total_width += (col.width + 3);
     }
-    std::cout << std::endl << std::string(250, '-') << std::endl;
+    std::cout << std::endl;
+
+    // 2. 调用封装好的装饰线逻辑
+    print_decorative_line(total_width, title, title);
 }
 
 void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price) {
