@@ -115,7 +115,6 @@ void print_merge( DayOutputMetrics& out) {
 void print_will_price_header() {
     std::cout << std::left 
               << std::setw(11) << "Date"        << " | "
-              // 下面这些宽度调整为与数据打印的 12/9/9 保持一致
               << std::setw(12) << "Buy-Dn"      << " | "
               << std::setw(9)  << "Buy-Kp"      << " | "
               << std::setw(9)  << "Buy-Up"      << " | "
