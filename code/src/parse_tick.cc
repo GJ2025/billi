@@ -331,7 +331,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    print_tailer(opts);
+    print_headers(opts);
 
     return 0;
 }

@@ -14,23 +14,6 @@
 #include "tick_types.h"
 #include "collect_stream.h"
 
-
-
-std::string format_inflow(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) 
-       << value;
-    return ss.str();
-}
-
-std::string format_percent_value(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2)
-        << value
-        << "%";
-    return ss.str();
-}
-
 void print_table_header() {
     std::cout << std::left << std::setw(12) << "Date" << " | "
               << std::right 
@@ -108,41 +91,12 @@ void show_margin_header(const std::string& margin) {
 }
 
 
-
-void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str) {
-      
-    std::cout << std::left << std::setw(11) << out.date_str << " | "
-              << std::right << std::setw(5) << out.ticks_count << " | "
-              << std::fixed << std::setprecision(2)
-              << std::setw(9)  << out.total_vol_wan << " | " 
-              << std::setw(9)  << out.am_vol_wan << " | "
-              << std::setw(11) << out.am_turnover_wan << " | " 
-              << std::setw(11) << format_percent_value(out.am_turnover_ratio) << " | " // 打印新字段：上午成交额占比
-              << std::setw(10) << std::fixed << std::setprecision(1) << out.avg_vol_per_tick << " | " 
-              << std::fixed << std::setprecision(2)
-              << std::setw(11) << out.total_turnover_wan << " | "
-              << std::setw(8)  << format_inflow(out.am_closing_price) << " | "
-              << std::setw(9)  << format_inflow(out.avg_price) << " | "; 
-              
-    std::cout << std::setw(7)  << format_inflow(out.closing_price)  << " | "
-              << std::setw(8)  << format_percent_value(out.am_pct_change)    << " | "
-              << std::setw(8)  << format_percent_value(out.pct_change)    << " | "
-              << std::setw(10) << format_inflow(out.net_inflow_wan) << " | "
-              << std::setw(10) << format_inflow(out.am_net_inflow_wan) << " | "
-              << std::setw(10) << format_inflow(out.pm_net_inflow_wan) << " | " 
-              << std::setw(9) << format_percent_value(out.inflow_ratio)  << " | "
-              << std::setw(9) << format_percent_value(out.net_per_change)  << " | "
-              << std::setw(11) << format_inflow(out.historical_total_inflow)   <<  " | ";
-    
-    std::cout << std::left << std::setw(20) << divergence_str << std::endl;
-}
-
 void print_headers(const ProgramOptions& opts) {
     if (opts.show_head){
         print_table_header();
     }  
     if (opts.show_all){
-        print_all();
+        print_will_price_header("ALL", data_row_table_cols);
     }   
     if (opts.show_will){
         print_will_price_header("will", will_table_cols);
@@ -162,34 +116,10 @@ void print_headers(const ProgramOptions& opts) {
     } 
 }
 
-void print_tailer(const ProgramOptions& opts) {
-    if (opts.show_head){
-        print_table_header();
-    }  
-    if (opts.show_all){
-        print_all();
-    }   
-    if (opts.show_will){
-        print_will_price_header("will", will_table_cols);
-    }   
-    if (opts.show_price){
-        print_will_price_header("price ", price_table_cols);
-    }   
-    if (opts.show_merge){
-        print_will_price_header("MERGE ", merge_table_cols) ;
-    }   
-    if (opts.show_super ){
-        print_will_price_header("super",will_price_table_cols);
-    }
-    
-    if (opts.show_big){
-        print_will_price_header("big",will_price_table_cols);
-    } 
-}
 
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
         if (opts.show_head)  print_header_info(out, prev_out);
-        if (opts.show_all)   print_data_row(out, divergence);;
+        if (opts.show_all)   print_data(out, divergence,data_row_table_cols);;
         if (opts.show_will)  print_will(out, will_table_cols);
         if (opts.show_price) print_price(out, price_table_cols);
         if (opts.show_merge) print_merge(out, merge_table_cols);

@@ -210,6 +210,29 @@ static const std::vector<Col> merge_table_cols = {
     {"Close", 5}
 };
 
+static const std::vector<Col> data_row_table_cols = {
+    {"Date", 11}, 
+    {"Ticks", 5}, 
+    {"Vol(W)", 9}, 
+    {"AM-Vol(W)", 9},
+    {"AM-Turn(W)", 11}, 
+    {"AM-Turn%", 11}, 
+    {"AvgVol/Tick", 10},
+    {"TotTurn(W)", 11}, 
+    {"AM-Close", 8}, 
+    {"AvgPrice", 9},
+    {"Close", 7}, 
+    {"AM-Pct%", 8}, 
+    {"Pct%", 8}, 
+    {"NetIn(W)", 10},
+    {"AM-NetIn(W)", 10}, 
+    {"PM-NetIn(W)", 10}, 
+    {"Inflow%", 9},
+    {"NetPer%", 9}, 
+    {"HistNetIn(W)", 11}, 
+    {"Divergence", 20}
+};
+
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
     // 仅当当前列可见时执行打印
@@ -226,6 +249,21 @@ inline void print_next_pos(const T& val, int& index, const std::vector<Col>& col
         std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
     }
     index++;
+}
+
+inline std::string format_inflow(double value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) 
+       << value;
+    return ss.str();
+}
+
+inline std::string format_percent_value(double value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2)
+        << value
+        << "%";
+    return ss.str();
 }
 
 inline double sum_price(const deal_price& price) { return price.up + price.down + price.keep; }
@@ -438,6 +476,47 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     std::cout << std::endl;
 }
 
+inline void print_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
+    int i = 0;
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    // 1. 基础数据
+    print_next(out.date_str, i, cols);
+    print_next(out.ticks_count, i, cols);
+    print_next(out.total_vol_wan, i, cols);
+    print_next(out.am_vol_wan, i, cols);
+    
+    // 2. 金额与成交指标
+    print_next(out.am_turnover_wan, i, cols);
+    print_next(format_percent_value(out.am_turnover_ratio), i, cols);
+    
+    std::cout << std::fixed << std::setprecision(1); // AvgVol/Tick 精度特殊
+    print_next(out.avg_vol_per_tick, i, cols);
+    std::cout << std::fixed << std::setprecision(2);
+    
+    print_next(out.total_turnover_wan, i, cols);
+    print_next(format_inflow(out.am_closing_price), i, cols);
+    print_next(format_inflow(out.avg_price), i, cols);
+    
+    // 3. 价格与涨跌幅
+    print_next(format_inflow(out.closing_price), i, cols);
+    print_next(format_percent_value(out.am_pct_change), i, cols);
+    print_next(format_percent_value(out.pct_change), i, cols);
+    
+    // 4. 净流入系列
+    print_next(format_inflow(out.net_inflow_wan), i, cols);
+    print_next(format_inflow(out.am_net_inflow_wan), i, cols);
+    print_next(format_inflow(out.pm_net_inflow_wan), i, cols);
+    print_next(format_percent_value(out.inflow_ratio), i, cols);
+    print_next(format_percent_value(out.net_per_change), i, cols);
+    print_next(format_inflow(out.historical_total_inflow), i, cols);
+    
+    // 5. 尾部字符串 (Divergence)
+    print_next(divergence_str, i, cols);
+
+    std::cout << std::endl;
+}
+
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
@@ -446,5 +525,6 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
 void print_will_price_header(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);
 inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols);
+inline void print_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols);
 
 #endif // COLLECT_STREAM_H
