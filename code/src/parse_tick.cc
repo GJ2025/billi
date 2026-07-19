@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> files_to_process;
     int opt;
 
-    while ((opt = getopt(argc, argv, "hd:parwsmb")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsmbl:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -281,6 +281,9 @@ int main(int argc, char* argv[]) {
             case 'm': opts.show_merge = true; break;
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
+            case 'l': 
+                opts.show_limit = std::stoi(optarg);
+                break;
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
                 return 1;
@@ -298,7 +301,7 @@ int main(int argc, char* argv[]) {
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
     size_t total_files = files_to_process.size();
-    size_t start_index = (total_files > 10) ? (total_files - 10) : 0;
+    size_t start_index = (total_files > opts.show_limit) ? (total_files - opts.show_limit) : 0;
     size_t current_idx = 0;
 
     for (const auto& file : files_to_process) {

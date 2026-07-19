@@ -99,20 +99,20 @@ void print_headers(const ProgramOptions& opts) {
         print_will_price_header("ALL", data_row_table_cols);
     }   
     if (opts.show_will){
-        print_will_price_header("will", will_table_cols);
+        print_will_price_header("WILL", will_table_cols);
     }   
     if (opts.show_price){
-        print_will_price_header("price ", price_table_cols);
+        print_will_price_header("PRICE ", price_table_cols);
     }   
     if (opts.show_merge){
         print_will_price_header("MERGE ", merge_table_cols) ;
     }   
     if (opts.show_super ){
-        print_will_price_header("super",will_price_table_cols);
+        print_will_price_header("SUPER",will_price_table_cols);
     }
     
     if (opts.show_big){
-        print_will_price_header("big",will_price_table_cols);
+        print_will_price_header("BIG",will_price_table_cols);
     } 
 }
 
