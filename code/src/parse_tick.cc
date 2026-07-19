@@ -18,7 +18,6 @@
 
 namespace fs = std::filesystem;
 
-
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
     return std::isdigit(static_cast<unsigned char>(str[0]));
@@ -305,7 +304,7 @@ int main(int argc, char* argv[]) {
     size_t current_idx = 0;
 
     for (const auto& file : files_to_process) {
-        
+
         if (!check_company_id_match(file, target_company_id)) {
             continue;
         }

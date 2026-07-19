@@ -23,15 +23,23 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
 
 // --- 核心逻辑 ---
 void collect_price_action(deal_price& rp, double trade, double gap) {
-    if (gap < 0.0) rp.down += trade;
-    else if (gap == 0.0) rp.keep += trade;
-    else rp.up += trade;
+    if (gap < 0.0){
+        rp.down.money += trade;
+    }else if (gap == 0.0){
+        rp.keep.money += trade;
+    }else{
+        rp.up.money += trade;
+    } 
 }
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap) {
-    if (bs_type == "B") collect_price_action(group.buy, trade, gap);
-    else if (bs_type == "S") collect_price_action(group.sale, trade, gap);
-    else collect_price_action(group.neutral, trade, gap);
+    if (bs_type == "B"){
+        collect_price_action(group.buy, trade, gap);
+    }else if (bs_type == "S"){
+        collect_price_action(group.sale, trade, gap);
+    } else{
+        collect_price_action(group.neutral, trade, gap);
+    } 
 }
 
 void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
@@ -53,16 +61,20 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
         metrics.first_record = record;
         stream_new(stream, record, record.price);
     }
+
     if (record_change(record, pre_record)) {
         summary_stream(metrics.stream_sum_info, stream);
         stream_new(stream, record, pre_record.price);
     } else if (!first_record(record)) {
         stream.records.push_back(record);
     }
+
+
     if (last_record(record)) {
         metrics.last_record = record;
         summary_stream(metrics.stream_sum_info, stream);
     }
+
     pre_record = record;
 }
 
@@ -85,9 +97,9 @@ void deal_classfy(DayOutputMetrics& out) {
 
   
     auto fill_price = [](deal_price& dest, const bs_action_group& src) {
-        dest.up   = src.buy.up   + src.sale.up   + src.neutral.up;
-        dest.down = src.buy.down + src.sale.down + src.neutral.down;
-        dest.keep = src.buy.keep + src.sale.keep + src.neutral.keep;
+        dest.up.money   = src.buy.up.money   + src.sale.up.money   + src.neutral.up.money;
+        dest.down.money = src.buy.down.money + src.sale.down.money + src.neutral.down.money;
+        dest.keep.money = src.buy.keep.money + src.sale.keep.money + src.neutral.keep.money;
     };
 
     fill_price(out.deal_super_price,  out.stream_sum_info.super);
@@ -95,8 +107,8 @@ void deal_classfy(DayOutputMetrics& out) {
     fill_price(out.deal_middle_price, out.stream_sum_info.middle);
     fill_price(out.deal_small_price,  out.stream_sum_info.small);
 
-    out.deal_total_price.up   = sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
-    out.deal_total_price.down = sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
-    out.deal_total_price.keep = sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    out.deal_total_price.up.money   = sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    out.deal_total_price.down.money = sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    out.deal_total_price.keep.money = sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
 }
 
