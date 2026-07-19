@@ -244,11 +244,10 @@ static const std::vector<Col> data_row_table_cols = {
 
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
-    // 仅当当前列可见时执行打印
     if (index < (int)cols.size() && cols[index].visible) {
         std::cout << std::setw(cols[index].width) << val << " | ";
     }
-    // 索引始终递增，以匹配调用序列
+
     index++;
 }
 
@@ -284,48 +283,44 @@ inline size_t sum_volume(const deal_price& price) {
     return price.up.volume + price.down.volume + price.keep.volume; 
 }
 
-
-inline void sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
-    total.buy.money = super.buy.money + big.buy.money + middle.buy.money + small.buy.money ;
-    total.buy.volume = super.buy.volume + big.buy.volume + middle.buy.volume + small.buy.volume ;
-    return ;
+inline void add_trade(trade& target, const trade& s, const trade& b, const trade& m, const trade& sm) {
+    target.money += (s.money + b.money + m.money + sm.money);
+    target.volume += (s.volume + b.volume + m.volume + sm.volume);
 }
 
-inline void sum_bsn_sale(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
-    total.sale.money = super.sale.money + big.sale.money + middle.sale.money + small.sale.money ;
-    total.sale.volume = super.sale.volume + big.sale.volume + middle.sale.volume + small.sale.volume ;
-    return;
+inline void sum_bsn_buy(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
+    add_trade(total.buy, s.buy, b.buy, m.buy, sm.buy);
 }
 
-inline void sum_bsn_neutral(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
-    total.neutral.money = super.neutral.money + big.neutral.money + middle.neutral.money + small.neutral.money ;
-    total.neutral.volume = super.neutral.volume + big.neutral.volume + middle.neutral.volume + small.neutral.volume ;
+inline void sum_bsn_sale(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
+    add_trade(total.sale, s.sale, b.sale, m.sale, sm.sale);
 }
 
-inline double sum_price_up(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
-    return super.up.money + big.up.money + middle.up.money + small.up.money ;
-}
-
-inline double sum_price_down(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
-    return super.down.money + big.down.money + middle.down.money + small.down.money ;
-}
-
-inline double sum_price_keep(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
-    return super.keep.money + big.keep.money + middle.keep.money + small.keep.money ;
+inline void sum_bsn_neutral(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
+    add_trade(total.neutral, s.neutral, b.neutral, m.neutral, sm.neutral);
 }
 
 
-// 专门负责打印带有标题的装饰线
+inline void sum_price_up(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
+    add_trade(total.up, s.up, b.up, m.up, sm.up);
+}
+
+inline void sum_price_down(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
+    add_trade(total.down, s.down, b.down, m.down, sm.down);
+}
+
+inline void sum_price_keep(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
+    add_trade(total.keep, s.keep, b.keep, m.keep, sm.keep);
+}
+
+
 inline void print_decorative_line(int total_width, const std::string& left_title, const std::string& right_title) {
-    // 扣除掉分隔符引起的额外长度，并计算可用的线条空间
     int line_len = total_width - 3;
     
-    // 计算标题占用的长度
     int left_len = static_cast<int>(left_title.length());
     int right_len = static_cast<int>(right_title.length());
     
-    // 计算中间剩余的横线长度
-    int mid_space = line_len - left_len - right_len - 4; // 4 为左右两侧括号和空格的预留
+    int mid_space = line_len - left_len - right_len - 4; 
     if (mid_space < 2) mid_space = 2;
 
     std::cout << "[ " << left_title << " ]" 
@@ -339,7 +334,6 @@ inline void print_will_price_header(const std::string& title, const std::vector<
     std::cout << std::left;
     int total_width = 0;
 
-    // 1. 打印表头：仅遍历可见列
     for (const auto& col : cols) {
         if (col.visible) {
             std::cout << std::setw(col.width) << col.name << " | ";
@@ -348,7 +342,6 @@ inline void print_will_price_header(const std::string& title, const std::vector<
     }
     std::cout << std::endl;
 
-    // 2. 打印对齐的装饰线
     print_decorative_line(total_width, title, title);
 }
 

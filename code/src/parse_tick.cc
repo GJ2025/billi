@@ -189,12 +189,19 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
                 metrics.am_closing_price = record.price; 
                 metrics.am_vol += current_vol;
                 metrics.am_turnover += current_amount; 
-                if (record.bs_type == "B") metrics.am_inflow += current_amount;
-                else if (record.bs_type == "S") metrics.am_outflow += current_amount;
+                
+                if (record.bs_type == "B"){
+                    metrics.am_inflow += current_amount;        
+                }else if (record.bs_type == "S"){
+                    metrics.am_outflow += current_amount;    
+                } 
             } else {
                 metrics.pm_vol += current_vol;
-                if (record.bs_type == "B") metrics.pm_inflow += current_amount;
-                else if (record.bs_type == "S") metrics.pm_outflow += current_amount;
+                if (record.bs_type == "B"){
+                    metrics.pm_inflow += current_amount;        
+                }else if (record.bs_type == "S"){
+                    metrics.pm_outflow += current_amount;    
+                } 
             }
         }else{
                 std::cout << "failed=========== " << record.time << std::endl;

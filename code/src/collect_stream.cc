@@ -126,8 +126,8 @@ void deal_classfy(DayOutputMetrics& out) {
     fill_price(out.deal_middle_price, out.stream_sum_info.middle);
     fill_price(out.deal_small_price,  out.stream_sum_info.small);
 
-    out.deal_total_price.up.money   = sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
-    out.deal_total_price.down.money = sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
-    out.deal_total_price.keep.money = sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price);
+    sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price, out.deal_total_price);
+    sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price, out.deal_total_price);
+    sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price,out. deal_small_price, out.deal_total_price);
 }
 
