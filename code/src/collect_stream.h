@@ -139,7 +139,7 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Tot-Kp", 9}, 
     {"WILL-Net", 10}, 
     {"PRICE-Net", 9},     
-    {"Total", 12},  
+    {"Money", 12},  
     {"Volume", 12},
     {"Pre", 5},     
     {"StartCh", 9}, 
@@ -164,7 +164,7 @@ static const std::vector<Col> price_table_cols = {
     {"Tot-Up", 12},  
     {"Tot-Dn", 12},  
     {"Tot-Net", 12},
-    {"Total", 12},   
+    {"Money", 12},   
     {"Volume", 12},
     {"Pre", 5},      
     {"StartCh", 9},  
@@ -189,7 +189,7 @@ static const std::vector<Col> will_table_cols = {
     {"Tot-Buy", 9},    
     {"Tot-Sale", 9},   
     {"Tot-Net", 9},
-    {"Total", 12},     
+    {"Money", 12},     
     {"Volume", 12},
     {"Pre", 5},        
     {"StartCh", 9},    
@@ -208,7 +208,7 @@ static const std::vector<Col> merge_table_cols = {
     {"TotKp(PRC)", 12},
     {"BSN-Net", 16},     
     {"PRC-Net", 16},
-    {"Total", 12},       
+    {"Money", 12},       
     {"Volume", 12},
     {"Pre", 5},          
     {"StartCh", 9},       
@@ -400,8 +400,10 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
 
     print_next_pos((bsn.buy.money - bsn.sale.money) / WAN, i, cols);
     print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
-    print_next((out.deal_total_bsn.buy.money + out.deal_total_bsn.sale.money + out.deal_total_bsn.neutral.money) / WAN, i, cols);
-    print_next(out.total_vol_wan, i, cols);
+
+    print_next((bsn.buy.money + bsn.sale.money + bsn.neutral.money) / WAN, i, cols);
+    print_next((bsn.buy.volume + bsn.sale.volume + bsn.neutral.volume)/ WAN, i, cols);
+    
     print_next(out.pre_closing_price, i, cols);
 
     print_next_pos(out.start_change, i, cols);

@@ -55,7 +55,7 @@ void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
 
     for (const auto& r : stream.records){
         total_trade += (r.volume * r.price * 100.0);
-        total_volume += r.volume;
+        total_volume += r.volume * 100;
     } 
     
     bs_action_group* group = (total_trade > 100 * WAN) ? &sum.super :
