@@ -305,12 +305,12 @@ int main(int argc, char* argv[]) {
     size_t current_idx = 0;
 
     for (const auto& file : files_to_process) {
-        current_idx++;
+        
         if (!check_company_id_match(file, target_company_id)) {
             continue;
         }
 
-        if (current_idx < start_index){
+        if (current_idx++ < start_index){
             continue;
         }
 

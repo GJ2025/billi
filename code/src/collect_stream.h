@@ -132,7 +132,7 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Tot-Dn", 9},
     {"Tot-Kp", 9}, 
     {"WILL-Net", 10}, 
-    {"Price-Net", 9},     
+    {"PRICE-Net", 9},     
     {"Total", 12},  
     {"Volume", 12},
     {"Pre", 5},     

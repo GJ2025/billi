@@ -6,7 +6,6 @@
 void print_table_header(); 
 void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out);
 void print_all();
-void show_margin_header(const std::string& margin);
 void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str);
 void print_headers(const ProgramOptions& opts);
 void print_tailer(const ProgramOptions& opts);

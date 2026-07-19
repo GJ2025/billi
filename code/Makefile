@@ -2,7 +2,7 @@
 CXX = g++
 
 # 在 CXXFLAGS 中添加 -Wunused-variable 和 -Wunused-but-set-variable
-CXXFLAGS = -g -O0 -Wall -Wextra -Wunused-variable -Wunused-but-set-variable -std=c++17
+CXXFLAGS = -g -O0 -Wall -Wextra -Wunused-variable -Wunused-but-set-variable -Wunused-function -std=c++17
 
 # 定义目录路径
 SRC_DIR = src
