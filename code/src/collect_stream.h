@@ -33,9 +33,9 @@ struct stream_sum {
 };
 
 struct deal_bsn {
-    double buy = 0.0;
-    double sale = 0.0;
-    double neutral = 0.0;
+    trade buy;
+    trade sale;
+    trade neutral;
 };
 
 struct StreamRecord {
@@ -275,24 +275,41 @@ inline std::string format_percent_value(double value) {
     return ss.str();
 }
 
-inline double sum_price(const deal_price& price) { 
+inline double sum_money(const deal_price& price) { 
     return price.up.money + price.down.money + price.keep.money; 
 }
-inline double sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
-    return super.buy + big.buy + middle.buy + small.buy ;
+
+
+inline size_t sum_volume(const deal_price& price) { 
+    return price.up.volume + price.down.volume + price.keep.volume; 
 }
-inline double sum_bsn_sale(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
-    return super.sale + big.sale + middle.sale + small.sale ;
+
+
+inline void sum_bsn_buy(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
+    total.buy.money = super.buy.money + big.buy.money + middle.buy.money + small.buy.money ;
+    total.buy.volume = super.buy.volume + big.buy.volume + middle.buy.volume + small.buy.volume ;
+    return ;
 }
-inline double sum_bsn_neutral(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small){
-    return super.neutral + big.neutral + middle.neutral + small.neutral ;
+
+inline void sum_bsn_sale(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
+    total.sale.money = super.sale.money + big.sale.money + middle.sale.money + small.sale.money ;
+    total.sale.volume = super.sale.volume + big.sale.volume + middle.sale.volume + small.sale.volume ;
+    return;
 }
+
+inline void sum_bsn_neutral(deal_bsn& super, deal_bsn& big, deal_bsn& middle, deal_bsn& small, deal_bsn& total){
+    total.neutral.money = super.neutral.money + big.neutral.money + middle.neutral.money + small.neutral.money ;
+    total.neutral.volume = super.neutral.volume + big.neutral.volume + middle.neutral.volume + small.neutral.volume ;
+}
+
 inline double sum_price_up(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
     return super.up.money + big.up.money + middle.up.money + small.up.money ;
 }
+
 inline double sum_price_down(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
     return super.down.money + big.down.money + middle.down.money + small.down.money ;
 }
+
 inline double sum_price_keep(deal_price& super, deal_price& big, deal_price& middle, deal_price& small){
     return super.keep.money + big.keep.money + middle.keep.money + small.keep.money ;
 }
@@ -380,17 +397,17 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
     print_next(super.neutral.keep.money / WAN, i, cols);
     print_next(super.neutral.up.money / WAN, i, cols);
 
-    print_next(bsn.buy / WAN, i, cols);
-    print_next(bsn.sale / WAN, i, cols);
-    print_next(bsn.neutral / WAN, i, cols);
+    print_next(bsn.buy.money / WAN, i, cols);
+    print_next(bsn.sale.money / WAN, i, cols);
+    print_next(bsn.neutral.money / WAN, i, cols);
 
     print_next(price.up.money / WAN, i, cols);
     print_next(price.down.money / WAN, i, cols);
     print_next(price.keep.money / WAN, i, cols);
 
-    print_next_pos((bsn.buy - bsn.sale) / WAN, i, cols);
+    print_next_pos((bsn.buy.money - bsn.sale.money) / WAN, i, cols);
     print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
-    print_next((out.deal_total_bsn.buy + out.deal_total_bsn.sale + out.deal_total_bsn.neutral) / WAN, i, cols);
+    print_next((out.deal_total_bsn.buy.money + out.deal_total_bsn.sale.money + out.deal_total_bsn.neutral.money) / WAN, i, cols);
     print_next(out.total_vol_wan, i, cols);
     print_next(out.pre_closing_price, i, cols);
 
@@ -408,42 +425,42 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     // 计算净额
-    double jing_super = out.deal_super_bsn.buy - out.deal_super_bsn.sale;
-    double jing_big = out.deal_big_bsn.buy - out.deal_big_bsn.sale;
-    double jing_middle = out.deal_middle_bsn.buy - out.deal_middle_bsn.sale;
-    double jing_small = out.deal_small_bsn.buy - out.deal_small_bsn.sale;
-    double jing_total = out.deal_total_bsn.buy - out.deal_total_bsn.sale;
+    double jing_super = out.deal_super_bsn.buy.money - out.deal_super_bsn.sale.money;
+    double jing_big = out.deal_big_bsn.buy.money - out.deal_big_bsn.sale.money;
+    double jing_middle = out.deal_middle_bsn.buy.money - out.deal_middle_bsn.sale.money;
+    double jing_small = out.deal_small_bsn.buy.money - out.deal_small_bsn.sale.money;
+    double jing_total = out.deal_total_bsn.buy.money - out.deal_total_bsn.sale.money;
 
     // 顺序打印 (需严格对应 cols 定义的顺序)
     print_next(out.date_str, i, cols);
 
     // Super
-    print_next(out.deal_super_bsn.buy / WAN, i, cols);
-    print_next(out.deal_super_bsn.sale / WAN, i, cols);
+    print_next(out.deal_super_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_super_bsn.sale.money / WAN, i, cols);
     print_next_pos(jing_super / WAN, i, cols);
 
     // Big
-    print_next(out.deal_big_bsn.buy / WAN, i, cols);
-    print_next(out.deal_big_bsn.sale / WAN, i, cols);
+    print_next(out.deal_big_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_big_bsn.sale.money / WAN, i, cols);
     print_next_pos(jing_big / WAN, i, cols);
 
     // Middle
-    print_next(out.deal_middle_bsn.buy / WAN, i, cols);
-    print_next(out.deal_middle_bsn.sale / WAN, i, cols);
+    print_next(out.deal_middle_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_middle_bsn.sale.money / WAN, i, cols);
     print_next_pos(jing_middle / WAN, i, cols);
 
     // Small
-    print_next(out.deal_small_bsn.buy / WAN, i, cols);
-    print_next(out.deal_small_bsn.sale / WAN, i, cols);
+    print_next(out.deal_small_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_small_bsn.sale.money / WAN, i, cols);
     print_next_pos(jing_small / WAN, i, cols);
 
     // Total
-    print_next(out.deal_total_bsn.buy / WAN, i, cols);
-    print_next(out.deal_total_bsn.sale / WAN, i, cols);
+    print_next(out.deal_total_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_total_bsn.sale.money / WAN, i, cols);
     print_next_pos(jing_total / WAN, i, cols);
 
     // 其余统计项
-    print_next((out.deal_total_bsn.buy + out.deal_total_bsn.sale + out.deal_total_bsn.neutral) / WAN, i, cols);
+    print_next((out.deal_total_bsn.buy.money + out.deal_total_bsn.sale.money + out.deal_total_bsn.neutral.money) / WAN, i, cols);
     print_next(out.total_vol_wan, i, cols);
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
@@ -461,9 +478,9 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.date_str, i, cols);
 
     // 2. BSN 汇总 (对应原代码 "buy" 后的三项)
-    print_next(out.deal_total_bsn.buy / WAN, i, cols);
-    print_next(out.deal_total_bsn.sale / WAN, i, cols);
-    print_next(out.deal_total_bsn.neutral / WAN, i, cols);
+    print_next(out.deal_total_bsn.buy.money / WAN, i, cols);
+    print_next(out.deal_total_bsn.sale.money / WAN, i, cols);
+    print_next(out.deal_total_bsn.neutral.money / WAN, i, cols);
 
     // 3. Price 汇总 (对应原代码 "up" 后的三项)
     print_next(out.deal_total_price.up.money / WAN, i, cols);
@@ -471,7 +488,7 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.deal_total_price.keep.money / WAN, i, cols);
 
     // 4. 净额 (带有正负号)
-    print_next_pos((out.deal_total_bsn.buy - out.deal_total_bsn.sale) / WAN, i, cols);
+    print_next_pos((out.deal_total_bsn.buy.money - out.deal_total_bsn.sale.money) / WAN, i, cols);
     print_next_pos((out.deal_total_price.up.money - out.deal_total_price.down.money) / WAN, i, cols);
 
     // 5. 成交总量相关
@@ -521,7 +538,7 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     std::cout << std::endl;
 }
 
-void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap);
+void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
 void deal_classfy(DayOutputMetrics& out);
 inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols);

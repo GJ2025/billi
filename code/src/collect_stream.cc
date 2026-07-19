@@ -22,36 +22,47 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
 }
 
 // --- 核心逻辑 ---
-void collect_price_action(deal_price& rp, double trade, double gap) {
+void collect_price_action(deal_price& rp, double trade, size_t volume, double gap) {
     if (gap < 0.0){
         rp.down.money += trade;
+        rp.down.volume += volume;
     }else if (gap == 0.0){
         rp.keep.money += trade;
+        rp.keep.volume += volume;
     }else{
         rp.up.money += trade;
+        rp.up.volume += volume;
     } 
 }
 
-void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, double gap) {
+void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap) {
     if (bs_type == "B"){
-        collect_price_action(group.buy, trade, gap);
+        collect_price_action(group.buy, trade, volume, gap);
     }else if (bs_type == "S"){
-        collect_price_action(group.sale, trade, gap);
+        collect_price_action(group.sale, trade, volume, gap);
     } else{
-        collect_price_action(group.neutral, trade, gap);
+        collect_price_action(group.neutral, trade, volume, gap);
     } 
 }
 
 void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
-    if (stream.records.empty()) return;
     double total_trade = 0.0;
-    for (const auto& r : stream.records) total_trade += (r.volume * r.price * 100.0);
+    size_t total_volume = 0;
+    
+    if (stream.records.empty()) {
+        return;
+    }
+
+    for (const auto& r : stream.records){
+        total_trade += (r.volume * r.price * 100.0);
+        total_volume += r.volume;
+    } 
     
     bs_action_group* group = (total_trade > 100 * WAN) ? &sum.super :
                              (total_trade > 30 * WAN) ? &sum.big :
                              (total_trade > 5 * WAN)  ? &sum.middle : &sum.small;
     
-    collect_bs_action(*group, stream.records[0].bs_type, total_trade, stream.gap);
+    collect_bs_action(*group, stream.records[0].bs_type, total_trade, total_volume, stream.gap);
 }
 
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
@@ -81,9 +92,13 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
 void deal_classfy(DayOutputMetrics& out) {
 
     auto fill_bsn = [&](deal_bsn& dest, const bs_action_group& src) {
-        dest.buy = sum_price(src.buy);
-        dest.sale = sum_price(src.sale);
-        dest.neutral = sum_price(src.neutral);
+        dest.buy.money = sum_money(src.buy);
+        dest.sale.money = sum_money(src.sale);
+        dest.neutral.money = sum_money(src.neutral);
+
+        dest.buy.volume = sum_volume(src.buy);
+        dest.sale.volume = sum_volume(src.sale);
+        dest.neutral.volume = sum_volume(src.neutral);
     };
 
     fill_bsn(out.deal_super_bsn, out.stream_sum_info.super);
@@ -91,15 +106,19 @@ void deal_classfy(DayOutputMetrics& out) {
     fill_bsn(out.deal_middle_bsn, out.stream_sum_info.middle);
     fill_bsn(out.deal_small_bsn, out.stream_sum_info.small);
 
-    out.deal_total_bsn.buy = sum_bsn_buy(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
-    out.deal_total_bsn.sale = sum_bsn_sale(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
-    out.deal_total_bsn.neutral = sum_bsn_neutral(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn);
+    sum_bsn_buy(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
+    sum_bsn_sale(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
+    sum_bsn_neutral(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
 
   
     auto fill_price = [](deal_price& dest, const bs_action_group& src) {
         dest.up.money   = src.buy.up.money   + src.sale.up.money   + src.neutral.up.money;
         dest.down.money = src.buy.down.money + src.sale.down.money + src.neutral.down.money;
         dest.keep.money = src.buy.keep.money + src.sale.keep.money + src.neutral.keep.money;
+
+        dest.up.volume   = src.buy.up.volume   + src.sale.up.volume   + src.neutral.up.volume;
+        dest.down.volume = src.buy.down.volume + src.sale.down.volume + src.neutral.down.volume;
+        dest.keep.volume = src.buy.keep.volume + src.sale.keep.volume + src.neutral.keep.volume;
     };
 
     fill_price(out.deal_super_price,  out.stream_sum_info.super);
