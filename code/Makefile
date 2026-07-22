@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
 
 # 编译规则：编译 src/*.cc 到 src/*.o
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cc
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cc $(SRC_DIR)/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # 清理规则

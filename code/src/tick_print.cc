@@ -84,29 +84,34 @@ void print_all() {
 void print_headers(const ProgramOptions& opts) {
     if (opts.show_head){
         print_table_header();
-    }  
+    } 
+
     if (opts.show_all){
-        print_will_price_header("ALL", data_row_table_cols);
-    }   
-    if (opts.show_will){
-        print_will_price_header("WILL", will_table_cols);
-    }   
-    if (opts.show_price){
-        print_will_price_header("PRICE ", price_table_cols);
-    }   
+        print__headers("ALL", data_all_table_cols);
+    } 
+
     if (opts.show_merge){
-        print_will_price_header("MERGE ", merge_table_cols) ;
+        print__headers("MERGE ", merge_table_cols) ;
     }   
-    if (opts.show_super ){
-        print_will_price_header("SUPER", will_price_table_cols);
+
+    if (opts.show_will){
+        print__headers("WILL", will_table_cols);
+    }
+
+    if (opts.show_price){
+        print__headers("PRICE ", price_table_cols);
+    }   
+
+    if (opts.show_super){
+        print__headers("SUPER", will_price_table_cols);
     }
     
     if (opts.show_big){
-        print_will_price_header("BIG", will_price_table_cols);
+        print__headers("BIG", will_price_table_cols);
     }
     
     if (opts.show_middle){
-        print_will_price_header("MIDDLE", will_price_table_cols);
+        print__headers("MIDDLE", will_price_table_cols);
     } 
 }
 
@@ -117,8 +122,12 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         }  
 
         if (opts.show_all){
-            print_data(out, divergence,data_row_table_cols);
+            print_data(out, divergence, data_all_table_cols);
         }
+
+        if (opts.show_merge){
+            print_merge(out, merge_table_cols);
+        } 
 
         if (opts.show_will){
             print_will(out, will_table_cols);
@@ -126,10 +135,6 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
 
         if (opts.show_price){
             print_price(out, price_table_cols);
-        } 
-
-        if (opts.show_merge){
-            print_merge(out, merge_table_cols);
         } 
 
         if (opts.show_super){
