@@ -128,22 +128,22 @@ struct Col {
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
     {"Buy-Dn", 12, false}, 
-    {"Buy-Kp", 9, false},  
-    {"Buy-Up", 9},
+    {"Buy-Kp", 12, false},  
+    {"Buy-Up", 12},
     {"Sale-Dn", 12,true}, 
-    {"Sale-Kp", 9, false}, 
-    {"Sale-Up", 9,false}, 
-    {"Neutral-Dn", 10, false},
-    {"Neutral-Kp", 10, false},  
-    {"Neutral-Up", 10, false},
+    {"Sale-Kp", 12, false}, 
+    {"Sale-Up", 12,false}, 
+    {"Neutral-Dn", 12, false},
+    {"Neutral-Kp", 12, false},  
+    {"Neutral-Up", 12, false},
     {"Tot-Buy", 12}, 
-    {"Tot-Sale", 9},
+    {"Tot-Sale", 12},
     {"Tot-Neutral", 12, true},    
-    {"Tot-Up", 9}, 
-    {"Tot-Dn", 9},
-    {"Tot-Kp", 9}, 
+    {"Tot-Up", 12}, 
+    {"Tot-Dn", 12},
+    {"Tot-Kp", 12}, 
     {"WILL-Net", 10}, 
-    {"PRICE-Net", 9},     
+    {"PRICE-Net", 12},     
     {"Money", 12},  
     {"Volume", 12},
     {"Pre", 5},     
@@ -158,24 +158,24 @@ static const std::vector<Col> will_table_cols = {
     {"Super-Sale", 10, false}, 
     
     {"Big-Buy", 12, false},  
-    {"Big-Sale", 9, false},   
+    {"Big-Sale", 12, false},   
    
-    {"Mid-Buy", 9, false},    
-    {"Mid-Sale", 9, false},   
+    {"Mid-Buy", 12, false},    
+    {"Mid-Sale", 12, false},   
     
 
 
     {"Small-Buy", 9, false},  
     {"Small-Sale", 10, false}, 
     
-    {"Super-NET", 9},
-    {"Big-NET", 9},    
-    {"Mid-NET", 9},
-    {"Small-NET", 9},
-    {"Tot-NET", 9},
+    {"Super-NET", 12},
+    {"Big-NET", 12},    
+    {"Mid-NET", 12},
+    {"Small-NET", 12},
+    {"Tot-NET", 12},
 
-    {"Tot-Buy", 9},    
-    {"Tot-Sale", 9},
+    {"Tot-Buy", 12},    
+    {"Tot-Sale", 12},
     {"Tot-Neutral", 12}, 
 
     {"Money", 12},     
@@ -204,7 +204,7 @@ static const std::vector<Col> price_table_cols = {
     {"Small-Dn", 9, false}, 
     
 
-    {"Super-NET", 9},
+    {"Super-NET", 12},
     {"Big-NET", 9},
     {"Mid-NET", 9},
     {"Small-NET", 9},
@@ -213,6 +213,8 @@ static const std::vector<Col> price_table_cols = {
     {"Tot-Up", 12},  
     {"Tot-Dn", 12},
     {"Tot-KEEP", 12},
+
+    {"KEEP/ALL", 8},
 
     {"Money", 12},   
     {"Volume", 12},
@@ -463,6 +465,9 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
 
 inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     int i = 0;
+    double all_money = out.deal_total_price.down.money + out.deal_total_price.up.money + out.deal_total_price.keep.money;
+
+
     std::cout << std::left << std::fixed << std::setprecision(2);
     print_next(out.date_str, i, cols);
 
@@ -491,10 +496,10 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.deal_total_price.up.money / WAN, i, cols);
     print_next(out.deal_total_price.down.money / WAN, i, cols);
     print_next(out.deal_total_price.keep.money / WAN, i, cols);
+    print_next(out.deal_total_price.keep.money / all_money, i, cols);
 
 
-
-    print_next((out.deal_total_price.down.money + out.deal_total_price.up.money + out.deal_total_price.keep.money) / WAN, i, cols);
+    print_next( all_money/WAN , i, cols);
     print_next(out.total_vol_wan, i, cols);
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
