@@ -53,11 +53,12 @@ struct HeadTickData {
 
 struct DailyMetrics {
     long long valid_records_count = 0;
-    double closing_price = 0.0;
+    double pm_closing_price = 0.0;
     double am_closing_price = 0.0;
     long long am_vol = 0;
     long long pm_vol = 0;
-    double total_turnover = 0.0;
+    //double total_turnover = 0.0;
+    double pm_turnover = 0.0;
     double am_turnover = 0.0; 
     double am_inflow = 0.0;
     double am_outflow = 0.0;
@@ -71,25 +72,29 @@ struct DailyMetrics {
     stream_sum stream_sum_info;
 };
 
+
 struct DayOutputMetrics {
     long long ticks_count = 0;  
     double pre_closing_price = 0.0;        
-    double closing_price = 0.0;        
+    
+    double pm_closing_price = 0.0;        
     double am_closing_price = 0.0;     
     double am_net_inflow_wan = 0.0;
     double pm_net_inflow_wan = 0.0;
-    double net_inflow_wan = 0.0;
-    double total_turnover_wan = 0.0;
     double am_turnover_wan = 0.0;      
     double am_turnover_ratio = 0.0;
-    double total_vol_wan = 0.0;
     double am_vol_wan = 0.0;
+    double am_pct_change = 0.0;
+
+    double net_inflow_wan = 0.0;
+    double total_turnover_wan = 0.0;
+
+    double total_vol_wan = 0.0;
     double avg_price = 0.0;
     double inflow_ratio = 0.0;
     double avg_vol_per_tick = 0.0;
     double net_per_change = 0.0;
     double pct_change = 0.0;
-    double am_pct_change = 0.0;
     double start_change = 0.0;
 
     std::string date_str = "";
@@ -225,7 +230,6 @@ static const std::vector<Col> data_row_table_cols = {
     {"AvgVol/Tick", 11},
     {"TotTurn(W)", 11},
     {"Vol(W)", 9},  
-    {"AM-Close", 8, false}, 
 
     {"NetIn(W)", 10},
     {"AM-NetIn(W)", 11}, 
@@ -235,8 +239,9 @@ static const std::vector<Col> data_row_table_cols = {
     {"HistNetIn(W)", 11, false}, 
 
     {"AvgPrice", 9},
+    {"AM-Close", 8, true}, 
+    {"AM-Pct%", 8, true}, 
     {"Close", 7}, 
-    {"AM-Pct%", 8, false}, 
     {"Pct%", 8}, 
 
     {"Divergence", 20}
@@ -369,7 +374,7 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.closing_price, i, cols);
+    print_next(out.pm_closing_price, i, cols);
     std::cout << std::endl;
 }
 
@@ -409,7 +414,7 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
 
-    print_next(out.closing_price, i, cols);
+    print_next(out.pm_closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -460,7 +465,7 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.closing_price, i, cols);
+    print_next(out.pm_closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -494,7 +499,7 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.closing_price, i, cols);
+    print_next(out.pm_closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -513,7 +518,6 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     
     print_next(out.total_turnover_wan, i, cols);
     print_next(out.total_vol_wan, i, cols);
-    print_next(out.am_closing_price, i, cols);
 
     
     print_next_pos(out.net_inflow_wan, i, cols);
@@ -524,8 +528,11 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
     print_next(out.historical_total_inflow, i, cols);
 
     print_next(out.avg_price, i, cols);
-    print_next(out.closing_price, i, cols);
+
+    print_next(out.am_closing_price, i, cols);
     print_next_pos(out.am_pct_change, i, cols);
+
+    print_next(out.pm_closing_price, i, cols);
     print_next_pos(out.pct_change, i, cols);
     
     print_next(divergence_str, i, cols);

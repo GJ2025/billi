@@ -21,7 +21,7 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
     stream.gap = record.price - pre_price;
 }
 
-// --- 核心逻辑 ---
+
 void collect_price_action(deal_price& rp, double trade, size_t volume, double gap) {
     if (gap < 0.0){
         rp.down.money += trade;

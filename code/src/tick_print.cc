@@ -33,9 +33,9 @@ void print_table_header() {
 void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out) {
     double price_change_pct = 0.0;
     double ratio_change_pre_day = 0.0;
-    if (pre_out.closing_price != 0.0) {
-        price_change_pct = ((out.closing_price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
-        ratio_change_pre_day = ((out.head_data.v_925.price - pre_out.closing_price) / pre_out.closing_price) * 100.0;
+    if (pre_out.pm_closing_price != 0.0) {
+        price_change_pct = ((out.pm_closing_price - pre_out.pm_closing_price) / pre_out.pm_closing_price) * 100.0;
+        ratio_change_pre_day = ((out.head_data.v_925.price - pre_out.pm_closing_price) / pre_out.pm_closing_price) * 100.0;
 
     }
 
@@ -98,21 +98,49 @@ void print_headers(const ProgramOptions& opts) {
         print_will_price_header("MERGE ", merge_table_cols) ;
     }   
     if (opts.show_super ){
-        print_will_price_header("SUPER",will_price_table_cols);
+        print_will_price_header("SUPER", will_price_table_cols);
     }
     
     if (opts.show_big){
-        print_will_price_header("BIG",will_price_table_cols);
+        print_will_price_header("BIG", will_price_table_cols);
+    }
+    
+    if (opts.show_middle){
+        print_will_price_header("MIDDLE", will_price_table_cols);
     } 
 }
 
 
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
-        if (opts.show_head)  print_header_info(out, prev_out);
-        if (opts.show_all)   print_data(out, divergence,data_row_table_cols);;
-        if (opts.show_will)  print_will(out, will_table_cols);
-        if (opts.show_price) print_price(out, price_table_cols);
-        if (opts.show_merge) print_merge(out, merge_table_cols);
-        if (opts.show_super) print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
-        if (opts.show_big) print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
+        if (opts.show_head){
+            print_header_info(out, prev_out);
+        }  
+
+        if (opts.show_all){
+            print_data(out, divergence,data_row_table_cols);
+        }
+
+        if (opts.show_will){
+            print_will(out, will_table_cols);
+        }  
+
+        if (opts.show_price){
+            print_price(out, price_table_cols);
+        } 
+
+        if (opts.show_merge){
+            print_merge(out, merge_table_cols);
+        } 
+
+        if (opts.show_super){
+            print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
+        }
+
+        if (opts.show_big){
+            print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
+        } 
+
+        if (opts.show_middle){
+            print_slim_price(out, out.stream_sum_info.middle, out.deal_middle_bsn,  out.deal_middle_price, will_price_table_cols);
+        } 
 }

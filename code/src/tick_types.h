@@ -44,6 +44,7 @@ struct ProgramOptions {
     bool show_income_ratio = false;
     bool show_super = false;
     bool show_big = false;
+    bool show_middle = false;
     bool show_merge = false;
     size_t show_limit = 1000;
     std::string dir_path;

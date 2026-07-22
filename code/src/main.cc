@@ -68,14 +68,6 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 }
 
 
-std::string are_signs_same(double a, double b) {
-    if  (std::signbit(a) == std::signbit(b)){
-        return "SAME";
-    }else{
-        return "DIFF";
-    }
-}
-
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     std::vector<std::string> signals;
 
@@ -106,7 +98,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 }
 
 bool is_filled_tick(const DayOutputMetrics& out){
-    bool had_one = (out.ticks_count > 0 && out.closing_price > 0.0);
+    bool had_one = (out.ticks_count > 0 && out.pm_closing_price > 0.0);
     return had_one;
 }
 
@@ -179,17 +171,17 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             update_stream_and_metrics(metrics, stream, record, pre_record);
             
             metrics.valid_records_count++;
-            metrics.closing_price = record.price; 
+             
 
             long long current_vol = record.volume * 100; 
             double current_amount = record.price * current_vol;
-            metrics.total_turnover += current_amount; 
+            metrics.pm_closing_price = record.price;
 
             if (is_am_time(record.t)) {
                 metrics.am_closing_price = record.price; 
                 metrics.am_vol += current_vol;
                 metrics.am_turnover += current_amount; 
-                
+
                 if (record.bs_type == "B"){
                     metrics.am_inflow += current_amount;        
                 }else if (record.bs_type == "S"){
@@ -197,6 +189,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
                 } 
             } else {
                 metrics.pm_vol += current_vol;
+                metrics.pm_turnover += current_amount; 
                 if (record.bs_type == "B"){
                     metrics.pm_inflow += current_amount;        
                 }else if (record.bs_type == "S"){
@@ -229,24 +222,23 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     }
 
     out.ticks_count = metrics.valid_records_count;
-    out.closing_price = metrics.closing_price;
+    out.pm_closing_price = metrics.pm_closing_price;
     out.am_closing_price = metrics.am_closing_price;
 
     out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / WAN;
     out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / WAN; 
     out.net_inflow_wan = out.am_net_inflow_wan + out.pm_net_inflow_wan;  
     
-    out.total_turnover_wan = metrics.total_turnover / WAN;
+    out.total_turnover_wan = (metrics.pm_turnover+ metrics.am_turnover)/ WAN;
     out.am_turnover_wan = metrics.am_turnover / WAN; 
     
-    if (metrics.total_turnover > 0.0) {
-        out.am_turnover_ratio = (metrics.am_turnover / metrics.total_turnover) * BAI;
+    if ((metrics.pm_turnover+ metrics.am_turnover) > 0.0) {
+        out.am_turnover_ratio = (metrics.am_turnover / (metrics.pm_turnover+ metrics.am_turnover)) * BAI;
     } else {
         out.am_turnover_ratio = 0.0;
     }
 
-    long long total_vol = metrics.am_vol + metrics.pm_vol;
-    out.total_vol_wan = total_vol / WAN;  
+    out.total_vol_wan = (metrics.am_vol + metrics.pm_vol) / WAN;  
     out.am_vol_wan = metrics.am_vol / WAN;
 
     if (out.total_vol_wan > 0.0) {
@@ -276,7 +268,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> files_to_process;
     int opt;
 
-    while ((opt = getopt(argc, argv, "hd:parwsmbl:")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsmbl:M")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -287,6 +279,7 @@ int main(int argc, char* argv[]) {
             case 'm': opts.show_merge = true; break;
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
+            case 'M': opts.show_middle = true; break;
             case 'l': 
                 opts.show_limit = std::stoi(optarg);
                 break;
@@ -327,10 +320,10 @@ int main(int argc, char* argv[]) {
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
         if (is_filled_tick(prev_out)) {
-            out.pct_change =pct(out.closing_price, prev_out.closing_price);
-            out.am_pct_change = pct(out.am_closing_price, prev_out.closing_price);
-            out.start_change = pct(out.first_record.price, prev_out.closing_price);
-            out.pre_closing_price = prev_out.closing_price;
+            out.pct_change =pct(out.pm_closing_price, prev_out.pm_closing_price);
+            out.am_pct_change = pct(out.am_closing_price, prev_out.pm_closing_price);
+            out.start_change = pct(out.first_record.price, prev_out.pm_closing_price);
+            out.pre_closing_price = prev_out.pm_closing_price;
         }
 
         if (std::abs(out.pct_change) <= 1.0) {
