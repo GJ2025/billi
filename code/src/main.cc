@@ -342,7 +342,6 @@ int main(int argc, char* argv[]) {
 
     print_headers(opts);
 
-    DayOutputMetrics out;
     DayOutputMetrics prev_out;
     std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
@@ -360,6 +359,8 @@ int main(int argc, char* argv[]) {
         if (current_idx++ < start_index){
             continue;
         }
+
+        DayOutputMetrics out;
 
         
         if (!process_single_file(file, out)) {

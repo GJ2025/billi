@@ -506,7 +506,9 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next_pos(out.pct_change, i, cols);
     print_next(out.pm_closing_price, i, cols);
     std::cout << std::endl;
+    
 }
+
 
 inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     int i = 0;
