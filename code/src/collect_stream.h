@@ -54,14 +54,14 @@ struct HeadTickData {
 struct DailyMetrics {
     long long ticks_count = 0;
     double closing_price = 0.0;
-    long long am_vol = 0;
-    long long pm_vol = 0;
-    double pm_turnover = 0.0;
-    double am_turnover = 0.0; 
-    double am_inflow = 0.0;
-    double am_outflow = 0.0;
-    double pm_inflow = 0.0;
-    double pm_outflow = 0.0;
+    // long long am_vol = 0;
+    // long long pm_vol = 0;
+    // double pm_turnover = 0.0;
+    // double am_turnover = 0.0; 
+    // double am_inflow = 0.0;
+    // double am_outflow = 0.0;
+    // double pm_inflow = 0.0;
+    // double pm_outflow = 0.0;
 
     HeadTickData head_data;
     bool head_calculated = false;
@@ -542,13 +542,17 @@ inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std:
 
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
     int i = 0;
+    const deal_bsn& deal_total_bsn = out.am_metrics.deal_total_bsn;
+
+
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
     print_next(out.metrics.ticks_count, i, cols);
-    print_next(out.am_vol_wan, i, cols);
+    // print_next(out.am_vol_wan, i, cols);
+    print_next(deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume, i, cols);
+    print_next(deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money, i, cols);
     
-    print_next(out.am_turnover_wan, i, cols);
     print_next(out.am_turnover_ratio, i, cols);
     print_next(out.avg_vol_per_tick, i, cols);
     

@@ -160,28 +160,7 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     metrics.ticks_count++;
         
 
-    long long current_vol = record.volume * 100; 
-    double current_amount = record.price * current_vol;
     metrics.closing_price = record.price;
-
-    if (is_am_time(record.t)) {
-        metrics.am_vol += current_vol;
-        metrics.am_turnover += current_amount; 
-
-        if (record.bs_type == "B"){
-            metrics.am_inflow += current_amount;        
-        }else if (record.bs_type == "S"){
-            metrics.am_outflow += current_amount;    
-        } 
-    } else {
-        metrics.pm_vol += current_vol;
-        metrics.pm_turnover += current_amount; 
-        if (record.bs_type == "B"){
-            metrics.pm_inflow += current_amount;        
-        }else if (record.bs_type == "S"){
-            metrics.pm_outflow += current_amount;    
-        } 
-    }
 
     return;
 }
@@ -247,23 +226,6 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     if (metrics.ticks_count == 0) {
         return false;
     }
-
-
-    out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / WAN;
-    out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / WAN; 
-    out.net_inflow_wan = out.am_net_inflow_wan + out.pm_net_inflow_wan;  
-    
-    out.total_turnover_wan = (metrics.pm_turnover+ metrics.am_turnover)/ WAN;
-    out.am_turnover_wan = metrics.am_turnover / WAN; 
-    
-    if ((metrics.pm_turnover+ metrics.am_turnover) > 0.0) {
-        out.am_turnover_ratio = (metrics.am_turnover / (metrics.pm_turnover+ metrics.am_turnover)) * BAI;
-    } else {
-        out.am_turnover_ratio = 0.0;
-    }
-
-    out.total_vol_wan = (metrics.am_vol + metrics.pm_vol) / WAN;  
-    out.am_vol_wan = metrics.am_vol / WAN;
 
     if (out.total_vol_wan > 0.0) {
         out.avg_price = out.total_turnover_wan / out.total_vol_wan;
@@ -364,6 +326,7 @@ int main(int argc, char* argv[]) {
         process_out(out, prev_out);
 
         deal_classfy(out.metrics);
+        deal_classfy(out.am_metrics);
         divergengce = get_and_print_signals(out, prev_out);
 
         print_bodys(opts, out, prev_out, divergengce);
