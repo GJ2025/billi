@@ -499,7 +499,7 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.deal_total_price.keep.money / all_money, i, cols);
 
 
-    print_next( all_money/WAN , i, cols);
+    print_next(all_money/WAN , i, cols);
     print_next(out.total_vol_wan, i, cols);
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);

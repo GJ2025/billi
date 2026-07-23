@@ -39,6 +39,14 @@ bool after_15(const tickTime& t) {
     }
 }
 
+bool is_1130(const tickTime& t) {
+    if (t.hour == 11 && t.minute == 30){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
     
@@ -179,7 +187,7 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     return;
 }
 
-void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
+void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics& am_metrics) {
     std::string line;
     TickRecord pre_record;
     StreamRecord stream;
@@ -198,7 +206,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
             if (!is_loading_data(record.time)){
                 continue;        
             } 
-            
+
             process_head_data(metrics, record);
 
             if (record.deal_count == 0){
@@ -210,6 +218,10 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
 
             update_stream_and_metrics(metrics, stream, record, pre_record);
             update_metrics_by_record(metrics, record);
+
+            if (is_1130(record.t)){
+                am_metrics = metrics;
+            }
 
         }else{
                 std::cout << "failed=========== " << record.time << std::endl;
@@ -228,8 +240,10 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
         return false;
     }
 
-    DailyMetrics metrics; 
-    parse_tick_file(infile, metrics);
+    DailyMetrics metrics;
+    DailyMetrics am_metrics;
+
+    parse_tick_file(infile, metrics, am_metrics);
 
     if (metrics.valid_records_count == 0) {
         return false;

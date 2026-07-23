@@ -4,11 +4,19 @@
 #include <iomanip>
 #include "common.h"
 
-// --- 辅助逻辑 ---
 bool record_change(TickRecord this_record, TickRecord pre_record) {
-    if (this_record.bs_type != pre_record.bs_type) return true;
-    if (this_record.bs_type == "S") return this_record.price > pre_record.price;
-    if (this_record.bs_type == "B") return this_record.price < pre_record.price;
+    if (this_record.bs_type != pre_record.bs_type){
+        return true;
+    } 
+
+    if (this_record.bs_type == "S"){
+        return this_record.price > pre_record.price;
+    } 
+
+    if (this_record.bs_type == "B"){
+        return this_record.price < pre_record.price;
+    } 
+
     return true;
 }
 
