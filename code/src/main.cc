@@ -106,7 +106,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 }
 
 bool is_filled_tick(const DayOutputMetrics& out){
-    bool had_one = (out.ticks_count > 0 && out.metrics.closing_price > 0.0);
+    bool had_one = (out.metrics.ticks_count > 0 && out.metrics.closing_price > 0.0);
     return had_one;
 }
 
@@ -157,7 +157,7 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
 }
 
 void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
-    metrics.valid_records_count++;
+    metrics.ticks_count++;
         
 
     long long current_vol = record.volume * 100; 
@@ -244,11 +244,10 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
 
     parse_tick_file(infile, metrics, am_metrics);
 
-    if (metrics.valid_records_count == 0) {
+    if (metrics.ticks_count == 0) {
         return false;
     }
 
-    out.ticks_count = metrics.valid_records_count;
 
     out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / WAN;
     out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / WAN; 
@@ -274,7 +273,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
         out.inflow_ratio = (out.net_inflow_wan / out.total_turnover_wan) * BAI;
     }
 
-    out.avg_vol_per_tick = (out.total_vol_wan * 10000.0) / metrics.valid_records_count; 
+    out.avg_vol_per_tick = (out.total_vol_wan * WAN) / metrics.ticks_count; 
 
     
     std::string pure_name = fs::path(filename).filename().string();
@@ -369,7 +368,7 @@ int main(int argc, char* argv[]) {
 
         print_bodys(opts, out, prev_out, divergengce);
 
-        if (out.ticks_count > 0) {
+        if (out.metrics.ticks_count > 0) {
             prev_out = out;
         }
     }

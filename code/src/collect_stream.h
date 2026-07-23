@@ -52,12 +52,10 @@ struct HeadTickData {
 };
 
 struct DailyMetrics {
-    long long valid_records_count = 0;
+    long long ticks_count = 0;
     double closing_price = 0.0;
-    // double am_closing_price = 0.0;
     long long am_vol = 0;
     long long pm_vol = 0;
-    //double total_turnover = 0.0;
     double pm_turnover = 0.0;
     double am_turnover = 0.0; 
     double am_inflow = 0.0;
@@ -74,11 +72,8 @@ struct DailyMetrics {
 
 
 struct DayOutputMetrics {
-    long long ticks_count = 0;  
-    double pre_closing_price = 0.0;        
     
-    // // double pm_closing_price = 0.0;        
-    // double am_closing_price = 0.0;     
+    double pre_closing_price = 0.0;        
     double am_net_inflow_wan = 0.0;
     double pm_net_inflow_wan = 0.0;
     double am_turnover_wan = 0.0;      
@@ -547,7 +542,7 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
-    print_next(out.ticks_count, i, cols);
+    print_next(out.metrics.ticks_count, i, cols);
     print_next(out.am_vol_wan, i, cols);
     
     print_next(out.am_turnover_wan, i, cols);
