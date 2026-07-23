@@ -39,8 +39,8 @@ bool after_15(const tickTime& t) {
     }
 }
 
-bool is_1130(const tickTime& t) {
-    if (t.hour == 11 && t.minute == 30){
+bool is_am_end(const tickTime& t) {
+    if (t.hour == 11 && (t.minute == 30 || t.minute == 29)){
         return true;
     }else{
         return false;
@@ -106,7 +106,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 }
 
 bool is_filled_tick(const DayOutputMetrics& out){
-    bool had_one = (out.ticks_count > 0 && out.pm_closing_price > 0.0);
+    bool had_one = (out.ticks_count > 0 && out.metrics.closing_price > 0.0);
     return had_one;
 }
 
@@ -162,10 +162,9 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
 
     long long current_vol = record.volume * 100; 
     double current_amount = record.price * current_vol;
-    metrics.pm_closing_price = record.price;
+    metrics.closing_price = record.price;
 
     if (is_am_time(record.t)) {
-        metrics.am_closing_price = record.price; 
         metrics.am_vol += current_vol;
         metrics.am_turnover += current_amount; 
 
@@ -219,7 +218,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
             update_stream_and_metrics(metrics, stream, record, pre_record);
             update_metrics_by_record(metrics, record);
 
-            if (is_1130(record.t)){
+            if (is_am_end(record.t)){
                 am_metrics = metrics;
             }
 
@@ -250,8 +249,6 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     }
 
     out.ticks_count = metrics.valid_records_count;
-    out.pm_closing_price = metrics.pm_closing_price;
-    out.am_closing_price = metrics.am_closing_price;
 
     out.am_net_inflow_wan = (metrics.am_inflow - metrics.am_outflow) / WAN;
     out.pm_net_inflow_wan = (metrics.pm_inflow - metrics.pm_outflow) / WAN; 
@@ -283,10 +280,8 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     std::string pure_name = fs::path(filename).filename().string();
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
-    out.head_data = metrics.head_data;
-    out.stream_sum_info = metrics.stream_sum_info;
-    out.first_record = metrics.first_record;
-    out.last_record = metrics.last_record;
+    out.metrics = metrics;
+    out.am_metrics = am_metrics;
 
     return true;
 }
@@ -295,10 +290,10 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
 
         out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
         if (is_filled_tick(prev_out)) {
-            out.pct_change =pct(out.pm_closing_price, prev_out.pm_closing_price);
-            out.am_pct_change = pct(out.am_closing_price, prev_out.pm_closing_price);
-            out.start_change = pct(out.first_record.price, prev_out.pm_closing_price);
-            out.pre_closing_price = prev_out.pm_closing_price;
+            out.pct_change =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
+            out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
+            out.start_change = pct(out.metrics.first_record.price, prev_out.metrics.closing_price);
+            out.pre_closing_price = prev_out.metrics.closing_price;
         }
 
         if (std::abs(out.pct_change) <= 1.0) {

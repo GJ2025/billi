@@ -53,8 +53,8 @@ struct HeadTickData {
 
 struct DailyMetrics {
     long long valid_records_count = 0;
-    double pm_closing_price = 0.0;
-    double am_closing_price = 0.0;
+    double closing_price = 0.0;
+    // double am_closing_price = 0.0;
     long long am_vol = 0;
     long long pm_vol = 0;
     //double total_turnover = 0.0;
@@ -77,8 +77,8 @@ struct DayOutputMetrics {
     long long ticks_count = 0;  
     double pre_closing_price = 0.0;        
     
-    double pm_closing_price = 0.0;        
-    double am_closing_price = 0.0;     
+    // // double pm_closing_price = 0.0;        
+    // double am_closing_price = 0.0;     
     double am_net_inflow_wan = 0.0;
     double pm_net_inflow_wan = 0.0;
     double am_turnover_wan = 0.0;      
@@ -100,11 +100,8 @@ struct DayOutputMetrics {
     std::string date_str = "";
     double historical_total_inflow = 0.0;
 
-    TickRecord first_record;
-    TickRecord last_record;
-
-    HeadTickData head_data;
-    stream_sum stream_sum_info;
+    DailyMetrics metrics;
+    DailyMetrics am_metrics;
 
     deal_bsn deal_super_bsn;
     deal_bsn deal_big_bsn;
@@ -408,7 +405,8 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
 
-    print_next(out.pm_closing_price, i, cols);
+    // print_next(out.pm_closing_price, i, cols);
+    print_next(out.metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -458,7 +456,7 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.pm_closing_price, i, cols);
+    print_next(out.metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -504,9 +502,9 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.pm_closing_price, i, cols);
+    print_next(out.metrics.closing_price, i, cols);
     std::cout << std::endl;
-    
+
 }
 
 
@@ -539,12 +537,12 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    print_next(out.pm_closing_price, i, cols);
+    print_next(out.metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
 
-inline void print_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
+inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -569,10 +567,11 @@ inline void print_data(const DayOutputMetrics& out, const std::string& divergenc
 
     print_next(out.avg_price, i, cols);
 
-    print_next(out.am_closing_price, i, cols);
+    // print_next(out.am_closing_price, i, cols);
+    print_next(out.am_metrics.closing_price, i, cols);
     print_next_pos(out.am_pct_change, i, cols);
 
-    print_next(out.pm_closing_price, i, cols);
+    print_next(out.metrics.closing_price, i, cols);
     print_next_pos(out.pct_change, i, cols);
     
     print_next(divergence_str, i, cols);
@@ -588,6 +587,6 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
 void print__headers(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);
 inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols);
-inline void print_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols);
+inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols);
 
 #endif // COLLECT_STREAM_H

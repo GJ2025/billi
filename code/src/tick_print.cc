@@ -33,21 +33,21 @@ void print_table_header() {
 void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out) {
     double price_change_pct = 0.0;
     double ratio_change_pre_day = 0.0;
-    if (pre_out.pm_closing_price != 0.0) {
-        price_change_pct = ((out.pm_closing_price - pre_out.pm_closing_price) / pre_out.pm_closing_price) * 100.0;
-        ratio_change_pre_day = ((out.head_data.v_925.price - pre_out.pm_closing_price) / pre_out.pm_closing_price) * 100.0;
+    if (pre_out.metrics.closing_price != 0.0) {
+        price_change_pct = ((out.metrics.closing_price - pre_out.metrics.closing_price) / pre_out.metrics.closing_price) * 100.0;
+        ratio_change_pre_day = ((out.metrics.head_data.v_925.price - pre_out.metrics.closing_price) / pre_out.metrics.closing_price) * 100.0;
 
     }
 
     std::cout << std::left  << std::setw(12) << out.date_str << " | "
               << std::right << std::fixed << std::setprecision(2)
-              << std::setw(12) << out.head_data.pre_924.price << " | "
-              << std::setw(10) << out.head_data.v_924.price   << " | "
-              << std::setw(10) << out.head_data.v_925.price   << " | "
-              << std::setw(11) << out.head_data.ratio_change_pre_924 << "% | "
+              << std::setw(12) << out.metrics.head_data.pre_924.price << " | "
+              << std::setw(10) << out.metrics.head_data.v_924.price   << " | "
+              << std::setw(10) << out.metrics.head_data.v_925.price   << " | "
+              << std::setw(11) << out.metrics.head_data.ratio_change_pre_924 << "% | "
               << std::setw(11) << ratio_change_pre_day << "% | "
-              << std::setw(6) << out.head_data.v_925.bs_type << " | "
-              << std::setw(11) << out.head_data.ratio_change_924 << "% | "
+              << std::setw(6) << out.metrics.head_data.v_925.bs_type << " | "
+              << std::setw(11) << out.metrics.head_data.ratio_change_924 << "% | "
               << std::setw(11) << price_change_pct << "%"
               << std::endl;
 }
@@ -122,7 +122,7 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         }  
 
         if (opts.show_all){
-            print_data(out, divergence, data_all_table_cols);
+            print_all_data(out, divergence, data_all_table_cols);
         }
 
         if (opts.show_merge){
@@ -138,14 +138,14 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         } 
 
         if (opts.show_super){
-            print_slim_price(out, out.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
         }
 
         if (opts.show_big){
-            print_slim_price(out, out.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, out.stream_sum_info.middle, out.deal_middle_bsn,  out.deal_middle_price, will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.middle, out.deal_middle_bsn,  out.deal_middle_price, will_price_table_cols);
         } 
 }
