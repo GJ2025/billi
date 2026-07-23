@@ -126,26 +126,26 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         }
 
         if (opts.show_merge){
-            print_merge(out, merge_table_cols);
+            print_merge(out, out.metrics, merge_table_cols);
         } 
 
         if (opts.show_will){
-            print_will(out, will_table_cols);
+            print_will(out, out.metrics, will_table_cols);
         }  
 
         if (opts.show_price){
-            print_price(out, price_table_cols);
+            print_price(out, out.metrics, price_table_cols);
         } 
 
         if (opts.show_super){
-            print_slim_price(out, out.metrics.stream_sum_info.super, out.deal_super_bsn, out.deal_super_price,will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.super, out.metrics.deal_super_bsn, out.metrics.deal_super_price, will_price_table_cols);
         }
 
         if (opts.show_big){
-            print_slim_price(out, out.metrics.stream_sum_info.big, out.deal_big_bsn,  out.deal_big_price,will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.big, out.metrics.deal_big_bsn,  out.metrics.deal_big_price, will_price_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, out.metrics.stream_sum_info.middle, out.deal_middle_bsn,  out.deal_middle_price, will_price_table_cols);
+            print_slim_price(out, out.metrics.stream_sum_info.middle, out.metrics.deal_middle_bsn,  out.metrics.deal_middle_price, will_price_table_cols);
         } 
 }

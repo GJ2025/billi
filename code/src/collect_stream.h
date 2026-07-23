@@ -68,6 +68,18 @@ struct DailyMetrics {
     TickRecord first_record;
     TickRecord last_record;
     stream_sum stream_sum_info;
+
+    deal_bsn deal_super_bsn;
+    deal_bsn deal_big_bsn;
+    deal_bsn deal_middle_bsn;
+    deal_bsn deal_small_bsn;
+    deal_bsn deal_total_bsn;
+
+    deal_price deal_super_price;
+    deal_price deal_big_price;
+    deal_price deal_middle_price;
+    deal_price deal_small_price;
+    deal_price deal_total_price; 
 };
 
 
@@ -98,17 +110,8 @@ struct DayOutputMetrics {
     DailyMetrics metrics;
     DailyMetrics am_metrics;
 
-    deal_bsn deal_super_bsn;
-    deal_bsn deal_big_bsn;
-    deal_bsn deal_middle_bsn;
-    deal_bsn deal_small_bsn;
-    deal_bsn deal_total_bsn;
 
-    deal_price deal_super_price;
-    deal_price deal_big_price;
-    deal_price deal_middle_price;
-    deal_price deal_small_price;
-    deal_price deal_total_price;    
+   
 };
 
 struct Col {
@@ -407,31 +410,31 @@ inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal
 }
 
 
-inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
+inline void print_will(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    double jing_super = out.deal_super_bsn.buy.money - out.deal_super_bsn.sale.money;
-    double jing_big = out.deal_big_bsn.buy.money - out.deal_big_bsn.sale.money;
-    double jing_middle = out.deal_middle_bsn.buy.money - out.deal_middle_bsn.sale.money;
-    double jing_small = out.deal_small_bsn.buy.money - out.deal_small_bsn.sale.money;
-    double jing_total = out.deal_total_bsn.buy.money - out.deal_total_bsn.sale.money;
+    double jing_super = metrics.deal_super_bsn.buy.money - metrics.deal_super_bsn.sale.money;
+    double jing_big = metrics.deal_big_bsn.buy.money - metrics.deal_big_bsn.sale.money;
+    double jing_middle = metrics.deal_middle_bsn.buy.money - metrics.deal_middle_bsn.sale.money;
+    double jing_small = metrics.deal_small_bsn.buy.money - metrics.deal_small_bsn.sale.money;
+    double jing_total = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
 
     print_next(out.date_str, i, cols);
 
-    print_next(out.deal_super_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_super_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_super_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_super_bsn.sale.money / WAN, i, cols);
     
 
-    print_next(out.deal_big_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_big_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_big_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_big_bsn.sale.money / WAN, i, cols);
 
-    print_next(out.deal_middle_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_middle_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_middle_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_middle_bsn.sale.money / WAN, i, cols);
     
 
-    print_next(out.deal_small_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_small_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_small_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_small_bsn.sale.money / WAN, i, cols);
    
 
     print_next_pos(jing_super / WAN, i, cols);
@@ -440,14 +443,14 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next_pos(jing_small / WAN, i, cols);
     print_next_pos(jing_total / WAN, i, cols);
 
-    print_next(out.deal_total_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_total_bsn.sale.money / WAN, i, cols);
-    print_next(out.deal_total_bsn.neutral.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.neutral.money / WAN, i, cols);
 
 
     // 其余统计项
-    print_next((out.deal_total_bsn.buy.money + out.deal_total_bsn.sale.money + out.deal_total_bsn.neutral.money) / WAN, i, cols);
-    print_next(out.total_vol_wan, i, cols);
+    print_next((metrics.deal_total_bsn.buy.money + metrics.deal_total_bsn.sale.money + metrics.deal_total_bsn.neutral.money) / WAN, i, cols);
+    print_next((metrics.deal_total_bsn.buy.volume+ metrics.deal_total_bsn.sale.volume + metrics.deal_total_bsn.neutral.volume) / WAN, i, cols);
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
@@ -456,40 +459,40 @@ inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols) {
     std::cout << std::endl;
 }
 
-inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
+inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
-    double all_money = out.deal_total_price.down.money + out.deal_total_price.up.money + out.deal_total_price.keep.money;
+    double all_money = metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money;
 
 
     std::cout << std::left << std::fixed << std::setprecision(2);
     print_next(out.date_str, i, cols);
 
-    print_next(out.deal_super_price.up.money / WAN, i, cols);
-    print_next(out.deal_super_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_super_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_super_price.down.money / WAN, i, cols);
     
 
-    print_next(out.deal_big_price.up.money / WAN, i, cols);
-    print_next(out.deal_big_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_big_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_big_price.down.money / WAN, i, cols);
 
 
-    print_next(out.deal_middle_price.up.money / WAN, i, cols);
-    print_next(out.deal_middle_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_middle_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_middle_price.down.money / WAN, i, cols);
     
 
-    print_next(out.deal_small_price.up.money / WAN, i, cols);
-    print_next(out.deal_small_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_small_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_small_price.down.money / WAN, i, cols);
 
 
-    print_next_pos((out.deal_super_price.up.money - out.deal_super_price.down.money) / WAN, i, cols);
-    print_next_pos((out.deal_big_price.up.money - out.deal_big_price.down.money) / WAN, i, cols);
-    print_next_pos((out.deal_middle_price.up.money - out.deal_middle_price.down.money) / WAN, i, cols);
-    print_next_pos((out.deal_small_price.up.money - out.deal_small_price.down.money) / WAN, i, cols);
-    print_next_pos((out.deal_total_price.up.money - out.deal_total_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
 
-    print_next(out.deal_total_price.up.money / WAN, i, cols);
-    print_next(out.deal_total_price.down.money / WAN, i, cols);
-    print_next(out.deal_total_price.keep.money / WAN, i, cols);
-    print_next(out.deal_total_price.keep.money / all_money, i, cols);
+    print_next(metrics.deal_total_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.keep.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.keep.money / all_money, i, cols);
 
 
     print_next(all_money/WAN , i, cols);
@@ -503,7 +506,7 @@ inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols) {
 }
 
 
-inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
+inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -511,22 +514,22 @@ inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols) {
     print_next(out.date_str, i, cols);
 
     // 2. BSN 汇总 (对应原代码 "buy" 后的三项)
-    print_next(out.deal_total_bsn.buy.money / WAN, i, cols);
-    print_next(out.deal_total_bsn.sale.money / WAN, i, cols);
-    print_next(out.deal_total_bsn.neutral.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.buy.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.sale.money / WAN, i, cols);
+    print_next(metrics.deal_total_bsn.neutral.money / WAN, i, cols);
 
     // 3. Price 汇总 (对应原代码 "up" 后的三项)
-    print_next(out.deal_total_price.up.money / WAN, i, cols);
-    print_next(out.deal_total_price.down.money / WAN, i, cols);
-    print_next(out.deal_total_price.keep.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.keep.money / WAN, i, cols);
 
     // 4. 净额 (带有正负号)
-    print_next_pos((out.deal_total_bsn.buy.money - out.deal_total_bsn.sale.money) / WAN, i, cols);
-    print_next_pos((out.deal_total_price.up.money - out.deal_total_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
 
     // 5. 成交总量相关
-    print_next((out.deal_total_price.down.money + out.deal_total_price.up.money + out.deal_total_price.keep.money) / WAN, i, cols);
-    print_next(out.total_vol_wan, i, cols);
+    print_next((metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money) / WAN, i, cols);
+    print_next((metrics.deal_total_price.down.volume + metrics.deal_total_price.up.volume + metrics.deal_total_price.keep.volume) / WAN, i, cols);
 
     // 6. 价格与涨跌幅
     print_next(out.pre_closing_price, i, cols);
@@ -576,12 +579,12 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
-void deal_classfy(DayOutputMetrics& out);
-inline void print_will(DayOutputMetrics& out, const std::vector<Col>& cols);
+void deal_classfy(DailyMetrics& out);
+inline void print_will(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
 void print__headers(const std::string& title, const std::vector<Col>& cols) ;
-inline void print_price(DayOutputMetrics& out, const std::vector<Col>& cols);
-inline void print_merge(DayOutputMetrics& out, const std::vector<Col>& cols);
+inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
+inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols);
 
 #endif // COLLECT_STREAM_H

@@ -97,7 +97,7 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
     pre_record = record;
 }
 
-void deal_classfy(DayOutputMetrics& out) {
+void deal_classfy(DailyMetrics& metrics) {
 
     auto fill_bsn = [&](deal_bsn& dest, const bs_action_group& src) {
         dest.buy.money = sum_money(src.buy);
@@ -109,14 +109,14 @@ void deal_classfy(DayOutputMetrics& out) {
         dest.neutral.volume = sum_volume(src.neutral);
     };
 
-    fill_bsn(out.deal_super_bsn, out.metrics.stream_sum_info.super);
-    fill_bsn(out.deal_big_bsn, out.metrics.stream_sum_info.big);
-    fill_bsn(out.deal_middle_bsn, out.metrics.stream_sum_info.middle);
-    fill_bsn(out.deal_small_bsn, out.metrics.stream_sum_info.small);
+    fill_bsn(metrics.deal_super_bsn, metrics.stream_sum_info.super);
+    fill_bsn(metrics.deal_big_bsn, metrics.stream_sum_info.big);
+    fill_bsn(metrics.deal_middle_bsn, metrics.stream_sum_info.middle);
+    fill_bsn(metrics.deal_small_bsn, metrics.stream_sum_info.small);
 
-    sum_bsn_buy(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
-    sum_bsn_sale(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
-    sum_bsn_neutral(out.deal_super_bsn, out.deal_big_bsn, out.deal_middle_bsn, out.deal_small_bsn, out.deal_total_bsn);
+    sum_bsn_buy(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
+    sum_bsn_sale(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
+    sum_bsn_neutral(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
 
   
     auto fill_price = [](deal_price& dest, const bs_action_group& src) {
@@ -129,13 +129,13 @@ void deal_classfy(DayOutputMetrics& out) {
         dest.keep.volume = src.buy.keep.volume + src.sale.keep.volume + src.neutral.keep.volume;
     };
 
-    fill_price(out.deal_super_price,  out.metrics.stream_sum_info.super);
-    fill_price(out.deal_big_price,    out.metrics.stream_sum_info.big);
-    fill_price(out.deal_middle_price, out.metrics.stream_sum_info.middle);
-    fill_price(out.deal_small_price,  out.metrics.stream_sum_info.small);
+    fill_price(metrics.deal_super_price,  metrics.stream_sum_info.super);
+    fill_price(metrics.deal_big_price,    metrics.stream_sum_info.big);
+    fill_price(metrics.deal_middle_price, metrics.stream_sum_info.middle);
+    fill_price(metrics.deal_small_price,  metrics.stream_sum_info.small);
 
-    sum_price_up(out.deal_super_price, out.deal_big_price, out.deal_middle_price, out.deal_small_price, out.deal_total_price);
-    sum_price_down(out.deal_super_price, out.deal_big_price, out.deal_middle_price, out.deal_small_price, out.deal_total_price);
-    sum_price_keep(out.deal_super_price, out.deal_big_price, out.deal_middle_price, out.deal_small_price, out.deal_total_price);
+    sum_price_up(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
+    sum_price_down(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
+    sum_price_keep(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
 }
 

@@ -363,7 +363,7 @@ int main(int argc, char* argv[]) {
 
         process_out(out, prev_out);
 
-        deal_classfy(out);
+        deal_classfy(out.metrics);
         divergengce = get_and_print_signals(out, prev_out);
 
         print_bodys(opts, out, prev_out, divergengce);
