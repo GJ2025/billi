@@ -148,6 +148,37 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
     }
 }
 
+void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
+    metrics.valid_records_count++;
+        
+
+    long long current_vol = record.volume * 100; 
+    double current_amount = record.price * current_vol;
+    metrics.pm_closing_price = record.price;
+
+    if (is_am_time(record.t)) {
+        metrics.am_closing_price = record.price; 
+        metrics.am_vol += current_vol;
+        metrics.am_turnover += current_amount; 
+
+        if (record.bs_type == "B"){
+            metrics.am_inflow += current_amount;        
+        }else if (record.bs_type == "S"){
+            metrics.am_outflow += current_amount;    
+        } 
+    } else {
+        metrics.pm_vol += current_vol;
+        metrics.pm_turnover += current_amount; 
+        if (record.bs_type == "B"){
+            metrics.pm_inflow += current_amount;        
+        }else if (record.bs_type == "S"){
+            metrics.pm_outflow += current_amount;    
+        } 
+    }
+
+    return;
+}
+
 void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::string line;
     TickRecord pre_record;
@@ -156,50 +187,33 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics) {
     std::getline(infile, line); 
     std::getline(infile, line);
     while (std::getline(infile, line)) {
-        if (line.empty()) continue;
+        if (line.empty()){
+            continue;
+        } 
 
         std::stringstream ss(line);
         TickRecord record;
         
         if (ss >> record) {
-            if (!is_loading_data(record.time)) continue;
+            if (!is_loading_data(record.time)){
+                continue;        
+            } 
+            
             process_head_data(metrics, record);
-            if (record.deal_count == 0) continue; 
-            if (after_15(record.t)) continue;
 
+            if (record.deal_count == 0){
+                continue;
+            }  
+            if (after_15(record.t)){
+                continue;
+            } 
 
             update_stream_and_metrics(metrics, stream, record, pre_record);
-            
-            metrics.valid_records_count++;
-             
+            update_metrics_by_record(metrics, record);
 
-            long long current_vol = record.volume * 100; 
-            double current_amount = record.price * current_vol;
-            metrics.pm_closing_price = record.price;
-
-            if (is_am_time(record.t)) {
-                metrics.am_closing_price = record.price; 
-                metrics.am_vol += current_vol;
-                metrics.am_turnover += current_amount; 
-
-                if (record.bs_type == "B"){
-                    metrics.am_inflow += current_amount;        
-                }else if (record.bs_type == "S"){
-                    metrics.am_outflow += current_amount;    
-                } 
-            } else {
-                metrics.pm_vol += current_vol;
-                metrics.pm_turnover += current_amount; 
-                if (record.bs_type == "B"){
-                    metrics.pm_inflow += current_amount;        
-                }else if (record.bs_type == "S"){
-                    metrics.pm_outflow += current_amount;    
-                } 
-            }
         }else{
                 std::cout << "failed=========== " << record.time << std::endl;
                 exit(0);
-
         }
 
         pre_record = record;
@@ -263,6 +277,25 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     return true;
 }
 
+void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
+
+        out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
+        if (is_filled_tick(prev_out)) {
+            out.pct_change =pct(out.pm_closing_price, prev_out.pm_closing_price);
+            out.am_pct_change = pct(out.am_closing_price, prev_out.pm_closing_price);
+            out.start_change = pct(out.first_record.price, prev_out.pm_closing_price);
+            out.pre_closing_price = prev_out.pm_closing_price;
+        }
+
+        if (std::abs(out.pct_change) <= 1.0) {
+            out.net_per_change = 0.0;
+        } else {
+            out.net_per_change = out.inflow_ratio / out.pct_change;
+        }
+
+        return;
+}
+
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     std::vector<std::string> files_to_process;
@@ -295,6 +328,7 @@ int main(int argc, char* argv[]) {
 
     print_headers(opts);
 
+    DayOutputMetrics out;
     DayOutputMetrics prev_out;
     std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
@@ -313,24 +347,12 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        DayOutputMetrics out;
+        
         if (!process_single_file(file, out)) {
             continue;
         }
 
-        out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
-        if (is_filled_tick(prev_out)) {
-            out.pct_change =pct(out.pm_closing_price, prev_out.pm_closing_price);
-            out.am_pct_change = pct(out.am_closing_price, prev_out.pm_closing_price);
-            out.start_change = pct(out.first_record.price, prev_out.pm_closing_price);
-            out.pre_closing_price = prev_out.pm_closing_price;
-        }
-
-        if (std::abs(out.pct_change) <= 1.0) {
-            out.net_per_change = 0.0;
-        } else {
-            out.net_per_change = out.inflow_ratio / out.pct_change;
-        }
+        process_out(out, prev_out);
 
         deal_classfy(out);
         divergengce = get_and_print_signals(out, prev_out);
