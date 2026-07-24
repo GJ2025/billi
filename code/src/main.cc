@@ -18,6 +18,9 @@
 
 namespace fs = std::filesystem;
 
+bool record_should_process(TickRecord& record);
+void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record);
+
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
     return std::isdigit(static_cast<unsigned char>(str[0]));
@@ -176,25 +179,25 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
         std::stringstream ss(line);
         TickRecord record;
         
-        
         if (ss >> record) {
-            if (!is_loading_data(record.time)){
-                continue;        
-            } 
-
-            if (record.deal_count == 0){
+            
+            if (!record_should_process(record)){
                 continue;
-            }  
-            if (after_15(record.t)){
-                continue;
-            } 
+            }
 
             if (first_record(record)) {
                 pre_record = record;
+                set_metrics_record(metrics, record, RecordType::FIRST);
             }
 
-            update_stream_and_metrics(metrics, stream, record, pre_record);
+            if (record_change(record, pre_record)) {
+                summary_stream(metrics.header, stream);
+            }
+
+            update_stream(stream, record, pre_record);
             update_metrics_by_record(metrics, record);
+
+            process_last_record(metrics, stream, record);
 
             if (is_am_end(record.t, pre_record.t)){
                 am_metrics = metrics;
@@ -208,6 +211,32 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
         pre_record = record;
     }
     infile.close();
+}
+
+void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record){
+    if (last_record(record)) {
+
+        summary_stream(metrics.header, stream);
+        set_metrics_record(metrics, record, RecordType::LAST);
+
+    }
+}
+
+bool record_should_process(TickRecord& record){
+
+    if (!is_loading_data(record.time)){
+        return false;        
+    } 
+
+    if (record.deal_count == 0){
+        return false;   
+    }  
+    if (after_15(record.t)){
+       return false;   
+    } 
+
+    return true;
+
 }
 
 bool process_single_file(const std::string& filename, DayOutputMetrics& out) {

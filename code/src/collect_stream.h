@@ -629,7 +629,7 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 }
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
-void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, const TickRecord& pre_record);
+void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 inline void print_will(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
@@ -637,5 +637,9 @@ void print__headers(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str);
+
+extern void summary_stream(record_stream& header, StreamRecord& stream);
+extern bool record_change(TickRecord this_record, const TickRecord pre_record);
+extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 
 #endif // COLLECT_STREAM_H

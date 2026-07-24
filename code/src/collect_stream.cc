@@ -8,7 +8,6 @@
 bool record_change(TickRecord this_record, const TickRecord pre_record) {
     
     if (is_am_end(this_record.t, pre_record.t)){
-        // std::cout << "record_change for is am end :" << this_record.time << std::endl;
         return true;
     }
 
@@ -81,33 +80,20 @@ void summary_stream(record_stream& header, StreamRecord& stream) {
                              (total_trade > 5 * WAN)  ? &header.middle : &header.small;
     
     collect_bs_action(*group, stream.records[0].bs_type, total_trade, total_volume, stream.gap);
+
+    stream.records.clear();
 }
 
 
+void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record) {
+    
+    if (first_record(record) || record_change(record, pre_record)) {
 
-void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
-                               TickRecord& record, const TickRecord& pre_record) {
-    if (first_record(record)) {
-
-        stream_new(stream, record, record.price);
-        set_metrics_record(metrics, record, RecordType::FIRST);
+        stream_new(stream, record, pre_record.price);
 
     }else{
 
-        if (record_change(record, pre_record)) {
-            summary_stream(metrics.header, stream);
-            stream_new(stream, record, pre_record.price);
-
-        } else {
-            stream_add_record(stream, record);
-        }
-    }
-
-    if (last_record(record)) {
-
-        summary_stream(metrics.header, stream);
-        set_metrics_record(metrics, record, RecordType::LAST);
-
+        stream_add_record(stream, record);
     }
 
     return;
