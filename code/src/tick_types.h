@@ -6,11 +6,6 @@
 #include <sstream>
 #include <vector>
 
-struct tickTime {
-    int hour = 0;
-    int minute = 0;
-};
-
 struct TickRecord {
     std::string time = "";
     double price = 0.0;

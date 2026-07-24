@@ -1,8 +1,9 @@
+#include "common.h"
 #include "tick_types.h"
 #include "collect_stream.h"
 #include <iostream>
 #include <iomanip>
-#include "common.h"
+
 
 bool record_change(TickRecord this_record, TickRecord pre_record) {
     if (this_record.bs_type != pre_record.bs_type){
@@ -86,6 +87,10 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
         stream_new(stream, record, pre_record.price);
     } else if (!first_record(record)) {
         stream.records.push_back(record);
+    }
+
+    if (is_am_end(record.t)){
+        summary_stream(metrics.stream_sum_info, stream);
     }
 
 

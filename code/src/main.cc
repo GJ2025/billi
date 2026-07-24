@@ -23,29 +23,7 @@ bool is_loading_data(const std::string& str) {
     return std::isdigit(static_cast<unsigned char>(str[0]));
 }
 
-bool is_am_time(const tickTime& t) {
-    if (t.hour < 12){
-        return true;
-    }else{
-        return false;
-    }
-}
 
-bool after_15(const tickTime& t) {
-    if (t.hour == 15 && t.minute !=0){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-bool is_am_end(const tickTime& t) {
-    if (t.hour == 11 && (t.minute == 30 || t.minute == 29)){
-        return true;
-    }else{
-        return false;
-    }
-}
 
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
@@ -290,9 +268,9 @@ void make_test(DayOutputMetrics& out){
     int i = 0;
     bool should_exist = false;
     const std::vector<Col>& cols = test_table_cols;
-    print__headers("TEST", test_table_cols);
 
     if (out.metrics.am_inflow != out.am_metrics.deal_total_bsn.buy.money){
+        print__headers("TEST", test_table_cols);
         print_next(out.date_str, i, cols);
         print_next(out.metrics.ticks_count, i, cols);
 
@@ -310,9 +288,10 @@ void make_test(DayOutputMetrics& out){
         std::cout << std::endl;
         
         should_exist = true;
+        
+        print__headers("TEST", test_table_cols);
     }
 
-    print__headers("TEST", test_table_cols);
 
     if (should_exist){
         exit(0);
