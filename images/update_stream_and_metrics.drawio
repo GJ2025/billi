@@ -1,0 +1,113 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="第 1 页" id="JEn3zTzHXgEYjOZJOCrV">
+    <mxGraphModel dx="1406" dy="788" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-1" parent="1" style="rhombus;whiteSpace=wrap;html=1;shapeInside=1;" value="是第1个record" vertex="1">
+          <mxGeometry height="80" width="150" x="297.5" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-4" parent="1" style="rhombus;whiteSpace=wrap;html=1;shapeInside=1;" value="record 相比pre_record变化了" vertex="1">
+          <mxGeometry height="80" width="160" x="295" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;" value="&lt;b&gt;summary_stream&lt;/b&gt;&lt;div&gt;&lt;b&gt;1.&amp;nbsp; &amp;nbsp; 对当前流数据进行统计(累加) .&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;2.&amp;nbsp; &amp;nbsp;当前 record 还未包含在流中 .&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="220" x="270" y="401" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;stream_add_record&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="110" y="398" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;" value="&lt;b&gt;new_stream&lt;/b&gt;&lt;div&gt;&lt;b&gt;需要 record 和 pre_price&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="145" x="305" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;" value="&lt;b&gt;处理最后1条数据&lt;/b&gt;&lt;div&gt;&lt;b&gt;summary_stream&lt;/b&gt;&lt;b&gt;&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="170" x="297" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-11" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;" value="END" vertex="1">
+          <mxGeometry height="40" width="45" x="359.5" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-12" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;" value="START" vertex="1">
+          <mxGeometry height="40" width="45" x="350" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="TqlFrAUpxAmy0lVcogPB-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="370" y="120" as="sourcePoint" />
+            <mxPoint x="420" y="70" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-14" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.633;entryDx=0;entryDy=0;entryPerimeter=0;" target="TqlFrAUpxAmy0lVcogPB-9" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="190" />
+              <mxPoint x="540" y="537.98" />
+            </Array>
+            <mxPoint x="447.5" y="190" as="sourcePoint" />
+            <mxPoint x="440" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-16" connectable="0" parent="TqlFrAUpxAmy0lVcogPB-14" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="YES" vertex="1">
+          <mxGeometry relative="1" x="0.2199" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-17" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="TqlFrAUpxAmy0lVcogPB-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="370" y="230" as="sourcePoint" />
+            <mxPoint x="420" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-18" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="TqlFrAUpxAmy0lVcogPB-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="376" y="351" as="sourcePoint" />
+            <mxPoint x="426" y="301" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-19" connectable="0" parent="TqlFrAUpxAmy0lVcogPB-18" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="YES" vertex="1">
+          <mxGeometry relative="1" x="-0.0779" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-20" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="TqlFrAUpxAmy0lVcogPB-9" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="380" y="460" as="sourcePoint" />
+            <mxPoint x="430" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-21" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="TqlFrAUpxAmy0lVcogPB-7" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="310" />
+            </Array>
+            <mxPoint x="295" y="310" as="sourcePoint" />
+            <mxPoint x="345" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-22" connectable="0" parent="TqlFrAUpxAmy0lVcogPB-21" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="NO" vertex="1">
+          <mxGeometry relative="1" x="-0.3146" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-23" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="TqlFrAUpxAmy0lVcogPB-11" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="380" y="560" as="sourcePoint" />
+            <mxPoint x="375" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-24" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="TqlFrAUpxAmy0lVcogPB-11" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="650" />
+            </Array>
+            <mxPoint x="170" y="458" as="sourcePoint" />
+            <mxPoint x="350" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TqlFrAUpxAmy0lVcogPB-32" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="TqlFrAUpxAmy0lVcogPB-10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="380" y="670" as="sourcePoint" />
+            <mxPoint x="430" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
