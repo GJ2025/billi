@@ -200,6 +200,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
 
             if (is_am_end(record.t, pre_record.t)){
                 am_metrics = metrics;
+                // std::cout << "parse_tick_file for is am end :" << record.time << std::endl;
                 // double total_buy_money = 0.0;
 
                 //  deal_classfy(metrics);

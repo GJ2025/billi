@@ -6,6 +6,12 @@
 
 
 bool record_change(TickRecord this_record, const TickRecord pre_record) {
+    
+    if (is_am_end(this_record.t, pre_record.t)){
+        // std::cout << "record_change for is am end :" << this_record.time << std::endl;
+        return true;
+    }
+
     if (this_record.bs_type != pre_record.bs_type){
         return true;
     } 
@@ -18,10 +24,6 @@ bool record_change(TickRecord this_record, const TickRecord pre_record) {
         return this_record.price < pre_record.price;
     }
     
-    if (is_am_end(this_record.t, pre_record.t)){
-        return true;
-    }
-
     return true;
 }
 

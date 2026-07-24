@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <iostream>
+
 #define WAN 10000
 #define BAI 100
 
@@ -33,6 +35,7 @@ inline bool after_15(const tickTime& t) {
 
 inline bool is_am_end(const tickTime& now,const tickTime& pre) {
     if (now.hour >= 13 && pre.hour <= 11 ){
+        //  std::cout << "record_change for is am end :" << now.hour <<":"<< now.minute << std::endl;
         return true;
     }else{
         return false;
