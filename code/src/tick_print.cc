@@ -138,14 +138,14 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         } 
 
         if (opts.show_super){
-            print_slim_price(out, out.metrics.stream_sum_info.super, out.metrics.deal_super_bsn, out.metrics.deal_super_price, will_price_table_cols);
+            print_slim_price(out, out.metrics.header.super, out.metrics.deal_super_bsn, out.metrics.deal_super_price, will_price_table_cols);
         }
 
         if (opts.show_big){
-            print_slim_price(out, out.metrics.stream_sum_info.big, out.metrics.deal_big_bsn,  out.metrics.deal_big_price, will_price_table_cols);
+            print_slim_price(out, out.metrics.header.big, out.metrics.deal_big_bsn,  out.metrics.deal_big_price, will_price_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, out.metrics.stream_sum_info.middle, out.metrics.deal_middle_bsn,  out.metrics.deal_middle_price, will_price_table_cols);
+            print_slim_price(out, out.metrics.header.middle, out.metrics.deal_middle_bsn,  out.metrics.deal_middle_price, will_price_table_cols);
         } 
 }

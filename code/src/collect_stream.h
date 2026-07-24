@@ -30,7 +30,7 @@ struct bs_action_group {
     deal_price neutral; 
 };
 
-struct stream_sum {
+struct record_stream {
     bs_action_group super;
     bs_action_group big;
     bs_action_group middle;
@@ -72,7 +72,7 @@ struct DailyMetrics {
     bool head_calculated = false;
     TickRecord daily_first_record;
     TickRecord daily_last_record;
-    stream_sum stream_sum_info;
+    record_stream header;
 
     deal_bsn deal_super_bsn;
     deal_bsn deal_big_bsn;

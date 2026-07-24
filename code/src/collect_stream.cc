@@ -35,6 +35,10 @@ void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
     stream.gap = record.price - pre_price;
 }
 
+void stream_add_record(StreamRecord& stream, TickRecord record) {
+    stream.records.push_back(record);
+}
+
 
 void collect_price_action(deal_price& rp, double trade, size_t volume, double gap) {
     if (gap < 0.0){
@@ -59,7 +63,7 @@ void collect_bs_action(bs_action_group& group, const std::string& bs_type, doubl
     } 
 }
 
-void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
+void summary_stream(record_stream& header, StreamRecord& stream) {
     double total_trade = 0.0;
     size_t total_volume = 0;
     
@@ -72,9 +76,9 @@ void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
         total_volume += r.volume * 100;
     } 
     
-    bs_action_group* group = (total_trade > 100 * WAN) ? &sum.super :
-                             (total_trade > 30 * WAN) ? &sum.big :
-                             (total_trade > 5 * WAN)  ? &sum.middle : &sum.small;
+    bs_action_group* group = (total_trade > 100 * WAN) ? &header.super :
+                             (total_trade > 30 * WAN) ? &header.big :
+                             (total_trade > 5 * WAN)  ? &header.middle : &header.small;
     
     collect_bs_action(*group, stream.records[0].bs_type, total_trade, total_volume, stream.gap);
 }
@@ -91,18 +95,19 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
     }else{
 
         if (record_change(record, pre_record)) {
-            summary_stream(metrics.stream_sum_info, stream);
+            summary_stream(metrics.header, stream);
             stream_new(stream, record, pre_record.price);
-        } else if (!first_record(record)) {
-            stream.records.push_back(record);
-        }
 
-        if (last_record(record)) {
-        
-            summary_stream(metrics.stream_sum_info, stream);
-            set_metrics_record(metrics, record, RecordType::LAST);
-
+        } else {
+            stream_add_record(stream, record);
         }
+    }
+
+    if (last_record(record)) {
+
+        summary_stream(metrics.header, stream);
+        set_metrics_record(metrics, record, RecordType::LAST);
+
     }
 
 
@@ -122,10 +127,10 @@ void deal_classfy(DailyMetrics& metrics) {
         dest.neutral.volume = sum_volume(src.neutral);
     };
 
-    fill_bsn(metrics.deal_super_bsn, metrics.stream_sum_info.super);
-    fill_bsn(metrics.deal_big_bsn, metrics.stream_sum_info.big);
-    fill_bsn(metrics.deal_middle_bsn, metrics.stream_sum_info.middle);
-    fill_bsn(metrics.deal_small_bsn, metrics.stream_sum_info.small);
+    fill_bsn(metrics.deal_super_bsn, metrics.header.super);
+    fill_bsn(metrics.deal_big_bsn, metrics.header.big);
+    fill_bsn(metrics.deal_middle_bsn, metrics.header.middle);
+    fill_bsn(metrics.deal_small_bsn, metrics.header.small);
 
     sum_bsn_buy(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
     sum_bsn_sale(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
@@ -142,10 +147,10 @@ void deal_classfy(DailyMetrics& metrics) {
         dest.keep.volume = src.buy.keep.volume + src.sale.keep.volume + src.neutral.keep.volume;
     };
 
-    fill_price(metrics.deal_super_price,  metrics.stream_sum_info.super);
-    fill_price(metrics.deal_big_price,    metrics.stream_sum_info.big);
-    fill_price(metrics.deal_middle_price, metrics.stream_sum_info.middle);
-    fill_price(metrics.deal_small_price,  metrics.stream_sum_info.small);
+    fill_price(metrics.deal_super_price,  metrics.header.super);
+    fill_price(metrics.deal_big_price,    metrics.header.big);
+    fill_price(metrics.deal_middle_price, metrics.header.middle);
+    fill_price(metrics.deal_small_price,  metrics.header.small);
 
     sum_price_up(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
     sum_price_down(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
