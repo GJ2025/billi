@@ -58,10 +58,10 @@ struct DailyMetrics {
     // long long pm_vol = 0;
     // double pm_turnover = 0.0;
     // double am_turnover = 0.0; 
-    // double am_inflow = 0.0;
-    // double am_outflow = 0.0;
-    // double pm_inflow = 0.0;
-    // double pm_outflow = 0.0;
+    double am_inflow = 0.0;
+    double am_outflow = 0.0;
+    double pm_inflow = 0.0;
+    double pm_outflow = 0.0;
 
     HeadTickData head_data;
     bool head_calculated = false;
@@ -262,6 +262,20 @@ static const std::vector<Col> data_all_table_cols = {
     {"Pct%", 8}, 
 
     {"Divergence", 20}
+};
+
+
+static const std::vector<Col> test_table_cols = {
+    {"Date", 11}, 
+    {"Ticks", 5, false}, 
+    {"AM-inflow", 13},
+    {"AM-Buy", 13},
+    {"AM-outflow", 13}, 
+    {"AM-Sale", 13}, 
+    {"PM-inflow", 13},
+    {"PM-Buy", 13},
+    {"PM-outflow", 13}, 
+    {"PM-Sale", 13},
 };
 
 template<typename T>
@@ -542,27 +556,39 @@ inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std:
 
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
     int i = 0;
-    const deal_bsn& deal_total_bsn = out.am_metrics.deal_total_bsn;
+    size_t total_volume = 0;
+
+    const deal_bsn& am_deal_total_bsn = out.am_metrics.deal_total_bsn;
+    const deal_bsn& deal_total_bsn = out.metrics.deal_total_bsn;
+    double am_money_ratio = 0.0;
+    double am_money_total = am_deal_total_bsn.buy.money + am_deal_total_bsn.neutral.money + am_deal_total_bsn.sale.money;
+    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
+    double am_netin = out.am_metrics.deal_total_bsn.buy.money - out.am_metrics.deal_total_bsn.sale.money;
+    double all_netin = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
+
+    am_money_ratio = am_money_total/total_money; 
+    total_volume = deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
+
 
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
     print_next(out.metrics.ticks_count, i, cols);
-    // print_next(out.am_vol_wan, i, cols);
-    print_next(deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume, i, cols);
-    print_next(deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money, i, cols);
+    print_next(am_deal_total_bsn.buy.volume + am_deal_total_bsn.neutral.volume + am_deal_total_bsn.sale.volume, i, cols);
+    print_next(am_deal_total_bsn.buy.money + am_deal_total_bsn.neutral.money + am_deal_total_bsn.sale.money, i, cols);
     
-    print_next(out.am_turnover_ratio, i, cols);
-    print_next(out.avg_vol_per_tick, i, cols);
+    print_next(am_money_ratio, i, cols);
+    print_next(total_volume/out.metrics.ticks_count, i, cols);
     
-    print_next(out.total_turnover_wan, i, cols);
-    print_next(out.total_vol_wan, i, cols);
+    print_next(total_money/WAN, i, cols);
+    print_next(total_volume/WAN, i, cols);
 
-    
-    print_next_pos(out.net_inflow_wan, i, cols);
-    print_next_pos(out.am_net_inflow_wan, i, cols);
-    print_next_pos(out.pm_net_inflow_wan, i, cols);
+    print_next_pos(all_netin/WAN, i, cols);
+    print_next_pos(am_netin/WAN, i, cols);
+
+
+    print_next_pos((all_netin - am_netin)/WAN, i, cols);
     print_next_pos(out.inflow_ratio, i, cols);
     print_next_pos(out.net_per_change, i, cols);
     print_next(out.historical_total_inflow, i, cols);
@@ -579,6 +605,8 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
     print_next(divergence_str, i, cols);
 
     std::cout << std::endl;
+
+    return;
 }
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);

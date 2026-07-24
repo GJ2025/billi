@@ -24,7 +24,7 @@ bool is_loading_data(const std::string& str) {
 }
 
 bool is_am_time(const tickTime& t) {
-    if (t.hour< 12){
+    if (t.hour < 12){
         return true;
     }else{
         return false;
@@ -158,9 +158,28 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
 
 void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     metrics.ticks_count++;
-        
-
     metrics.closing_price = record.price;
+
+    long long current_vol = record.volume * 100; 
+    double current_amount = record.price * current_vol;
+
+  if (is_am_time(record.t)) {
+
+        if (record.bs_type == "B"){
+            metrics.am_inflow += current_amount;        
+        }else if (record.bs_type == "S"){
+            metrics.am_outflow += current_amount;    
+        } 
+    }else {
+
+        if (record.bs_type == "B"){
+            metrics.pm_inflow += current_amount;        
+        }else if (record.bs_type == "S"){
+            metrics.pm_outflow += current_amount;    
+        } 
+    }
+
+
 
     return;
 }
@@ -266,6 +285,43 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
         return;
 }
 
+void make_test(DayOutputMetrics& out){
+
+    int i = 0;
+    bool should_exist = false;
+    const std::vector<Col>& cols = test_table_cols;
+    print__headers("TEST", test_table_cols);
+
+    if (out.metrics.am_inflow != out.am_metrics.deal_total_bsn.buy.money){
+        print_next(out.date_str, i, cols);
+        print_next(out.metrics.ticks_count, i, cols);
+
+        print_next(out.metrics.am_inflow/WAN, i, cols);
+        print_next(out.am_metrics.deal_total_bsn.buy.money/WAN, i, cols);
+
+        print_next(out.metrics.am_outflow/WAN, i, cols);
+        print_next(out.am_metrics.deal_total_bsn.sale.money/WAN, i, cols);
+
+        print_next(out.metrics.pm_inflow/WAN, i, cols);
+        print_next((out.metrics.deal_total_bsn.buy.money - out.am_metrics.deal_total_bsn.buy.money)/WAN, i, cols);
+
+        print_next(out.metrics.pm_outflow/WAN, i, cols);
+        print_next((out.metrics.deal_total_bsn.sale.money - out.am_metrics.deal_total_bsn.sale.money)/WAN, i, cols);
+        std::cout << std::endl;
+        
+        should_exist = true;
+    }
+
+    print__headers("TEST", test_table_cols);
+
+    if (should_exist){
+        exit(0);
+    }
+
+
+    return;
+}
+
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     std::vector<std::string> files_to_process;
@@ -327,6 +383,9 @@ int main(int argc, char* argv[]) {
 
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
+
+        make_test(out);
+
         divergengce = get_and_print_signals(out, prev_out);
 
         print_bodys(opts, out, prev_out, divergengce);
