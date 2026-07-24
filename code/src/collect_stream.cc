@@ -5,7 +5,7 @@
 #include <iomanip>
 
 
-bool record_change(TickRecord this_record, TickRecord pre_record) {
+bool record_change(TickRecord this_record, const TickRecord pre_record) {
     if (this_record.bs_type != pre_record.bs_type){
         return true;
     } 
@@ -16,13 +16,16 @@ bool record_change(TickRecord this_record, TickRecord pre_record) {
 
     if (this_record.bs_type == "B"){
         return this_record.price < pre_record.price;
-    } 
+    }
+    
+    if (is_am_end(this_record.t, pre_record.t)){
+        return true;
+    }
 
     return true;
 }
 
-bool last_record(TickRecord this_record) { return this_record.time == "15:00"; }
-bool first_record(TickRecord this_record) { return this_record.time == "09:25"; }
+
 
 void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
     stream.records.clear();
@@ -75,9 +78,8 @@ void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
 }
 
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
-                               TickRecord& record, TickRecord& pre_record) {
+                               TickRecord& record, const TickRecord& pre_record) {
     if (first_record(record)) {
-        pre_record = record;
         metrics.first_record = record;
         stream_new(stream, record, record.price);
     }
@@ -89,17 +91,12 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
         stream.records.push_back(record);
     }
 
-    if (is_am_end(record.t)){
-        summary_stream(metrics.stream_sum_info, stream);
-    }
-
-
     if (last_record(record)) {
         metrics.last_record = record;
         summary_stream(metrics.stream_sum_info, stream);
     }
 
-    pre_record = record;
+    return;
 }
 
 void deal_classfy(DailyMetrics& metrics) {

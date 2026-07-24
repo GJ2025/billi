@@ -24,7 +24,6 @@ bool is_loading_data(const std::string& str) {
 }
 
 
-
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
     
@@ -177,6 +176,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
         std::stringstream ss(line);
         TickRecord record;
         
+        
         if (ss >> record) {
             if (!is_loading_data(record.time)){
                 continue;        
@@ -191,11 +191,25 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
                 continue;
             } 
 
+            if (first_record(record)) {
+                pre_record = record;
+            }
+
             update_stream_and_metrics(metrics, stream, record, pre_record);
             update_metrics_by_record(metrics, record);
 
-            if (is_am_end(record.t)){
+            if (is_am_end(record.t, pre_record.t)){
                 am_metrics = metrics;
+                // double total_buy_money = 0.0;
+
+                //  deal_classfy(metrics);
+
+                // total_buy_money =  metrics.deal_super_bsn.buy.money +  metrics.deal_big_bsn.buy.money +  metrics.deal_middle_bsn.buy.money+  metrics.deal_small_bsn.buy.money;
+                // std::cout << line <<" (this_time, pre_time)--> (" 
+                //              << record.time << ", " <<  pre_record.time 
+                //              <<")  (metrics.am_inflow, total_buy_money)--->("
+                //              << metrics.am_inflow << ", " << total_buy_money 
+                //              <<")"<<std::endl;
             }
 
         }else{

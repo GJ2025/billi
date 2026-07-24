@@ -31,13 +31,15 @@ inline bool after_15(const tickTime& t) {
     }
 }
 
-inline bool is_am_end(const tickTime& t) {
-    if (t.hour == 11 && (t.minute == 30 || t.minute == 29)){
+inline bool is_am_end(const tickTime& now,const tickTime& pre) {
+    if (now.hour >= 13 && pre.hour <= 11 ){
         return true;
     }else{
         return false;
     }
 }
+
+
 
 
 #endif // COMMON_H

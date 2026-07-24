@@ -122,7 +122,7 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         }  
 
         if (opts.show_all){
-            print_all_data(out, divergence, data_all_table_cols);
+            print_all_data(out, divergence);
         }
 
         if (opts.show_merge){

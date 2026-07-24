@@ -252,8 +252,8 @@ static const std::vector<Col> data_all_table_cols = {
     {"AM-NetIn(W)", 11}, 
     {"PM-NetIn(W)", 11}, 
     {"Inflow%", 9, false},
-    {"NetPer%", 9,false}, 
-    {"HistNetIn(W)", 11, false}, 
+    // {"NetPer%", 9,false}, 
+    // {"HistNetIn(W)", 11, false}, 
 
     {"AvgPrice", 9},
     {"AM-Close", 8, true}, 
@@ -294,6 +294,9 @@ inline void print_next_pos(const T& val, int& index, const std::vector<Col>& col
     }
     index++;
 }
+
+inline bool last_record(TickRecord this_record) { return this_record.time == "15:00"; }
+inline bool first_record(TickRecord this_record) { return this_record.time == "09:25"; }
 
 inline std::string format_inflow(double value) {
     std::stringstream ss;
@@ -510,7 +513,7 @@ inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std:
 
 
     print_next(all_money/WAN , i, cols);
-    print_next(out.total_vol_wan, i, cols);
+    print_next((out.metrics.deal_total_price.down.volume + out.metrics.deal_total_price.up.volume + out.metrics.deal_total_price.keep.volume)/WAN, i, cols);
     print_next(out.pre_closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
@@ -554,9 +557,11 @@ inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std:
     std::cout << std::endl;
 }
 
-inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols) {
+inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str) {
     int i = 0;
     size_t total_volume = 0;
+
+    const std::vector<Col>& cols = data_all_table_cols;
 
     const deal_bsn& am_deal_total_bsn = out.am_metrics.deal_total_bsn;
     const deal_bsn& deal_total_bsn = out.metrics.deal_total_bsn;
@@ -569,8 +574,6 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
     am_money_ratio = am_money_total/total_money; 
     total_volume = deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
 
-
-
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
@@ -578,7 +581,7 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
     print_next(am_deal_total_bsn.buy.volume + am_deal_total_bsn.neutral.volume + am_deal_total_bsn.sale.volume, i, cols);
     print_next(am_deal_total_bsn.buy.money + am_deal_total_bsn.neutral.money + am_deal_total_bsn.sale.money, i, cols);
     
-    print_next(am_money_ratio, i, cols);
+    print_next(am_money_ratio * 100, i, cols);
     print_next(total_volume/out.metrics.ticks_count, i, cols);
     
     print_next(total_money/WAN, i, cols);
@@ -589,11 +592,11 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 
 
     print_next_pos((all_netin - am_netin)/WAN, i, cols);
-    print_next_pos(out.inflow_ratio, i, cols);
-    print_next_pos(out.net_per_change, i, cols);
-    print_next(out.historical_total_inflow, i, cols);
+    print_next_pos(all_netin/total_money, i, cols);
+    // print_next_pos(out.net_per_change, i, cols);
+    // print_next(out.historical_total_inflow, i, cols);
 
-    print_next(out.avg_price, i, cols);
+    print_next(total_money/total_volume, i, cols);
 
     // print_next(out.am_closing_price, i, cols);
     print_next(out.am_metrics.closing_price, i, cols);
@@ -610,13 +613,13 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 }
 
 void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
-void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, TickRecord& pre_record);
+void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 inline void print_will(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols); 
 void print__headers(const std::string& title, const std::vector<Col>& cols) ;
 inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
-inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str, const std::vector<Col>& cols);
+inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str);
 
 #endif // COLLECT_STREAM_H
