@@ -110,8 +110,6 @@ void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream,
 
     }
 
-
-
     return;
 }
 

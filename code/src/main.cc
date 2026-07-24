@@ -182,8 +182,6 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
                 continue;        
             } 
 
-            process_head_data(metrics, record);
-
             if (record.deal_count == 0){
                 continue;
             }  
@@ -200,17 +198,6 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
 
             if (is_am_end(record.t, pre_record.t)){
                 am_metrics = metrics;
-                // std::cout << "parse_tick_file for is am end :" << record.time << std::endl;
-                // double total_buy_money = 0.0;
-
-                //  deal_classfy(metrics);
-
-                // total_buy_money =  metrics.deal_super_bsn.buy.money +  metrics.deal_big_bsn.buy.money +  metrics.deal_middle_bsn.buy.money+  metrics.deal_small_bsn.buy.money;
-                // std::cout << line <<" (this_time, pre_time)--> (" 
-                //              << record.time << ", " <<  pre_record.time 
-                //              <<")  (metrics.am_inflow, total_buy_money)--->("
-                //              << metrics.am_inflow << ", " << total_buy_money 
-                //              <<")"<<std::endl;
             }
 
         }else{
