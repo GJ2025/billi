@@ -79,24 +79,33 @@ void summary_stream(struct stream_sum& sum, StreamRecord& stream) {
     collect_bs_action(*group, stream.records[0].bs_type, total_trade, total_volume, stream.gap);
 }
 
+
+
 void update_stream_and_metrics(DailyMetrics& metrics, StreamRecord& stream, 
                                TickRecord& record, const TickRecord& pre_record) {
     if (first_record(record)) {
-        metrics.first_record = record;
+
         stream_new(stream, record, record.price);
+        set_metrics_record(metrics, record, RecordType::FIRST);
+
+    }else{
+
+        if (record_change(record, pre_record)) {
+            summary_stream(metrics.stream_sum_info, stream);
+            stream_new(stream, record, pre_record.price);
+        } else if (!first_record(record)) {
+            stream.records.push_back(record);
+        }
+
+        if (last_record(record)) {
+        
+            summary_stream(metrics.stream_sum_info, stream);
+            set_metrics_record(metrics, record, RecordType::LAST);
+
+        }
     }
 
-    if (record_change(record, pre_record)) {
-        summary_stream(metrics.stream_sum_info, stream);
-        stream_new(stream, record, pre_record.price);
-    } else if (!first_record(record)) {
-        stream.records.push_back(record);
-    }
 
-    if (last_record(record)) {
-        metrics.last_record = record;
-        summary_stream(metrics.stream_sum_info, stream);
-    }
 
     return;
 }

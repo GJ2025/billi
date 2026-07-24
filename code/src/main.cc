@@ -265,7 +265,7 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
         if (is_filled_tick(prev_out)) {
             out.pct_change =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
-            out.start_change = pct(out.metrics.first_record.price, prev_out.metrics.closing_price);
+            out.start_change = pct(out.metrics.daily_first_record.price, prev_out.metrics.closing_price);
             out.pre_closing_price = prev_out.metrics.closing_price;
         }
 

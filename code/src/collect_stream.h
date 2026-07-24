@@ -7,6 +7,11 @@
 #include "common.h"
 #include "tick_types.h"
 
+enum class RecordType {
+    FIRST,       
+    LAST
+};
+
 struct trade {
     double money = 0.0;
     size_t volume = 0;
@@ -65,8 +70,8 @@ struct DailyMetrics {
 
     HeadTickData head_data;
     bool head_calculated = false;
-    TickRecord first_record;
-    TickRecord last_record;
+    TickRecord daily_first_record;
+    TickRecord daily_last_record;
     stream_sum stream_sum_info;
 
     deal_bsn deal_super_bsn;
@@ -293,6 +298,17 @@ inline void print_next_pos(const T& val, int& index, const std::vector<Col>& col
         std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
     }
     index++;
+}
+
+
+inline void set_metrics_record(DailyMetrics& metrics, TickRecord record, RecordType t){
+
+    if (t == RecordType::FIRST){
+        metrics.daily_first_record = record;
+    }else if (t == RecordType::LAST){
+         metrics.daily_last_record = record;
+    }
+
 }
 
 inline bool last_record(TickRecord this_record) { return this_record.time == "15:00"; }
