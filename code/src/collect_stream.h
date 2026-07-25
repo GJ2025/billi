@@ -12,6 +12,13 @@ enum class RecordType {
     LAST
 };
 
+enum class RecordScale {
+    SUPER,       
+    BIG,
+    MIDDLE,
+    SMALL
+};
+
 struct trade {
     double money = 0.0;
     size_t volume = 0;
@@ -394,8 +401,44 @@ inline void print__headers(const std::string& title, const std::vector<Col>& col
     print_decorative_line(total_width, title, title);
 }
 
-inline void print_slim_price(DayOutputMetrics& out, bs_action_group& super, deal_bsn& bsn, deal_price& price, const std::vector<Col>& cols) {
+
+inline void get_slim_base(DayOutputMetrics& out, RecordScale t,  bs_action_group& super, deal_bsn& bsn, deal_price& price){
+    
+    if (t == RecordScale::SUPER){
+
+        super = out.metrics.header.super;
+        bsn = out.metrics.deal_super_bsn;
+        price =  out.metrics.deal_super_price;
+
+    }else if(t == RecordScale::BIG){
+
+        super = out.metrics.header.big;
+        bsn = out.metrics.deal_big_bsn;
+        price =  out.metrics.deal_big_price;
+
+    }else if(t == RecordScale::MIDDLE){
+
+        super = out.metrics.header.middle;
+        bsn = out.metrics.deal_middle_bsn;
+        price =  out.metrics.deal_middle_price;
+
+    }else{
+        super = out.metrics.header.small;
+        bsn = out.metrics.deal_small_bsn;
+        price =  out.metrics.deal_small_price;
+    }
+
+}
+
+inline void print_slim_price(DayOutputMetrics& out,  RecordScale t, const std::vector<Col>& cols) {
+
     int i = 0;
+    bs_action_group super ;
+    deal_bsn bsn; 
+    deal_price price ;
+
+    get_slim_base(out, t, super, bsn, price);
+
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);

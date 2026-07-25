@@ -116,6 +116,8 @@ void print_headers(const ProgramOptions& opts) {
 }
 
 
+
+
 void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
         if (opts.show_head){
             print_header_info(out, prev_out);
@@ -138,14 +140,14 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         } 
 
         if (opts.show_super){
-            print_slim_price(out, out.metrics.header.super, out.metrics.deal_super_bsn, out.metrics.deal_super_price, will_price_table_cols);
+            print_slim_price(out, RecordScale::SUPER, will_price_table_cols);
         }
 
         if (opts.show_big){
-            print_slim_price(out, out.metrics.header.big, out.metrics.deal_big_bsn,  out.metrics.deal_big_price, will_price_table_cols);
+            print_slim_price(out, RecordScale::BIG, will_price_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, out.metrics.header.middle, out.metrics.deal_middle_bsn,  out.metrics.deal_middle_price, will_price_table_cols);
+            print_slim_price(out, RecordScale::MIDDLE, will_price_table_cols);
         } 
 }
