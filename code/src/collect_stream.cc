@@ -58,7 +58,7 @@ void collect_bs_action(bs_action_group& group, const std::string& bs_type, doubl
     } 
 }
 
-void summary_stream(record_stream& header, StreamRecord& stream) {
+void update_metrics_header(record_stream& header, StreamRecord& stream) {
     double total_trade = 0.0;
     size_t total_volume = 0;
     

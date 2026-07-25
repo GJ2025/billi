@@ -635,7 +635,7 @@ inline void print_price(DayOutputMetrics& out, DailyMetrics& metrics, const std:
 inline void print_merge(DayOutputMetrics& out, DailyMetrics& metrics, const std::vector<Col>& cols);
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str);
 
-extern void summary_stream(record_stream& header, StreamRecord& stream);
+extern void update_metrics_header(record_stream& header, StreamRecord& stream);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 

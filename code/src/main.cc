@@ -20,6 +20,7 @@ namespace fs = std::filesystem;
 
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record);
+void process_first_record(DailyMetrics& metrics, TickRecord record, TickRecord& pre_record);
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -185,18 +186,14 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
                 continue;
             }
 
-            if (first_record(record)) {
-                pre_record = record;
-                set_metrics_record(metrics, record, RecordType::FIRST);
-            }
+            process_first_record(metrics, record, pre_record);
 
             if (record_change(record, pre_record)) {
-                summary_stream(metrics.header, stream);
+                update_metrics_header(metrics.header, stream);
             }
 
-            //需要将 summary_stream 之后，stream清空，清空之后再 update_stream 时， 要进行new 操作，不是 add 操作
             if (is_am_end(record.t, pre_record.t)){
-                summary_stream(metrics.header, stream);
+                update_metrics_header(metrics.header, stream);
                 am_metrics = metrics;
             }
 
@@ -218,9 +215,16 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
 void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record){
     if (last_record(record)) {
 
-        summary_stream(metrics.header, stream);
+        update_metrics_header(metrics.header, stream);
         set_metrics_record(metrics, record, RecordType::LAST);
 
+    }
+}
+
+void process_first_record(DailyMetrics& metrics, TickRecord record, TickRecord& pre_record){
+    if (first_record(record)) {
+        pre_record = record;
+        set_metrics_record(metrics, record, RecordType::FIRST);
     }
 }
 
