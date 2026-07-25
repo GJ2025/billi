@@ -60,7 +60,6 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
 
     double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
-    // double will_net_volume = out.metrics.deal_total_bsn.buy.volume - out.metrics.deal_total_bsn.sale.volume;
 
     std::vector<std::string> signals;
 
@@ -70,10 +69,18 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
         signals.push_back("[DN_IN]");
     }
 
-    if (prev_out.avg_price > 0.0) {
-        if (out.avg_price > prev_out.avg_price && will_net_money < 0) {
+    // if (prev_out.avg_price > 0.0) {
+    //     if (out.avg_price > prev_out.avg_price && will_net_money < 0) {
+    //         signals.push_back("[AVUP_OUT]");
+    //     } else if (out.avg_price < prev_out.avg_price && will_net_money > 0) {
+    //         signals.push_back("[AVDN_IN]");
+    //     }
+    // }
+
+    if (prev_out.metrics.avg_price > 0.0) {
+        if (out.metrics.avg_price > prev_out.metrics.avg_price && will_net_money < 0) {
             signals.push_back("[AVUP_OUT]");
-        } else if (out.avg_price < prev_out.avg_price && will_net_money > 0) {
+        } else if (out.metrics.avg_price < prev_out.metrics.avg_price && will_net_money > 0) {
             signals.push_back("[AVDN_IN]");
         }
     }
@@ -156,6 +163,9 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
         }else if (record.bs_type == "S"){
             metrics.am_bsn.sale.money += money;
             metrics.am_bsn.sale.volume += volume;      
+        }else{
+            metrics.am_bsn.neutral.money += money;
+            metrics.am_bsn.neutral.volume += volume;            
         } 
     }else {
 
@@ -165,8 +175,16 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
         }else if (record.bs_type == "S"){
             metrics.pm_bsn.sale.money += money;
             metrics.pm_bsn.sale.volume += volume;     
+        }else{
+            metrics.pm_bsn.neutral.money += money;
+            metrics.pm_bsn.neutral.volume += volume;  
         } 
     }
+
+    metrics.all_money = metrics.am_bsn.buy.money + metrics.am_bsn.sale.money + metrics.am_bsn.neutral.money;
+    metrics.all_volume = metrics.am_bsn.buy.volume + metrics.am_bsn.sale.volume + metrics.am_bsn.neutral.volume;
+
+    metrics.avg_price = metrics.all_money / metrics.all_volume;
 
     return;
 }

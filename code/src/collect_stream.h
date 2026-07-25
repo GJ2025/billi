@@ -60,6 +60,8 @@ struct DailyMetrics {
     size_t ticks_count = 0;
     double closing_price = 0.0;
     double avg_price = 0.0;
+    double all_money = 0.0;
+    size_t all_volume = 0.0;
 
     deal_bsn am_bsn;
     deal_bsn pm_bsn;
