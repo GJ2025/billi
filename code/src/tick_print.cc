@@ -128,26 +128,26 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
         }
 
         if (opts.show_merge){
-            print_merge(out, out.metrics, merge_table_cols);
+            print_merge(out, prev_out, out.metrics, merge_table_cols);
         } 
 
         if (opts.show_will){
-            print_will(out, out.metrics, will_table_cols);
+            print_will(out, prev_out, out.metrics, will_table_cols);
         }  
 
         if (opts.show_price){
-            print_price(out, out.metrics, price_table_cols);
+            print_price(out, prev_out, out.metrics, price_table_cols);
         } 
 
         if (opts.show_super){
-            print_slim_price(out, RecordScale::SUPER, will_price_table_cols);
+            print_slim_price(out, prev_out, RecordScale::SUPER, will_price_table_cols);
         }
 
         if (opts.show_big){
-            print_slim_price(out, RecordScale::BIG, will_price_table_cols);
+            print_slim_price(out, prev_out, RecordScale::BIG, will_price_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, RecordScale::MIDDLE, will_price_table_cols);
+            print_slim_price(out, prev_out, RecordScale::MIDDLE, will_price_table_cols);
         } 
 }

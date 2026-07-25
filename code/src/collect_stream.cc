@@ -48,7 +48,7 @@ void collect_price_action(deal_price& rp, double trade, size_t volume, double ga
     } 
 }
 
-void collect_bs_action(bs_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap) {
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap) {
     if (bs_type == "B"){
         collect_price_action(group.buy, trade, volume, gap);
     }else if (bs_type == "S"){
@@ -71,7 +71,7 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
         total_volume += r.volume * 100;
     } 
     
-    bs_action_group* group = (total_trade > 100 * WAN) ? &header.super :
+    bsn_action_group* group = (total_trade > 100 * WAN) ? &header.super :
                              (total_trade > 30 * WAN) ? &header.big :
                              (total_trade > 5 * WAN)  ? &header.middle : &header.small;
     
@@ -97,7 +97,7 @@ void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& p
 
 void deal_classfy(DailyMetrics& metrics) {
 
-    auto fill_bsn = [&](deal_bsn& dest, const bs_action_group& src) {
+    auto fill_bsn = [&](deal_bsn& dest, const bsn_action_group& src) {
         dest.buy.money = sum_money(src.buy);
         dest.sale.money = sum_money(src.sale);
         dest.neutral.money = sum_money(src.neutral);
@@ -117,7 +117,7 @@ void deal_classfy(DailyMetrics& metrics) {
     sum_bsn_neutral(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
 
   
-    auto fill_price = [](deal_price& dest, const bs_action_group& src) {
+    auto fill_price = [](deal_price& dest, const bsn_action_group& src) {
         dest.up.money   = src.buy.up.money   + src.sale.up.money   + src.neutral.up.money;
         dest.down.money = src.buy.down.money + src.sale.down.money + src.neutral.down.money;
         dest.keep.money = src.buy.keep.money + src.sale.keep.money + src.neutral.keep.money;
