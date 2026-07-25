@@ -609,12 +609,9 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 
     print_next_pos((all_netin - am_netin)/WAN, i, cols);
     print_next_pos(all_netin/total_money, i, cols);
-    // print_next_pos(out.net_per_change, i, cols);
-    // print_next(out.historical_total_inflow, i, cols);
 
     print_next(total_money/total_volume, i, cols);
 
-    // print_next(out.am_closing_price, i, cols);
     print_next(out.am_metrics.closing_price, i, cols);
     print_next_pos(out.am_pct_change, i, cols);
 

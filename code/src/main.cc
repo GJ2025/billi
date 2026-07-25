@@ -194,14 +194,16 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
                 summary_stream(metrics.header, stream);
             }
 
+            //需要将 summary_stream 之后，stream清空，清空之后再 update_stream 时， 要进行new 操作，不是 add 操作
+            if (is_am_end(record.t, pre_record.t)){
+                summary_stream(metrics.header, stream);
+                am_metrics = metrics;
+            }
+
             update_stream(stream, record, pre_record);
             update_metrics_by_record(metrics, record);
 
             process_last_record(metrics, stream, record);
-
-            if (is_am_end(record.t, pre_record.t)){
-                am_metrics = metrics;
-            }
 
         }else{
                 std::cout << "failed=========== " << record.time << std::endl;

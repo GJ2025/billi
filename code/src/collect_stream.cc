@@ -7,10 +7,6 @@
 
 bool record_change(TickRecord this_record, const TickRecord pre_record) {
     
-    if (is_am_end(this_record.t, pre_record.t)){
-        return true;
-    }
-
     if (this_record.bs_type != pre_record.bs_type){
         return true;
     } 
@@ -87,7 +83,7 @@ void summary_stream(record_stream& header, StreamRecord& stream) {
 
 void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record) {
     
-    if (first_record(record) || record_change(record, pre_record)) {
+    if (stream.records.empty() || first_record(record) || record_change(record, pre_record)) {
 
         stream_new(stream, record, pre_record.price);
 
