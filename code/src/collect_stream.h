@@ -96,18 +96,12 @@ struct DailyMetrics {
 struct DayOutputMetrics {
     
     double am_pct_change = 0.0;
-
-    double net_inflow_wan = 0.0;
-
-    double avg_price = 0.0;
-    double inflow_ratio = 0.0;
-    double avg_vol_per_tick = 0.0;
-    double net_per_change = 0.0;
     double pct_change = 0.0;
     double start_change = 0.0;
+    double historical_total_inflow = 0.0;
 
     std::string date_str = "";
-    double historical_total_inflow = 0.0;
+    
 
     DailyMetrics metrics;
     DailyMetrics am_metrics;

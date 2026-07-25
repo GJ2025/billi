@@ -296,17 +296,12 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
 
 void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
 
-        out.historical_total_inflow = prev_out.historical_total_inflow + out.net_inflow_wan;
+        out.historical_total_inflow = prev_out.historical_total_inflow + 
+                                        out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
         if (is_filled_tick(prev_out)) {
             out.pct_change =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
             out.start_change = pct(out.metrics.daily_first_record.price, prev_out.metrics.closing_price);
-        }
-
-        if (std::abs(out.pct_change) <= 1.0) {
-            out.net_per_change = 0.0;
-        } else {
-            out.net_per_change = out.inflow_ratio / out.pct_change;
         }
 
         return;
