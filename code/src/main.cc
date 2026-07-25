@@ -58,31 +58,50 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 
 
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+    (void)prev_out;
 
     double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
+    double price_net_money = out.metrics.deal_total_price.up.money - out.metrics.deal_total_price.down.money;
+
+    double avg_change = out.metrics.avg_price - out.metrics.closing_price;
+    #define PRICE_THRESHOLD 0.05
 
     std::vector<std::string> signals;
 
+    if (will_net_money * price_net_money < 0.0){
+        signals.push_back("[WILL_P_DIFF]");
+    }
+
     if (out.pct_change > 0 && will_net_money < 0) {
         signals.push_back("[UP_OUT]");
-    } else if (out.pct_change < 0 && will_net_money > 0) {
+    }
+    
+    if (out.pct_change > 0 && price_net_money < 0) {
+        signals.push_back("[UP_POUT]");
+    } 
+    
+    if (out.pct_change < 0 && will_net_money > 0) {
         signals.push_back("[DN_IN]");
     }
 
-    // if (prev_out.avg_price > 0.0) {
-    //     if (out.avg_price > prev_out.avg_price && will_net_money < 0) {
-    //         signals.push_back("[AVUP_OUT]");
-    //     } else if (out.avg_price < prev_out.avg_price && will_net_money > 0) {
-    //         signals.push_back("[AVDN_IN]");
-    //     }
-    // }
+    if (out.pct_change < 0 && price_net_money > 0) {
+        signals.push_back("[DN_PIN]");
+    }
 
-    if (prev_out.metrics.avg_price > 0.0) {
-        if (out.metrics.avg_price > prev_out.metrics.avg_price && will_net_money < 0) {
-            signals.push_back("[AVUP_OUT]");
-        } else if (out.metrics.avg_price < prev_out.metrics.avg_price && will_net_money > 0) {
-            signals.push_back("[AVDN_IN]");
-        }
+    if ((avg_change - PRICE_THRESHOLD) > 0 && will_net_money < 0) {
+        signals.push_back("[AVUP_OUT]");
+    }
+    
+    if ((avg_change - PRICE_THRESHOLD) > 0 && price_net_money < 0) {
+        signals.push_back("[AVUP_POUT]");
+    } 
+    
+    if ((avg_change + PRICE_THRESHOLD) < 0 && will_net_money > 0) {
+        signals.push_back("[AVDN_IN]");
+    }
+
+    if ((avg_change + PRICE_THRESHOLD) < 0 && price_net_money > 0) {
+        signals.push_back("[AVDN_PIN]");
     }
 
     if (signals.empty()) {
