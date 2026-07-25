@@ -135,5 +135,6 @@ void deal_classfy(DailyMetrics& metrics) {
     sum_price_up(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
     sum_price_down(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
     sum_price_keep(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
+
 }
 

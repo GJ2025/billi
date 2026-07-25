@@ -58,18 +58,22 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 
 
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+
+    double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
+    // double will_net_volume = out.metrics.deal_total_bsn.buy.volume - out.metrics.deal_total_bsn.sale.volume;
+
     std::vector<std::string> signals;
 
-    if (out.pct_change > 0 && out.net_inflow_wan < 0) {
+    if (out.pct_change > 0 && will_net_money < 0) {
         signals.push_back("[UP_OUT]");
-    } else if (out.pct_change < 0 && out.net_inflow_wan > 0) {
+    } else if (out.pct_change < 0 && will_net_money > 0) {
         signals.push_back("[DN_IN]");
     }
 
     if (prev_out.avg_price > 0.0) {
-        if (out.avg_price > prev_out.avg_price && out.net_inflow_wan < 0) {
+        if (out.avg_price > prev_out.avg_price && will_net_money < 0) {
             signals.push_back("[AVUP_OUT]");
-        } else if (out.avg_price < prev_out.avg_price && out.net_inflow_wan > 0) {
+        } else if (out.avg_price < prev_out.avg_price && will_net_money > 0) {
             signals.push_back("[AVDN_IN]");
         }
     }
@@ -141,26 +145,28 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     metrics.ticks_count++;
     metrics.closing_price = record.price;
 
-    long long current_vol = record.volume * 100; 
-    double current_amount = record.price * current_vol;
+    size_t volume = record.volume * 100; 
+    double money = record.price * volume;
 
   if (is_am_time(record.t)) {
 
         if (record.bs_type == "B"){
-            metrics.am_inflow += current_amount;        
+            metrics.am_bsn.buy.money += money;
+            metrics.am_bsn.buy.volume += volume;        
         }else if (record.bs_type == "S"){
-            metrics.am_outflow += current_amount;    
+            metrics.am_bsn.sale.money += money;
+            metrics.am_bsn.sale.volume += volume;      
         } 
     }else {
 
         if (record.bs_type == "B"){
-            metrics.pm_inflow += current_amount;        
+            metrics.pm_bsn.buy.money += money;
+            metrics.pm_bsn.buy.volume += volume;         
         }else if (record.bs_type == "S"){
-            metrics.pm_outflow += current_amount;    
+            metrics.pm_bsn.sale.money += money;
+            metrics.pm_bsn.sale.volume += volume;     
         } 
     }
-
-
 
     return;
 }
@@ -260,17 +266,6 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
     if (metrics.ticks_count == 0) {
         return false;
     }
-
-    if (out.total_vol_wan > 0.0) {
-        out.avg_price = out.total_turnover_wan / out.total_vol_wan;
-    }
-
-    if (out.total_turnover_wan > 0.0) {
-        out.inflow_ratio = (out.net_inflow_wan / out.total_turnover_wan) * BAI;
-    }
-
-    out.avg_vol_per_tick = (out.total_vol_wan * WAN) / metrics.ticks_count; 
-
     
     std::string pure_name = fs::path(filename).filename().string();
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
@@ -306,21 +301,21 @@ void make_test(DayOutputMetrics& out){
     bool should_exist = false;
     const std::vector<Col>& cols = test_table_cols;
 
-    if (out.metrics.am_inflow != out.am_metrics.deal_total_bsn.buy.money){
+    if (out.metrics.am_bsn.buy.money != out.am_metrics.deal_total_bsn.buy.money){
         print__headers("TEST", test_table_cols);
         print_next(out.date_str, i, cols);
         print_next(out.metrics.ticks_count, i, cols);
 
-        print_next(out.metrics.am_inflow/WAN, i, cols);
+        print_next(out.metrics.am_bsn.buy.money/WAN, i, cols);
         print_next(out.am_metrics.deal_total_bsn.buy.money/WAN, i, cols);
 
-        print_next(out.metrics.am_outflow/WAN, i, cols);
+        print_next(out.metrics.am_bsn.sale.money/WAN, i, cols);
         print_next(out.am_metrics.deal_total_bsn.sale.money/WAN, i, cols);
 
-        print_next(out.metrics.pm_inflow/WAN, i, cols);
+        print_next(out.metrics.pm_bsn.buy.money/WAN, i, cols);
         print_next((out.metrics.deal_total_bsn.buy.money - out.am_metrics.deal_total_bsn.buy.money)/WAN, i, cols);
 
-        print_next(out.metrics.pm_outflow/WAN, i, cols);
+        print_next(out.metrics.pm_bsn.sale.money/WAN, i, cols);
         print_next((out.metrics.deal_total_bsn.sale.money - out.am_metrics.deal_total_bsn.sale.money)/WAN, i, cols);
         std::cout << std::endl;
         

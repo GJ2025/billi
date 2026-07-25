@@ -57,16 +57,12 @@ struct HeadTickData {
 };
 
 struct DailyMetrics {
-    long long ticks_count = 0;
+    size_t ticks_count = 0;
     double closing_price = 0.0;
-    // long long am_vol = 0;
-    // long long pm_vol = 0;
-    // double pm_turnover = 0.0;
-    // double am_turnover = 0.0; 
-    double am_inflow = 0.0;
-    double am_outflow = 0.0;
-    double pm_inflow = 0.0;
-    double pm_outflow = 0.0;
+    double avg_price = 0.0;
+
+    deal_bsn am_bsn;
+    deal_bsn pm_bsn;
 
     HeadTickData head_data;
     bool head_calculated = false;
@@ -99,9 +95,7 @@ struct DayOutputMetrics {
     double am_pct_change = 0.0;
 
     double net_inflow_wan = 0.0;
-    double total_turnover_wan = 0.0;
 
-    double total_vol_wan = 0.0;
     double avg_price = 0.0;
     double inflow_ratio = 0.0;
     double avg_vol_per_tick = 0.0;
@@ -115,8 +109,6 @@ struct DayOutputMetrics {
     DailyMetrics metrics;
     DailyMetrics am_metrics;
 
-
-   
 };
 
 struct Col {
