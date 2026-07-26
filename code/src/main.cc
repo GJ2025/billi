@@ -63,14 +63,10 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
     double price_net_money = out.metrics.deal_total_price.up.money - out.metrics.deal_total_price.down.money;
 
-    double avg_change = out.metrics.avg_price - out.metrics.closing_price;
+    double avg_change = out.metrics.avg_price - prev_out.metrics.avg_price;
     #define PRICE_THRESHOLD 0.05
 
     std::vector<std::string> signals;
-
-    if (will_net_money * price_net_money < 0.0){
-        signals.push_back("[WILL_P_DIFF]");
-    }
 
     if (out.pct_change > 0 && will_net_money < 0) {
         signals.push_back("[UP_OUT]");
@@ -103,6 +99,11 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     if ((avg_change + PRICE_THRESHOLD) < 0 && price_net_money > 0) {
         signals.push_back("[AVDN_PIN]");
     }
+
+    // if (will_net_money * price_net_money < 0.0){
+    //     signals.push_back("[WILL_P_DIFF]");
+    // }
+
 
     if (signals.empty()) {
         return "      -      ";

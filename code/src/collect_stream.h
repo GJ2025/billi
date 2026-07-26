@@ -235,23 +235,28 @@ static const std::vector<Col> merge_table_cols = {
 static const std::vector<Col> data_all_table_cols = {
     {"Date", 11}, 
     {"Ticks", 5}, 
-    {"AM-Vol(W)", 9, false},
-    {"AM-Turn(W)", 11, false}, 
-    {"AM-Turn%", 11}, 
-    {"AvgVol/Tick", 11},
-    {"TotTurn(W)", 11},
-    {"Vol(W)", 9},  
+    {"AM-volume(W)", 12, false},
+    {"AM-Money(W)", 11, false}, 
+    {"AM-Money%", 11}, 
+    {"Volume/Tick", 11}, 
 
-    {"NetIn(W)", 10},
-    {"AM-NetIn(W)", 11}, 
-    {"PM-NetIn(W)", 11}, 
-    {"Inflow%", 9, false},
+    {"AM-NET", 11, false}, 
+    {"PM-NET", 11, false},
+    {"AM-P-NET", 11, false}, 
+    {"PM-P-NET", 11, false}, 
+
+    {"Will-NET", 16},
+    {"PRICE-NET", 16},
+    {"Money", 11},
+    {"Volume", 9}, 
+    
+    {"NET/Money", 9, false},
     // {"NetPer%", 9,false}, 
     // {"HistNetIn(W)", 11, false}, 
 
     {"AvgPrice", 9},
-    {"AM-Close", 8, true}, 
-    {"AM-Pct%", 8, true}, 
+    {"AM-Close", 8, false}, 
+    {"AM-Pct%", 8, false}, 
     {"Close", 7}, 
     {"Pct%", 8}, 
 
@@ -598,42 +603,76 @@ inline void print_merge(DayOutputMetrics& out, const DayOutputMetrics& prev_out,
     std::cout << std::endl;
 }
 
+inline double metrics_total_money(const DailyMetrics& metrics){
+
+    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+
+    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
+
+    return total_money;
+}
+
+inline double metrics_total_volume(const DailyMetrics& metrics){
+
+    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+
+    return deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
+}
+
+inline double metrics_bsn_net(const DailyMetrics& metrics){
+    double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
+    return all_will_netin;
+}
+
+inline double metrics_price_net(const DailyMetrics& metrics){
+    double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
+    return all_price_netin;
+}
+
 inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str) {
     int i = 0;
     size_t total_volume = 0;
 
     const std::vector<Col>& cols = data_all_table_cols;
 
-    const deal_bsn& am_deal_total_bsn = out.am_metrics.deal_total_bsn;
-    const deal_bsn& deal_total_bsn = out.metrics.deal_total_bsn;
     double am_money_ratio = 0.0;
-    double am_money_total = am_deal_total_bsn.buy.money + am_deal_total_bsn.neutral.money + am_deal_total_bsn.sale.money;
-    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
-    double am_netin = out.am_metrics.deal_total_bsn.buy.money - out.am_metrics.deal_total_bsn.sale.money;
-    double all_netin = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
+    double am_total_money = metrics_total_money(out.am_metrics);
+    double am_will_netin = metrics_bsn_net(out.am_metrics);
+    double am_price_netin = metrics_price_net(out.am_metrics);
 
-    am_money_ratio = am_money_total/total_money; 
-    total_volume = deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
+    double total_money = metrics_total_money(out.metrics);
+    double all_will_netin = metrics_bsn_net(out.metrics);
+    double all_price_netin = metrics_price_net(out.metrics);
+
+    
+
+    am_money_ratio = am_total_money/total_money; 
+    total_volume = metrics_total_volume(out.metrics);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
     print_next(out.metrics.ticks_count, i, cols);
-    print_next(am_deal_total_bsn.buy.volume + am_deal_total_bsn.neutral.volume + am_deal_total_bsn.sale.volume, i, cols);
-    print_next(am_deal_total_bsn.buy.money + am_deal_total_bsn.neutral.money + am_deal_total_bsn.sale.money, i, cols);
+    print_next(metrics_total_volume(out.am_metrics), i, cols);
+    print_next(am_total_money, i, cols);
     
     print_next(am_money_ratio * 100, i, cols);
     print_next(total_volume/out.metrics.ticks_count, i, cols);
-    
+
+    print_next_pos(am_will_netin/WAN, i, cols);
+    print_next_pos((all_will_netin - am_will_netin)/WAN, i, cols);
+
+
+    print_next_pos(am_price_netin/WAN, i, cols);
+    print_next_pos((all_price_netin - am_price_netin)/WAN, i, cols);
+
+    print_next_pos(all_will_netin/WAN, i, cols);
+    print_next_pos(all_price_netin/WAN, i, cols);
     print_next(total_money/WAN, i, cols);
     print_next(total_volume/WAN, i, cols);
 
-    print_next_pos(all_netin/WAN, i, cols);
-    print_next_pos(am_netin/WAN, i, cols);
 
-
-    print_next_pos((all_netin - am_netin)/WAN, i, cols);
-    print_next_pos(all_netin/total_money, i, cols);
+    print_next_pos(all_will_netin/total_money, i, cols);
 
     print_next(total_money/total_volume, i, cols);
 
