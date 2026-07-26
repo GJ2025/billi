@@ -248,6 +248,9 @@ static const std::vector<Col> data_all_table_cols = {
 
     {"Will-NET", 16},
     {"PRICE-NET", 16},
+
+    {"Will-NET-P", 16},
+    {"PRICE-NET-P", 16},
     {"Money", 11},
     {"Volume", 9}, 
     
@@ -630,9 +633,9 @@ inline double metrics_bsn_net(const DailyMetrics& metrics){
 inline double metrics_price_net(const DailyMetrics& metrics){
     double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
     return all_price_netin;
-}
+} 
 
-inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str) {
+inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const std::string& divergence_str) {
     int i = 0;
     size_t total_volume = 0;
 
@@ -644,8 +647,12 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
     double am_price_netin = metrics_price_net(out.am_metrics);
 
     double total_money = metrics_total_money(out.metrics);
+
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics);
+
+    double prev_all_will_netin = metrics_bsn_net(prev_out.metrics);
+    double prev_all_price_netin = metrics_price_net(prev_out.metrics);
 
     
 
@@ -671,6 +678,12 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 
     print_next_pos(all_will_netin/WAN, i, cols);
     print_next_pos(all_price_netin/WAN, i, cols);
+
+
+    print_next_pos((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
+    print_next_pos((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
+
+
     print_next(total_money/WAN, i, cols);
     print_next(total_volume/WAN, i, cols);
 
@@ -702,7 +715,6 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
 void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 void print__headers(const std::string& title, const std::vector<Col>& cols);
-inline void print_all_data(const DayOutputMetrics& out, const std::string& divergence_str);
 
 extern void update_metrics_header(record_stream& header, StreamRecord& stream);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
