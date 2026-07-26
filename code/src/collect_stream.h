@@ -98,6 +98,7 @@ struct DayOutputMetrics {
     double am_pct_change = 0.0;
     double pct_change = 0.0;
     double start_change = 0.0;
+    double avg_pct_change = 0.0;
     double historical_total_inflow = 0.0;
 
     std::string date_str = "";
@@ -254,11 +255,13 @@ static const std::vector<Col> data_all_table_cols = {
     // {"NetPer%", 9,false}, 
     // {"HistNetIn(W)", 11, false}, 
 
-    {"AvgPrice", 9},
+    {"AvgPrice", 9, false},
+    {"StartCh%", 8}, 
+    {"AvgPct%", 8},
     {"AM-Close", 8, false}, 
-    {"AM-Pct%", 8, false}, 
-    {"Close", 7}, 
+    {"AM-Pct%", 8, false},  
     {"Pct%", 8}, 
+    {"Close", 7},
 
     {"Divergence", 20}
 };
@@ -676,12 +679,18 @@ inline void print_all_data(const DayOutputMetrics& out, const std::string& diver
 
     print_next(total_money/total_volume, i, cols);
 
-    print_next(out.am_metrics.closing_price, i, cols);
-    print_next_pos(out.am_pct_change, i, cols);
 
-    print_next(out.metrics.closing_price, i, cols);
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.avg_pct_change, i, cols);
+
+
+
+    print_next(out.am_metrics.closing_price, i, cols);
+
+    print_next_pos(out.am_pct_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
-    
+    print_next(out.metrics.closing_price, i, cols);
+
     print_next(divergence_str, i, cols);
 
     std::cout << std::endl;
