@@ -172,6 +172,9 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     metrics.ticks_count++;
     metrics.closing_price = record.price;
 
+    trade am_trade;
+    trade pm_trade;
+
     size_t volume = record.volume * 100; 
     double money = record.price * volume;
 
@@ -201,10 +204,20 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
         } 
     }
 
-    metrics.all_money = metrics.am_bsn.buy.money + metrics.am_bsn.sale.money + metrics.am_bsn.neutral.money;
-    metrics.all_volume = metrics.am_bsn.buy.volume + metrics.am_bsn.sale.volume + metrics.am_bsn.neutral.volume;
+    am_trade.money = total_money(metrics.am_bsn);
+    am_trade.volume = total_volume(metrics.am_bsn);
+
+    pm_trade.money = total_money(metrics.pm_bsn);
+    pm_trade.volume = total_volume(metrics.pm_bsn);
+
+    metrics.all_money = am_trade.money + pm_trade.money;
+    metrics.all_volume = am_trade.volume + pm_trade.volume;
 
     metrics.avg_price = metrics.all_money / metrics.all_volume;
+
+    // if (last_record(record)){
+    //     std::cout << "update_metrics_by_record   "<< metrics.avg_price << "=" << metrics.all_money << "/" << metrics.all_volume << std::endl;
+    // }
 
     return;
 }
@@ -323,6 +336,7 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
             out.start_change = pct(out.metrics.daily_first_record.price, prev_out.metrics.closing_price);
             out.avg_pct_change = pct(out.metrics.avg_price, prev_out.metrics.avg_price);
+            // std::cout << ":"<< out.avg_pct_change << "=" << out.metrics.avg_price << "/" << prev_out.metrics.avg_price << std::endl;
         }
 
         return;
@@ -427,7 +441,7 @@ int main(int argc, char* argv[]) {
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
 
-        make_test(out);
+        // make_test(out);
 
         divergengce = get_and_print_signals(out, prev_out);
 

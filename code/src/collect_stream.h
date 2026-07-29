@@ -258,11 +258,12 @@ static const std::vector<Col> data_all_table_cols = {
     // {"NetPer%", 9,false}, 
     // {"HistNetIn(W)", 11, false}, 
 
-    {"AvgPrice", 9, false},
+    {"AvgPrice", 9, true},
     {"StartCh%", 8}, 
     {"AvgPct%", 8},
     {"AM-Close", 8, false}, 
-    {"AM-Pct%", 8, false},  
+    {"AM-Pct%", 8, false},
+    {"BaseAvg%", 8, true},  
     {"Pct%", 8}, 
     {"Close", 7},
 
@@ -282,6 +283,15 @@ static const std::vector<Col> test_table_cols = {
     {"PM-outflow", 13}, 
     {"PM-Sale", 13},
 };
+
+inline double total_money(const deal_bsn& deal) {
+    return deal.buy.money + deal.sale.money + deal.neutral.money;
+}
+
+// 计算总成交量
+inline size_t total_volume(const deal_bsn& deal) {
+    return deal.buy.volume + deal.sale.volume + deal.neutral.volume;
+}
 
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
@@ -638,6 +648,7 @@ inline double metrics_price_net(const DailyMetrics& metrics){
 inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const std::string& divergence_str) {
     int i = 0;
     size_t total_volume = 0;
+    double avg_price = 0.0;
 
     const std::vector<Col>& cols = data_all_table_cols;
 
@@ -658,6 +669,10 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
     am_money_ratio = am_total_money/total_money; 
     total_volume = metrics_total_volume(out.metrics);
+
+    avg_price = total_money/total_volume;
+
+    // std::cout <<"avg data in print all DATA: " <<avg_price << " = " << total_money << " / " << total_volume << std::endl;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -690,7 +705,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
     print_next_pos(all_will_netin/total_money, i, cols);
 
-    print_next(total_money/total_volume, i, cols);
+    print_next(avg_price, i, cols);
 
 
     print_next_pos(out.start_change, i, cols);
@@ -701,6 +716,9 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     print_next(out.am_metrics.closing_price, i, cols);
 
     print_next_pos(out.am_pct_change, i, cols);
+    
+    print_next_pos((out.metrics.closing_price - avg_price)/avg_price, i, cols);
+
     print_next_pos(out.pct_change, i, cols);
     print_next(out.metrics.closing_price, i, cols);
 
