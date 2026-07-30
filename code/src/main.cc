@@ -63,7 +63,7 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
     double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
     double price_net_money = out.metrics.deal_total_price.up.money - out.metrics.deal_total_price.down.money;
 
-    double avg_change = out.metrics.avg_price - prev_out.metrics.avg_price;
+    // double avg_change = out.metrics.avg_price - prev_out.metrics.avg_price;
     #define PRICE_THRESHOLD 0.05
 
     std::vector<std::string> signals;
@@ -84,21 +84,21 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
         signals.push_back("[DN_PIN]");
     }
 
-    if ((avg_change - PRICE_THRESHOLD) > 0 && will_net_money < 0) {
-        signals.push_back("[AVUP_OUT]");
-    }
+    // if ((avg_change - PRICE_THRESHOLD) > 0 && will_net_money < 0) {
+    //     signals.push_back("[AVUP_OUT]");
+    // }
     
-    if ((avg_change - PRICE_THRESHOLD) > 0 && price_net_money < 0) {
-        signals.push_back("[AVUP_POUT]");
-    } 
+    // if ((avg_change - PRICE_THRESHOLD) > 0 && price_net_money < 0) {
+    //     signals.push_back("[AVUP_POUT]");
+    // } 
     
-    if ((avg_change + PRICE_THRESHOLD) < 0 && will_net_money > 0) {
-        signals.push_back("[AVDN_IN]");
-    }
+    // if ((avg_change + PRICE_THRESHOLD) < 0 && will_net_money > 0) {
+    //     signals.push_back("[AVDN_IN]");
+    // }
 
-    if ((avg_change + PRICE_THRESHOLD) < 0 && price_net_money > 0) {
-        signals.push_back("[AVDN_PIN]");
-    }
+    // if ((avg_change + PRICE_THRESHOLD) < 0 && price_net_money > 0) {
+    //     signals.push_back("[AVDN_PIN]");
+    // }
 
     // if (will_net_money * price_net_money < 0.0){
     //     signals.push_back("[WILL_P_DIFF]");
@@ -336,7 +336,6 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
             out.start_change = pct(out.metrics.daily_first_record.price, prev_out.metrics.closing_price);
             out.avg_pct_change = pct(out.metrics.avg_price, prev_out.metrics.avg_price);
-            // std::cout << ":"<< out.avg_pct_change << "=" << out.metrics.avg_price << "/" << prev_out.metrics.avg_price << std::endl;
         }
 
         return;
@@ -406,7 +405,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    int init_status = initialize_and_get_files(opts.dir_path, files_to_process);
+    int init_status = initialize_and_get_files(opts.dir_path, files_to_process, opts.show_limit);
     if (init_status > 0) return init_status;
     if (init_status < 0) return 0;
 
@@ -416,17 +415,11 @@ int main(int argc, char* argv[]) {
     std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
-    size_t total_files = files_to_process.size();
-    size_t start_index = (total_files > opts.show_limit) ? (total_files - opts.show_limit) : 0;
-    size_t current_idx = 0;
+    files_to_process.shrink_to_fit();
 
     for (const auto& file : files_to_process) {
 
         if (!check_company_id_match(file, target_company_id)) {
-            continue;
-        }
-
-        if (current_idx++ < start_index){
             continue;
         }
 

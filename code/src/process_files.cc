@@ -37,7 +37,7 @@ void run_preprocessing(const std::string& dir_path) {
     }
 }
 
-int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& files_to_process) {
+int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& files_to_process, size_t show_limit) {
 
     run_preprocessing(dir_path);
 
@@ -58,6 +58,11 @@ int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& fi
         std::cout << "Info: No valid .txt data files found." << std::endl;
         return -1; 
     }
+
+    files_to_process.erase(
+        files_to_process.begin(), 
+        files_to_process.end() - show_limit
+    );
 
     return 0;
 }

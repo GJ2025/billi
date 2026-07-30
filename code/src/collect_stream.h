@@ -95,13 +95,13 @@ struct DailyMetrics {
 
 struct DayOutputMetrics {
     
+    std::string date_str = "";
+
     double am_pct_change = 0.0;
     double pct_change = 0.0;
     double start_change = 0.0;
     double avg_pct_change = 0.0;
     double historical_total_inflow = 0.0;
-
-    std::string date_str = "";
     
 
     DailyMetrics metrics;
