@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "time_seq.h"
 
 struct TickRecord {
     std::string time = "";
@@ -31,12 +32,6 @@ struct TickRecord {
     }
 };
 
-struct SeqTime{
-    int start_hour = 0;
-    int start_min = 0;
-    int cnt = 0;
-    int intervel =0;
-};
 
 struct ProgramOptions {
     bool show_head = false;

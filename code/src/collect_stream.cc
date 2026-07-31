@@ -1,8 +1,10 @@
-#include "common.h"
-#include "tick_types.h"
-#include "collect_stream.h"
 #include <iostream>
 #include <iomanip>
+#include "common.h"
+#include "time_seq.h"
+#include "tick_types.h"
+#include "collect_stream.h"
+
 
 
 bool record_change(TickRecord this_record, const TickRecord pre_record) {

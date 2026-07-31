@@ -4,11 +4,12 @@
 #include <ctime>
 #include <vector>
 #include <string>
+#include "time_seq.h"
 
-struct tickTime {
-    int hour = 0;
-    int minute = 0;
-};
+// struct tickTime {
+//     int hour = 0;
+//     int minute = 0;
+// };
 
 tickTime get_current_tick_time() {
     auto now = std::chrono::system_clock::now();
@@ -54,7 +55,7 @@ bool should_filter(int t_min) {
     return false;
 }
 
-std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t cnt = 0, int interval_minutes = 30) {
+std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t cnt , int interval_minutes) {
     std::vector<tickTime> result;
 
     int total_minutes = time_to_minutes(current);
@@ -81,24 +82,9 @@ std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t 
     return result;
 }
 
-std::vector<tickTime> min_vector(size_t cnt = 0, int interval_minutes = 30, int hour = 0, int min = 0){
+int show_time(SeqTime tseq) {
 
-    tickTime current;
-
-    if (hour == 0 && min ==0 ){
-        current = get_current_tick_time();
-    }else{
-        current.hour = hour;
-        current.minute = min;
-    }
-
-
-    return generate_today_tick_times(current, cnt, interval_minutes);
-}
-
-int show_time(size_t cnt = 0, int interval = 30, int hour = 0 ,int min = 0) {
-
-    std::vector<tickTime> tick_times = min_vector(cnt, interval, hour, min);
+    std::vector<tickTime> tick_times = min_vector(tseq);
 
     std::cout << "今天过滤后的有效时间点 (共 " << tick_times.size() << " 个):\n";
     for (const auto& t : tick_times) {
@@ -108,6 +94,29 @@ int show_time(size_t cnt = 0, int interval = 30, int hour = 0 ,int min = 0) {
               
     return 0;
 }
+
+int show_time_vector(std::vector<tickTime>& tick_times){
+    for (const auto& t : tick_times) {
+        std::cout << std::setw(2) << std::setfill('0') << t.hour << ":" 
+                  << std::setw(2) << std::setfill('0') << t.minute << "\n";
+    }
+              
+    return 0;
+}
+
+// int show_time(size_t cnt = 0, int interval = 30, int hour = 0 ,int min = 0) {
+
+//     std::vector<tickTime> tick_times = min_vector(cnt, interval, hour, min);
+
+//     std::cout << "今天过滤后的有效时间点 (共 " << tick_times.size() << " 个):\n";
+//     for (const auto& t : tick_times) {
+//         std::cout << std::setw(2) << std::setfill('0') << t.hour << ":" 
+//                   << std::setw(2) << std::setfill('0') << t.minute << "\n";
+//     }
+              
+//     return 0;
+// }
+
 
 // int main(int argc, char* argv[]) {
 //     int interval = 30;
