@@ -59,10 +59,12 @@ int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& fi
         return -1; 
     }
 
-    files_to_process.erase(
-        files_to_process.begin(), 
-        files_to_process.end() - show_limit
-    );
+    if (files_to_process.size() > show_limit){
+        files_to_process.erase(
+            files_to_process.begin(), 
+            files_to_process.end() - show_limit
+        );
+    }
 
     return 0;
 }
