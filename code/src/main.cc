@@ -385,7 +385,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> files_to_process;
     int opt;
 
-    while ((opt = getopt(argc, argv, "hd:parwsmbl:MI:N:H:K")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsmbl:MI:N:H:K:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
