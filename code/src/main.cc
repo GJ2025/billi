@@ -383,7 +383,7 @@ void make_test(DayOutputMetrics& out){
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     std::vector<std::string> files_to_process;
-    std::vector<tickTime> tick_times;
+    std::vector<tickTime> tick_times_seq;
     int opt;
 
     while ((opt = getopt(argc, argv, "hd:parwsmbl:MI:N:H:K:")) != -1) {
@@ -426,8 +426,8 @@ int main(int argc, char* argv[]) {
     // ./bin/parse_tick -N 5 -I 3 -H 16 -K 20
 
     if (opts.tseq.cnt != 0){
-        tick_times = min_vector(opts.tseq);
-        show_time_vector(tick_times);
+        tick_times_seq = min_vector(opts.tseq);
+        show_time_vector(tick_times_seq);
         return 0;
     }
     
