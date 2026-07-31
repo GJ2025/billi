@@ -31,6 +31,13 @@ struct TickRecord {
     }
 };
 
+struct SeqTime{
+    int start_hour = 0;
+    int start_min = 0;
+    int cnt = 0;
+    int intervel =0;
+};
+
 struct ProgramOptions {
     bool show_head = false;
     bool show_price = false;
@@ -41,6 +48,7 @@ struct ProgramOptions {
     bool show_big = false;
     bool show_middle = false;
     bool show_merge = false;
+    SeqTime tseq;
     size_t show_limit = 1000;
     std::string dir_path;
 };

@@ -15,6 +15,7 @@
 #include "collect_stream.h"
 #include "tick_print.h"
 #include "process_files.h"
+#include "time_seq.h"
 
 namespace fs = std::filesystem;
 
@@ -384,7 +385,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> files_to_process;
     int opt;
 
-    while ((opt = getopt(argc, argv, "hd:parwsmbl:M")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsmbl:MI:N:H:K")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -396,6 +397,22 @@ int main(int argc, char* argv[]) {
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
             case 'M': opts.show_middle = true; break;
+            case 'N': {
+                opts.tseq.cnt =std::stoi(optarg); 
+                break;
+            }
+            case 'I': {
+                opts.tseq.intervel =std::stoi(optarg); 
+                break;
+            }
+            case 'H': {
+                opts.tseq.start_hour =std::stoi(optarg); 
+                break;
+            }
+            case 'K': {
+                opts.tseq.start_min =std::stoi(optarg); 
+                break;
+            }
             case 'l': 
                 opts.show_limit = std::stoi(optarg);
                 break;
@@ -404,6 +421,12 @@ int main(int argc, char* argv[]) {
                 return 1;
         }
     }
+
+    if (opts.tseq.cnt != 0){
+        show_time(opts.tseq.cnt, opts.tseq.intervel, opts.tseq.start_hour, opts.tseq.start_min);
+        return 0;
+    }
+    
 
     int init_status = initialize_and_get_files(opts.dir_path, files_to_process, opts.show_limit);
     if (init_status > 0) return init_status;
