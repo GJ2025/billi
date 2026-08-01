@@ -58,6 +58,16 @@ inline bool is_am_end(const tickTime& now,const tickTime& pre) {
     }
 }
 
+inline bool is_this_time_end(const tickTime& now,const tickTime& pre, tickTime this_time) {
+
+
+    if (check_time(now, this_time) > 0 &&  check_time(pre, this_time) <= 0){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 
 
 

@@ -270,6 +270,58 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
     infile.close();
 }
 
+void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times) {
+    std::string line;
+    TickRecord pre_record;
+    StreamRecord stream;
+
+    size_t tick_idx = 0;
+    DailyMetrics current_metrics;
+
+    std::getline(infile, line); 
+    std::getline(infile, line);
+    while (std::getline(infile, line)) {
+        if (line.empty()){
+            continue;
+        } 
+
+        std::stringstream ss(line);
+        TickRecord record;
+        
+        if (ss >> record) {
+            
+            if (!record_should_process(record)){
+                continue;
+            }
+
+            process_first_record(current_metrics, record, pre_record);
+
+            if (record_change(record, pre_record)) {
+                update_metrics_header(current_metrics.header, stream);
+            }
+
+            if (tick_idx < tick_times.size() && 
+                is_this_time_end(record.t, pre_record.t, tick_times[tick_idx])) {
+                update_metrics_header(current_metrics.header, stream);
+                all_metrics.push_back(current_metrics);
+                tick_idx++; 
+            }
+
+            update_stream(stream, record, pre_record);
+            update_metrics_by_record(current_metrics, record);
+
+            process_last_record(current_metrics, stream, record);
+
+        }else{
+                std::cout << "failed=========== " << record.time << std::endl;
+                exit(0);
+        }
+
+        pre_record = record;
+    }
+    infile.close();
+}
+
 void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record){
     if (last_record(record)) {
 
@@ -380,13 +432,28 @@ void make_test(DayOutputMetrics& out){
     return;
 }
 
-int main(int argc, char* argv[]) {
-    ProgramOptions opts;
-    std::vector<std::string> files_to_process;
-    std::vector<tickTime> tick_times_seq;
-    int opt;
+int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
+    // 直接遍历 -t 之后的参数
+    for (int i = 0; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "-N" && i + 1 < argc) {
+            opts.tseq.cnt = std::stoi(argv[++i]);
+        } else if (arg == "-I" && i + 1 < argc) {
+            opts.tseq.intervel = std::stoi(argv[++i]);
+        } else if (arg == "-H" && i + 1 < argc) {
+            opts.tseq.start_hour = std::stoi(argv[++i]);
+        } else if (arg == "-M" && i + 1 < argc) {
+            opts.tseq.start_min = std::stoi(argv[++i]);
+        } else if (arg == "-d" && i + 1 < argc) {
+            opts.dir_path = argv[++i];
+        }
+    }
+    return 0;
+}
 
-    while ((opt = getopt(argc, argv, "hd:parwsmbl:MI:N:H:K:")) != -1) {
+int parse_opt(int argc, char* argv[], ProgramOptions& opts){
+    int opt;
+    while ((opt = getopt(argc, argv, "hd:parwsmbl:Mt")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -398,45 +465,59 @@ int main(int argc, char* argv[]) {
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
             case 'M': opts.show_middle = true; break;
-            case 'N': {
-                opts.tseq.cnt =std::stoi(optarg); 
-                break;
-            }
-            case 'I': {
-                opts.tseq.intervel =std::stoi(optarg); 
-                break;
-            }
-            case 'H': {
-                opts.tseq.start_hour =std::stoi(optarg); 
-                break;
-            }
-            case 'K': {
-                opts.tseq.start_min =std::stoi(optarg); 
-                break;
-            }
             case 'l': 
-                opts.show_limit = std::stoi(optarg);
+                {
+                    opts.show_limit = std::stoi(optarg);
+                    break;
+                }
+            case 't': {
+                parse_tseq_opt(argc - optind, argv + optind, opts);
+                optind = argc;
+                opts.show_t = true;
+                opts.show_limit = 1;
                 break;
+            }
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
                 return 1;
         }
     }
 
-    // ./bin/parse_tick -N 5 -I 3 -H 16 -K 20
+    return 0;
+}
 
-    if (opts.tseq.cnt != 0){
-        tick_times_seq = min_vector(opts.tseq);
-        show_time_vector(tick_times_seq);
-        return 0;
-    }
+int main(int argc, char* argv[]) {
+    ProgramOptions opts;
+    std::vector<std::string> files_to_process;
+    std::vector<tickTime> tick_times_seq;
     
 
+    if (parse_opt(argc, argv, opts) != 0){
+        return 1;
+    }
+
+    
     int init_status = initialize_and_get_files(opts.dir_path, files_to_process, opts.show_limit);
     if (init_status > 0) return init_status;
     if (init_status < 0) return 0;
 
+
+    // ./bin/parse_tick -t -N 5 -I 3 -H 16 -M 20 -d $d/xiye/
+    if (opts.tseq.cnt != 0){
+        std::vector<DailyMetrics> all_metrics;
+        tick_times_seq = min_vector(opts.tseq);
+        show_time_vector(tick_times_seq);
+         std::ifstream infile(files_to_process[0]);
+
+        parse_tick_file_by_tseq(infile, all_metrics, tick_times_seq);
+        return 0;
+    }
+
+
     print_headers(opts);
+
+
+
 
     DayOutputMetrics prev_out;
     std::string divergengce;

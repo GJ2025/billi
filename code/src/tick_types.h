@@ -43,6 +43,7 @@ struct ProgramOptions {
     bool show_big = false;
     bool show_middle = false;
     bool show_merge = false;
+    bool show_t= false;
     SeqTime tseq;
     size_t show_limit = 10000;
     std::string dir_path;
