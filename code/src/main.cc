@@ -69,19 +69,19 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 
     std::vector<std::string> signals;
 
-    if (out.pct_change > 0 && will_net_money < 0) {
+    if (out.pct_change_base_925 > 0 && will_net_money < 0) {
         signals.push_back("[UP_OUT]");
     }
     
-    if (out.pct_change > 0 && price_net_money < 0) {
+    if (out.pct_change_base_925 > 0 && price_net_money < 0) {
         signals.push_back("[UP_POUT]");
     } 
     
-    if (out.pct_change < 0 && will_net_money > 0) {
+    if (out.pct_change_base_925 < 0 && will_net_money > 0) {
         signals.push_back("[DN_IN]");
     }
 
-    if (out.pct_change < 0 && price_net_money > 0) {
+    if (out.pct_change_base_925 < 0 && price_net_money > 0) {
         signals.push_back("[DN_PIN]");
     }
 
@@ -387,11 +387,13 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
         out.historical_total_inflow = prev_out.historical_total_inflow + 
                                         out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
         if (is_filled_tick(prev_out)) {
-            out.pct_change =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
+            out.pct_change_base_pre =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
             out.start_change = pct(out.metrics.daily_first_record.price, prev_out.metrics.closing_price);
             out.avg_pct_change = pct(out.metrics.avg_price, prev_out.metrics.avg_price);
         }
+
+        out.pct_change_base_925 = pct(out.metrics.closing_price, out.metrics.daily_first_record.price);
 
         return;
 }
@@ -560,10 +562,11 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        process_out(out, prev_out);
 
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
+
+        process_out(out, prev_out);
 
         // make_test(out);
 
