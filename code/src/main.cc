@@ -273,6 +273,7 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
 void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times) {
     std::string line;
     TickRecord pre_record;
+    tickTime pre_seq_time;
     StreamRecord stream;
 
     size_t tick_idx = 0;
@@ -300,9 +301,10 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
                 update_metrics_header(current_metrics.header, stream);
             }
 
-            if (tick_idx < tick_times.size() && 
-                is_this_time_end(record.t, pre_record.t, tick_times[tick_idx])) {
-                update_metrics_header(current_metrics.header, stream);
+            if (tick_idx < tick_times.size() 
+                && (is_tick_time_end(record.t, pre_record.t, tick_times[tick_idx]) || is_tick_time_end(record.t, pre_seq_time, tick_times[tick_idx]))) {
+                // update_metrics_header(current_metrics.header, stream);
+                pre_seq_time = tick_times[tick_idx];
                 all_metrics.push_back(current_metrics);
                 tick_idx++; 
             }
@@ -453,7 +455,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsmbl:Mt")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsSmbl:Mt")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.dir_path = optarg; break;
@@ -464,7 +466,14 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 'm': opts.show_merge = true; break;
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
-            case 'M': opts.show_middle = true; break;
+            case 'M': {
+                opts.show_middle = true; 
+                break;
+            }
+            case 'S': {
+                opts.show_small = true; 
+                break;
+            }
             case 'l': 
                 {
                     opts.show_limit = std::stoi(optarg);
@@ -489,7 +498,6 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     std::vector<std::string> files_to_process;
-    std::vector<tickTime> tick_times_seq;
     
 
     if (parse_opt(argc, argv, opts) != 0){
@@ -504,12 +512,27 @@ int main(int argc, char* argv[]) {
 
     // ./bin/parse_tick -t -N 5 -I 3 -H 16 -M 20 -d $d/xiye/
     if (opts.tseq.cnt != 0){
+        std::vector<tickTime> tick_times_seq;
         std::vector<DailyMetrics> all_metrics;
         tick_times_seq = min_vector(opts.tseq);
+        std::reverse(tick_times_seq.begin(), tick_times_seq.end());
         show_time_vector(tick_times_seq);
-         std::ifstream infile(files_to_process[0]);
+        std::ifstream infile(files_to_process[0]);
 
         parse_tick_file_by_tseq(infile, all_metrics, tick_times_seq);
+
+        print__headers("PRICE ", tseq_price_table_cols);
+
+        for (size_t i = 0; i < all_metrics.size() && i < tick_times_seq.size(); ++i) {
+            auto& m = all_metrics[i];
+            const auto& t = tick_times_seq[i]; 
+            
+            deal_classfy(m);
+            print_tseq_price(t, m);
+        }
+
+        print__headers("PRICE ", tseq_price_table_cols);
+
         return 0;
     }
 

@@ -32,6 +32,7 @@ fi
 ./bin/parse_tick -d "$target_dir" -s $limit_opt >> "$output"
 ./bin/parse_tick -d "$target_dir" -b $limit_opt >> "$output"
 ./bin/parse_tick -d "$target_dir" -M $limit_opt >> "$output"
+./bin/parse_tick -d "$target_dir" -S $limit_opt >> "$output"
 
 echo "Done: $output"
 

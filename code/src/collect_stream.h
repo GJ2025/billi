@@ -117,12 +117,12 @@ struct Col {
 
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12, false}, 
-    {"Buy-Kp", 12, false},  
+    {"Buy-Dn", 12, true}, 
+    {"Buy-Kp", 12, true},  
     {"Buy-Up", 12},
     {"Sale-Dn", 12,true}, 
-    {"Sale-Kp", 12, false}, 
-    {"Sale-Up", 12,false}, 
+    {"Sale-Kp", 12, true}, 
+    {"Sale-Up", 12,true}, 
     {"Neutral-Dn", 12, false},
     {"Neutral-Kp", 12, false},  
     {"Neutral-Up", 12, false},
@@ -211,6 +211,45 @@ static const std::vector<Col> price_table_cols = {
     {"Pre", 5},      
     {"StartCh", 9},  
     {"PctCh", 9}, 
+    {"Close", 5}
+};
+
+
+static const std::vector<Col> tseq_price_table_cols = {
+    {"Date", 11},
+
+    {"Super-Up", 9, false}, 
+    {"Super-Dn", 9, false}, 
+    
+
+    {"Big-Up", 9, false},  
+    {"Big-Dn", 9, false},   
+    
+    {"Mid-Up", 9, false},  
+    {"Mid-Dn", 9, false}, 
+    
+
+    {"Small-Up", 9, false}, 
+    {"Small-Dn", 9, false}, 
+    
+
+    {"Super-NET", 12},
+    {"Big-NET", 9},
+    {"Mid-NET", 9},
+    {"Small-NET", 9},
+    {"Tot-NET", 12},
+
+    {"Tot-Up", 12},  
+    {"Tot-Dn", 12},
+    {"Tot-KEEP", 12},
+
+    {"KEEP/ALL", 8},
+
+    {"Money", 12},   
+    {"Volume", 12},
+    // {"Pre", 5},      
+    // {"StartCh", 9},  
+    // {"PctCh", 9}, 
     {"Close", 5}
 };
 
@@ -580,6 +619,55 @@ inline void print_price(DayOutputMetrics& out, const DayOutputMetrics& prev_out,
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change, i, cols);
     print_next(out.metrics.closing_price, i, cols);
+    std::cout << std::endl;
+
+}
+
+inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
+    int i = 0;
+
+    const std::vector<Col>& cols = tseq_price_table_cols;
+    std::string tshow = format_tick_times(t);
+
+    double all_money = metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money;
+
+
+    print_next(tshow, i, cols);
+
+    print_next(metrics.deal_super_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_super_price.down.money / WAN, i, cols);
+    
+
+    print_next(metrics.deal_big_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_big_price.down.money / WAN, i, cols);
+
+
+    print_next(metrics.deal_middle_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_middle_price.down.money / WAN, i, cols);
+    
+
+    print_next(metrics.deal_small_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_small_price.down.money / WAN, i, cols);
+
+
+    print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
+
+    print_next(metrics.deal_total_price.up.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.down.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.keep.money / WAN, i, cols);
+    print_next(metrics.deal_total_price.keep.money / all_money, i, cols);
+
+
+    print_next(all_money/WAN , i, cols);
+    print_next((metrics.deal_total_price.down.volume + metrics.deal_total_price.up.volume + metrics.deal_total_price.keep.volume)/WAN, i, cols);
+    // print_next(prev_out.metrics.closing_price, i, cols);
+    // print_next_pos(out.start_change, i, cols);
+    // print_next_pos(out.pct_change, i, cols);
+    print_next(metrics.closing_price, i, cols);
     std::cout << std::endl;
 
 }

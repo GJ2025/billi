@@ -112,7 +112,11 @@ void print_headers(const ProgramOptions& opts) {
     
     if (opts.show_middle){
         print__headers("MIDDLE", will_price_table_cols);
-    } 
+    }
+    
+    if (opts.show_small){
+        print__headers("SMALL", will_price_table_cols);
+    }
 }
 
 
@@ -149,5 +153,9 @@ void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOut
 
         if (opts.show_middle){
             print_slim_price(out, prev_out, RecordScale::MIDDLE, will_price_table_cols);
+        } 
+
+        if (opts.show_small){
+            print_slim_price(out, prev_out, RecordScale::SMALL, will_price_table_cols);
         } 
 }

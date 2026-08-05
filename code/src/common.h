@@ -58,7 +58,7 @@ inline bool is_am_end(const tickTime& now,const tickTime& pre) {
     }
 }
 
-inline bool is_this_time_end(const tickTime& now,const tickTime& pre, tickTime this_time) {
+inline bool is_tick_time_end(const tickTime& now,const tickTime& pre, tickTime this_time) {
 
 
     if (check_time(now, this_time) > 0 &&  check_time(pre, this_time) <= 0){
@@ -66,6 +66,15 @@ inline bool is_this_time_end(const tickTime& now,const tickTime& pre, tickTime t
     }else{
         return false;
     }
+}
+
+inline std::string format_tick_times(const tickTime& t) {
+    std::ostringstream oss;
+    
+    oss << std::setw(2) << std::setfill('0') << t.hour << ":" 
+        << std::setw(2) << std::setfill('0') << t.minute ;
+    
+    return oss.str();
 }
 
 
