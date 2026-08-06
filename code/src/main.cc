@@ -570,7 +570,7 @@ void get_signal_from_metrics(const std::vector<std::string>& files_to_process, c
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics);
 
-    if ((all_will_netin > 0 || all_price_netin > 0) && out.pct_change_base_925 < 0){
+    if ((all_will_netin > 0 || all_price_netin > 0) && (out.pct_change_base_925 < 0.1 ||out.pct_change_base_pre < 0.1)){
         // 使用 std::filesystem 获取路径最后两级（目录名 + 文件名）
         namespace fs = std::filesystem;
         fs::path p(file);
