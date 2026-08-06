@@ -103,7 +103,7 @@ bool is_filled_tick(const DayOutputMetrics& out){
     return had_one;
 }
 
-std::string get_and_print_signals(DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+std::string get_and_print_signals(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
 
     std::string divergence_str = get_divergence_string(out, prev_out); 
     return divergence_str;
@@ -525,13 +525,13 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
     }
 }
 
-void print_metrics(const ProgramOptions& opts,  std::vector<DayOutputMetrics>& out_vector) {
+void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetrics>& out_vector) {
     std::string divergengce;
     DayOutputMetrics prev_out;  
 
     print_headers(opts);
 
-    for (auto& out : out_vector) {
+    for (const auto& out : out_vector) {
 
         divergengce = get_and_print_signals(out, prev_out);
 
@@ -543,6 +543,32 @@ void print_metrics(const ProgramOptions& opts,  std::vector<DayOutputMetrics>& o
     }
 
     print_headers(opts);
+
+    std::cout << "\r\n" << std::endl;
+}
+
+
+void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
+    // 移除 const，确保成员指针允许被用于赋值操作
+    bool ProgramOptions::* const flags[] = {
+        &ProgramOptions::show_head,
+        &ProgramOptions::show_all,
+        &ProgramOptions::show_merge,
+        &ProgramOptions::show_will,
+        &ProgramOptions::show_price,
+        &ProgramOptions::show_super,
+        &ProgramOptions::show_big,
+        &ProgramOptions::show_middle,
+        &ProgramOptions::show_small
+    };
+
+    for (auto flag_ptr : flags) {
+        if (opts.*flag_ptr) {
+            ProgramOptions this_opts{};
+            this_opts.*flag_ptr = true; 
+            print_metrics(this_opts, out_vector);
+        }
+    }
 }
 
 void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>& files_to_process) {
@@ -596,7 +622,7 @@ int main(int argc, char* argv[]) {
 
     
     process_files_to_metrics(files_to_process, out_vector);
-    print_metrics(opts, out_vector);
+    show_metrics_by_opts(opts, out_vector);
 
     return 0;
 }

@@ -9,7 +9,7 @@ void print_all();
 void print_data_row(const DayOutputMetrics& out,  const std::string& divergence_str);
 void print_headers(const ProgramOptions& opts);
 void print_tailer(const ProgramOptions& opts);
-void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence) ;
+void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence) ;
 
 
 #endif // PRINT_TICK_H

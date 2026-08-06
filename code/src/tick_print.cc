@@ -122,7 +122,7 @@ void print_headers(const ProgramOptions& opts) {
 
 
 
-void print_bodys(const ProgramOptions& opts, DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
+void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
         if (opts.show_head){
             print_header_info(out, prev_out);
         }  

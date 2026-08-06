@@ -452,7 +452,7 @@ inline void print__headers(const std::string& title, const std::vector<Col>& col
 }
 
 
-inline void get_slim_base(DayOutputMetrics& out, RecordScale t,  bsn_action_group& super, deal_bsn& bsn, deal_price& price){
+inline void get_slim_base(const DayOutputMetrics& out, RecordScale t,  bsn_action_group& super, deal_bsn& bsn, deal_price& price){
     
     if (t == RecordScale::SUPER){
 
@@ -480,7 +480,7 @@ inline void get_slim_base(DayOutputMetrics& out, RecordScale t,  bsn_action_grou
 
 }
 
-inline void print_slim_price(DayOutputMetrics& out,const DayOutputMetrics& prev_out, RecordScale t, const std::vector<Col>& cols) {
+inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics& prev_out, RecordScale t, const std::vector<Col>& cols) {
 
     int i = 0;
     bsn_action_group bsn_group ;
@@ -530,7 +530,7 @@ inline void print_slim_price(DayOutputMetrics& out,const DayOutputMetrics& prev_
 }
 
 
-inline void print_will(DayOutputMetrics& out, const DayOutputMetrics& prev_out, DailyMetrics& metrics, const std::vector<Col>& cols) {
+inline void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -579,7 +579,7 @@ inline void print_will(DayOutputMetrics& out, const DayOutputMetrics& prev_out, 
     std::cout << std::endl;
 }
 
-inline void print_price(DayOutputMetrics& out, const DayOutputMetrics& prev_out, DailyMetrics& metrics, const std::vector<Col>& cols) {
+inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     double all_money = metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money;
 
@@ -675,7 +675,7 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
 }
 
 
-inline void print_merge(DayOutputMetrics& out, const DayOutputMetrics& prev_out, DailyMetrics& metrics, const std::vector<Col>& cols) {
+inline void print_merge(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     std::cout << std::left << std::fixed << std::setprecision(2);
 
