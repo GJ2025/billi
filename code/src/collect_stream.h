@@ -821,7 +821,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 }
 
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
-void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record);
+void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 void print__headers(const std::string& title, const std::vector<Col>& cols);
 

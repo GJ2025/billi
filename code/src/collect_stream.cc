@@ -7,7 +7,7 @@
 
 
 
-bool record_change(TickRecord this_record, const TickRecord pre_record) {
+bool record_change(const TickRecord this_record, const TickRecord pre_record) {
     
     if (this_record.bs_type != pre_record.bs_type){
         return true;
@@ -26,13 +26,13 @@ bool record_change(TickRecord this_record, const TickRecord pre_record) {
 
 
 
-void stream_new(StreamRecord& stream, TickRecord record, double pre_price) {
+void stream_new(StreamRecord& stream, const TickRecord record, double pre_price) {
     stream.records.clear();
     stream.records.push_back(record);
     stream.gap = record.price - pre_price;
 }
 
-void stream_add_record(StreamRecord& stream, TickRecord record) {
+void stream_add_record(StreamRecord& stream, const TickRecord record) {
     stream.records.push_back(record);
 }
 
@@ -83,7 +83,7 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
 }
 
 
-void update_stream(StreamRecord& stream, TickRecord& record, const TickRecord& pre_record) {
+void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record) {
     
     if (stream.records.empty() || first_record(record) || record_change(record, pre_record)) {
 

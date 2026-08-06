@@ -85,26 +85,6 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
         signals.push_back("[DN_PIN]");
     }
 
-    // if ((avg_change - PRICE_THRESHOLD) > 0 && will_net_money < 0) {
-    //     signals.push_back("[AVUP_OUT]");
-    // }
-    
-    // if ((avg_change - PRICE_THRESHOLD) > 0 && price_net_money < 0) {
-    //     signals.push_back("[AVUP_POUT]");
-    // } 
-    
-    // if ((avg_change + PRICE_THRESHOLD) < 0 && will_net_money > 0) {
-    //     signals.push_back("[AVDN_IN]");
-    // }
-
-    // if ((avg_change + PRICE_THRESHOLD) < 0 && price_net_money > 0) {
-    //     signals.push_back("[AVDN_PIN]");
-    // }
-
-    // if (will_net_money * price_net_money < 0.0){
-    //     signals.push_back("[WILL_P_DIFF]");
-    // }
-
 
     if (signals.empty()) {
         return "      -      ";
@@ -169,7 +149,7 @@ void process_head_data(DailyMetrics& metrics, const TickRecord& record) {
     }
 }
 
-void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
+void update_metrics_by_record(DailyMetrics& metrics, const TickRecord& record){
     metrics.ticks_count++;
     metrics.closing_price = record.price;
 
@@ -223,15 +203,17 @@ void update_metrics_by_record(DailyMetrics& metrics, TickRecord& record){
     return;
 }
 
-void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics& am_metrics) {
+void read_tick_records(const std::string& filename, std::vector<TickRecord>& records) {
+    std::ifstream infile(filename);
     std::string line;
-    TickRecord pre_record;
-    StreamRecord stream;
+    records.clear(); 
 
+    // 略过前两行表头
     std::getline(infile, line); 
     std::getline(infile, line);
+
     while (std::getline(infile, line)) {
-        if (line.empty()){
+        if (line.empty()) {
             continue;
         } 
 
@@ -239,35 +221,44 @@ void parse_tick_file(std::ifstream& infile, DailyMetrics& metrics, DailyMetrics&
         TickRecord record;
         
         if (ss >> record) {
-            
-            if (!record_should_process(record)){
+            if (!record_should_process(record)) {
                 continue;
             }
-
-            process_first_record(metrics, record, pre_record);
-
-            if (record_change(record, pre_record)) {
-                update_metrics_header(metrics.header, stream);
-            }
-
-            if (is_am_end(record.t, pre_record.t)){
-                update_metrics_header(metrics.header, stream);
-                am_metrics = metrics;
-            }
-
-            update_stream(stream, record, pre_record);
-            update_metrics_by_record(metrics, record);
-
-            process_last_record(metrics, stream, record);
-
-        }else{
-                std::cout << "failed=========== " << record.time << std::endl;
-                exit(0);
+            records.push_back(std::move(record));
+        } else {
+            std::cout << "failed=========== " << record.time << std::endl;
+            exit(0);
         }
-
-        pre_record = record;
     }
     infile.close();
+}
+
+void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics, DailyMetrics& am_metrics) {
+
+    TickRecord pre_record;
+    StreamRecord stream;
+    bool has_pre = false;
+
+    for (const auto& record : records) {
+        process_first_record(metrics, record, pre_record);
+
+        if (has_pre && record_change(record, pre_record)) {
+            update_metrics_header(metrics.header, stream);
+        }
+
+        if (has_pre && is_am_end(record.t, pre_record.t)) {
+            update_metrics_header(metrics.header, stream);
+            am_metrics = metrics;
+        }
+
+        update_stream(stream, record, pre_record);
+        update_metrics_by_record(metrics, record);
+
+        process_last_record(metrics, stream, record);
+
+        pre_record = record;
+        has_pre = true;
+    }
 }
 
 void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times) {
@@ -303,7 +294,6 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
 
             if (tick_idx < tick_times.size() 
                 && (is_tick_time_end(record.t, pre_record.t, tick_times[tick_idx]) || is_tick_time_end(record.t, pre_seq_time, tick_times[tick_idx]))) {
-                // update_metrics_header(current_metrics.header, stream);
                 pre_seq_time = tick_times[tick_idx];
                 all_metrics.push_back(current_metrics);
                 tick_idx++; 
@@ -358,16 +348,15 @@ bool record_should_process(TickRecord& record){
 }
 
 bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return false;
-    }
+
+    std::vector<TickRecord> records;
 
     DailyMetrics metrics;
     DailyMetrics am_metrics;
 
-    parse_tick_file(infile, metrics, am_metrics);
+    read_tick_records(filename, records);
+
+    parse_tick_records(records, metrics, am_metrics);
 
     if (metrics.ticks_count == 0) {
         return false;
@@ -497,61 +486,18 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     return 0;
 }
 
-int main(int argc, char* argv[]) {
-    ProgramOptions opts;
-    std::vector<std::string> files_to_process;
-    
+void process_files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
+    out_vector.clear(); // 确保传入的 vector 是干净的
 
-    if (parse_opt(argc, argv, opts) != 0){
-        return 1;
+    DayOutputMetrics prev_out;  
+    
+    if (files_to_process.empty()) {
+        return;
     }
 
-    
-    int init_status = initialize_and_get_files(opts.dir_path, files_to_process, opts.show_limit);
-    if (init_status > 0) return init_status;
-    if (init_status < 0) return 0;
-
-
-    // ./bin/parse_tick -t -N 5 -I 3 -H 16 -M 20 -d $d/xiye/
-    if (opts.tseq.cnt != 0){
-        std::vector<tickTime> tick_times_seq;
-        std::vector<DailyMetrics> all_metrics;
-        tick_times_seq = min_vector(opts.tseq);
-        std::reverse(tick_times_seq.begin(), tick_times_seq.end());
-        show_time_vector(tick_times_seq);
-        std::ifstream infile(files_to_process[0]);
-
-        parse_tick_file_by_tseq(infile, all_metrics, tick_times_seq);
-
-        print__headers("PRICE ", tseq_price_table_cols);
-
-        for (size_t i = 0; i < all_metrics.size() && i < tick_times_seq.size(); ++i) {
-            auto& m = all_metrics[i];
-            const auto& t = tick_times_seq[i]; 
-            
-            deal_classfy(m);
-            print_tseq_price(t, m);
-        }
-
-        print__headers("PRICE ", tseq_price_table_cols);
-
-        return 0;
-    }
-
-
-    print_headers(opts);
-
-
-
-
-    DayOutputMetrics prev_out;
-    std::string divergengce;
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
-    files_to_process.shrink_to_fit();
-
     for (const auto& file : files_to_process) {
-
         if (!check_company_id_match(file, target_company_id)) {
             continue;
         }
@@ -562,13 +508,30 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
+        if (out.metrics.ticks_count <= 0) {
+            continue;
+        }
+
 
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
-
         process_out(out, prev_out);
 
-        // make_test(out);
+        out_vector.push_back(out);
+
+        prev_out = out;
+
+
+    }
+}
+
+void print_metrics(const ProgramOptions& opts,  std::vector<DayOutputMetrics>& out_vector) {
+    std::string divergengce;
+    DayOutputMetrics prev_out;  
+
+    print_headers(opts);
+
+    for (auto& out : out_vector) {
 
         divergengce = get_and_print_signals(out, prev_out);
 
@@ -580,6 +543,60 @@ int main(int argc, char* argv[]) {
     }
 
     print_headers(opts);
+}
+
+void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>& files_to_process) {
+    if (files_to_process.empty()) {
+        return;
+    }
+
+    std::vector<tickTime> tick_times_seq;
+    std::vector<DailyMetrics> all_metrics;
+    
+    tick_times_seq = min_vector(opts.tseq);
+    std::reverse(tick_times_seq.begin(), tick_times_seq.end());
+    show_time_vector(tick_times_seq);
+    
+    std::ifstream infile(files_to_process[0]);
+    parse_tick_file_by_tseq(infile, all_metrics, tick_times_seq);
+
+    print__headers("PRICE ", tseq_price_table_cols);
+
+    for (size_t i = 0; i < all_metrics.size() && i < tick_times_seq.size(); ++i) {
+        auto& m = all_metrics[i];
+        const auto& t = tick_times_seq[i]; 
+        
+        deal_classfy(m);
+        print_tseq_price(t, m);
+    }
+
+    print__headers("PRICE ", tseq_price_table_cols);
+}
+
+int init_and_get_files_wrapper(const ProgramOptions& opts, std::vector<std::string>& files_to_process) {
+    return initialize_and_get_files(opts.dir_path, opts.show_limit, files_to_process);
+}
+
+int main(int argc, char* argv[]) {
+    ProgramOptions opts;
+    std::vector<std::string> files_to_process;
+    std::vector<DayOutputMetrics> out_vector;
+
+    if (parse_opt(argc, argv, opts) != 0){
+        return 1;
+    }
+    
+
+    init_and_get_files_wrapper(opts, files_to_process);
+
+    if (opts.tseq.cnt != 0){
+        handle_tseq_mode(opts, files_to_process);
+        return 0;
+    }
+
+    
+    process_files_to_metrics(files_to_process, out_vector);
+    print_metrics(opts, out_vector);
 
     return 0;
 }

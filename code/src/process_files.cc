@@ -37,7 +37,7 @@ void run_preprocessing(const std::string& dir_path) {
     }
 }
 
-int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& files_to_process, size_t show_limit) {
+int initialize_and_get_files(const std::string& dir_path, size_t show_limit, std::vector<std::string>& files_to_process) {
 
     run_preprocessing(dir_path);
 
@@ -65,6 +65,8 @@ int initialize_and_get_files(std::string& dir_path, std::vector<std::string>& fi
             files_to_process.end() - show_limit
         );
     }
+
+    files_to_process.shrink_to_fit();
 
     return 0;
 }
