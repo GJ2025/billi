@@ -438,7 +438,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
         } else if (arg == "-M" && i + 1 < argc) {
             opts.tseq.start_min = std::stoi(argv[++i]);
         } else if (arg == "-d" && i + 1 < argc) {
-            opts.dir_path = argv[++i];
+            opts.lvmeng_dir_path = argv[++i];
         }
     }
     return 0;
@@ -446,10 +446,11 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsSmbl:Mt")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsSmbl:MtD:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
-            case 'd': opts.dir_path = optarg; break;
+            case 'd': opts.lvmeng_dir_path = optarg; break;
+            case 'D': opts.data_dir_path = optarg; break;
             case 'r': opts.show_income_ratio = true; break;
             case 'a': opts.show_all = true; break;
             case 'w': opts.show_will = true; break;
@@ -512,7 +513,6 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
             continue;
         }
 
-
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
         process_out(out, prev_out);
@@ -520,7 +520,6 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
         out_vector.push_back(out);
 
         prev_out = out;
-
 
     }
 }
@@ -547,6 +546,46 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <filesystem>
+
+void get_signal_from_metrics(const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
+    std::string divergengce;
+    DayOutputMetrics prev_out;  
+
+    // 取两者中较小的长度，防止数组越界
+    size_t size = std::min(files_to_process.size(), out_vector.size());
+
+    if (size == 0){
+        std::cout << "impossible \r\n" << std::endl; 
+        return;
+    }
+
+    const auto& file = files_to_process[size - 1]; 
+    const auto& out = out_vector[size - 1];
+
+    double all_will_netin = metrics_bsn_net(out.metrics);
+    double all_price_netin = metrics_price_net(out.metrics);
+
+    if ((all_will_netin > 0 || all_price_netin > 0) && out.pct_change_base_925 < 0){
+        // 使用 std::filesystem 获取路径最后两级（目录名 + 文件名）
+        namespace fs = std::filesystem;
+        fs::path p(file);
+        std::string display_file = file;
+        if (p.has_parent_path() && p.has_filename()) {
+            display_file = p.parent_path().filename().string() + "/" + p.filename().string();
+        }
+
+        std::cout << " | WillNetIn: " << all_will_netin/WAN 
+                  << " | PriceNetIn: " << all_price_netin/WAN  
+                  << " | PctChange925: " << out.pct_change_base_925 
+                  << " File: " << display_file 
+                  << std::endl;
+    }
+}
 
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
     // 移除 const，确保成员指针允许被用于赋值操作
@@ -600,8 +639,47 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
 }
 
 int init_and_get_files_wrapper(const ProgramOptions& opts, std::vector<std::string>& files_to_process) {
-    return initialize_and_get_files(opts.dir_path, opts.show_limit, files_to_process);
+    return initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
 }
+
+void select_stock(const std::string& data_dir_path) {
+    std::vector<std::string> files_to_process;
+    std::vector<DayOutputMetrics> out_vector;
+
+    initialize_and_get_files(data_dir_path, 5, files_to_process);
+    process_files_to_metrics(files_to_process, out_vector); 
+
+    get_signal_from_metrics(files_to_process, out_vector);
+
+
+}
+
+void process_subdirectories(const std::string& data_dir_path) {
+    namespace fs = std::filesystem;
+
+    // 检查目录是否存在且是一个目录
+    if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
+        std::cerr << "Invalid directory path: " << data_dir_path << std::endl;
+        return;
+    }
+
+    // 只遍历1层目录，使用 fs::directory_iterator
+    for (const auto& entry : fs::directory_iterator(data_dir_path)) {
+        if (entry.is_directory()) {
+            std::string dir_name = entry.path().filename().string();
+
+            // 过滤掉包含 show 或 tseq_show 的目录
+            if (dir_name.find("show") != std::string::npos || 
+                dir_name.find("tseq_show") != std::string::npos) {
+                continue;
+            }
+
+            // std::cout << entry.path().string() << "\r\n" << std::endl;
+            select_stock(entry.path().string());
+        }
+    }
+}
+
 
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
@@ -612,17 +690,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-
-    init_and_get_files_wrapper(opts, files_to_process);
+    
 
     if (opts.tseq.cnt != 0){
+        initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);    
         handle_tseq_mode(opts, files_to_process);
-        return 0;
+    }if (!opts.data_dir_path.empty()){
+
+        process_subdirectories(opts.data_dir_path);
+
+    }else{
+        initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
+        process_files_to_metrics(files_to_process, out_vector);
+        show_metrics_by_opts(opts, out_vector);
     }
 
     
-    process_files_to_metrics(files_to_process, out_vector);
-    show_metrics_by_opts(opts, out_vector);
-
     return 0;
 }

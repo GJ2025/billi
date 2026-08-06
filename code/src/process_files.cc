@@ -28,7 +28,7 @@ void run_preprocessing(const std::string& dir_path) {
                   << "\nSkipping pre-processing stage..." << std::endl;
     } else {
         std::string shell_cmd = "sh " + script_path + " " + dir_path;
-        std::cout << "Executing: " << shell_cmd << std::endl;
+        // std::cout << "Executing: " << shell_cmd << std::endl;
         
         int ret = std::system(shell_cmd.c_str());
         if (ret != 0) {
