@@ -553,17 +553,9 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
 #include <algorithm>
 #include <filesystem>
 
-void get_signal_from_metrics(const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
+void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     std::string divergengce;
     DayOutputMetrics prev_out;  
-
-    // 取两者中较小的长度，防止数组越界
-    size_t size = std::min(files_to_process.size(), out_vector.size());
-
-    if (size == 0){
-        std::cout << "impossible \r\n" << std::endl; 
-        return;
-    }
 
     const auto& file = files_to_process[size - 1]; 
     const auto& out = out_vector[size - 1];
@@ -651,7 +643,14 @@ void select_stock(const std::string& data_dir_path) {
     initialize_and_get_files(data_dir_path, 5, files_to_process);
     process_files_to_metrics(files_to_process, out_vector); 
 
-    get_signal_from_metrics(files_to_process, out_vector);
+    size_t size = std::min(files_to_process.size(), out_vector.size());
+
+    if (size == 0){
+        std::cout << "impossible: " << data_dir_path << " " << std::endl; 
+        return;
+    }
+
+    get_signal_from_metrics(size, files_to_process, out_vector);
 
 
 }
