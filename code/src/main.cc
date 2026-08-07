@@ -10,6 +10,11 @@
 #include <cmath>       
 #include <cstdlib>   
 #include <unistd.h> 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <filesystem>
 #include "common.h"
 #include "tick_types.h"
 #include "collect_stream.h"
@@ -547,12 +552,6 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <filesystem>
-
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     std::string divergengce;
     DayOutputMetrics prev_out;  
@@ -572,11 +571,19 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             display_file = p.parent_path().filename().string() + "/" + p.filename().string();
         }
 
-        std::cout << " | WillNetIn: " << all_will_netin/WAN 
-                  << " | PriceNetIn: " << all_price_netin/WAN  
-                  << " | PctChange925: " << out.pct_change_base_925 
-                  << " File: " << display_file 
-                  << std::endl;
+        struct signal_info a;
+        a.all_price_netin = all_price_netin;
+        a.all_will_netin = all_will_netin;
+        a.display_file = display_file;
+        a.out = out;
+
+        print_signal(out, a);
+
+        // std::cout << " | WillNetIn: " << all_will_netin/WAN 
+        //           << " | PriceNetIn: " << all_price_netin/WAN  
+        //           << " | PctChange925: " << out.pct_change_base_925 
+        //           << " File: " << display_file 
+        //           << std::endl;
     }
 }
 
@@ -664,6 +671,8 @@ void process_subdirectories(const std::string& data_dir_path) {
         return;
     }
 
+    print__headers("QUIET", signal_table_cols);
+
     // 只遍历1层目录，使用 fs::directory_iterator
     for (const auto& entry : fs::directory_iterator(data_dir_path)) {
         if (entry.is_directory()) {
@@ -679,6 +688,8 @@ void process_subdirectories(const std::string& data_dir_path) {
             select_stock(entry.path().string());
         }
     }
+
+    print__headers("QUIET", signal_table_cols);
 }
 
 

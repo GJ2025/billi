@@ -110,6 +110,13 @@ struct DayOutputMetrics {
 
 };
 
+struct signal_info {
+    double all_will_netin = 0.0;
+    double all_price_netin = 0.0;
+    std::string display_file;
+    DayOutputMetrics out;
+};
+
 struct Col {
     std::string name;
     int width;
@@ -158,6 +165,14 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"StartCh", 9}, 
     {"Pct_925", 9},   
     {"Close", 5}
+};
+
+inline const std::vector<Col> signal_table_cols = {
+    {"File", 40,true},
+    {"WillNetIn", 12, true}, 
+    {"PriceNetIn", 12, true},  
+    {"PctChange925", 12},
+    {"PctChangepre", 12}
 };
 
 static const std::vector<Col> will_table_cols = {
@@ -806,6 +821,24 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
     // print_next_pos(out.start_change, i, cols);
     // print_next_pos(out.pct_change, i, cols);
     print_next(metrics.closing_price, i, cols);
+    std::cout << std::endl;
+
+}
+
+inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
+    int i = 0;
+
+    const std::vector<Col>& cols = signal_table_cols;
+
+
+
+    print_next(abc.display_file, i, cols);
+    print_next(abc.all_will_netin/WAN, i, cols);
+    print_next(abc.all_price_netin/WAN, i, cols);
+    print_next(out.pct_change_base_925, i, cols);
+    print_next(out.pct_change_base_pre, i, cols);
+    
+
     std::cout << std::endl;
 
 }
