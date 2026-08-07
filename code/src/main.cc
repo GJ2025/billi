@@ -446,7 +446,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsSmbl:MtD:")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsqSmbl:MtD:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.lvmeng_dir_path = optarg; break;
@@ -458,6 +458,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 'm': opts.show_merge = true; break;
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
+            case 'q': opts.show_quiet = true; break;
             case 'M': {
                 opts.show_middle = true; 
                 break;
@@ -598,7 +599,8 @@ void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutpu
         &ProgramOptions::show_super,
         &ProgramOptions::show_big,
         &ProgramOptions::show_middle,
-        &ProgramOptions::show_small
+        &ProgramOptions::show_small,
+        &ProgramOptions::show_quiet,
     };
 
     for (auto flag_ptr : flags) {
@@ -689,8 +691,6 @@ int main(int argc, char* argv[]) {
     if (parse_opt(argc, argv, opts) != 0){
         return 1;
     }
-    
-    
 
     if (opts.tseq.cnt != 0){
         initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);    

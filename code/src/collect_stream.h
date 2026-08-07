@@ -143,6 +143,23 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Close", 5}
 };
 
+inline const std::vector<Col> quiet_buying_table_cols = {
+    {"Date", 11}, 
+    {"Buy-Dn", 12, true}, 
+    {"Buy-Kp", 12, true},  
+    {"Buy-Up", 12},
+    {"Sale-Dn", 12,true}, 
+    {"Sale-Kp", 12, true}, 
+    {"Sale-Up", 12,true}, 
+    {"Neutral-Dn", 12, false},
+    {"Neutral-Kp", 12, false},  
+    {"Neutral-Up", 12, false},
+    {"Pre", 5},     
+    {"StartCh", 9}, 
+    {"Pct_925", 9},   
+    {"Close", 5}
+};
+
 static const std::vector<Col> will_table_cols = {
     {"Date", 11}, 
     {"Super-Buy", 12, false}, 
@@ -529,6 +546,125 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     std::cout << std::endl;
 }
 
+inline void accumulate_group(const bsn_action_group& group,
+                    trade& b_down, trade& b_up, trade& b_keep,
+                    trade& s_down, trade& s_up, trade& s_keep,
+                    trade& n_down, trade& n_up, trade& n_keep) 
+{
+    // 1. 累加 buy 相关
+    b_down.money  += group.buy.down.money;  
+    b_down.volume += group.buy.down.volume;
+    b_up.money    += group.buy.up.money;    
+    b_up.volume   += group.buy.up.volume;
+    b_keep.money  += group.buy.keep.money;  
+    b_keep.volume += group.buy.keep.volume;
+
+    // 2. 累加 sale 相关
+    s_down.money  += group.sale.down.money; 
+    s_down.volume += group.sale.down.volume;
+    s_up.money    += group.sale.up.money;   
+    s_up.volume   += group.sale.up.volume;
+    s_keep.money  += group.sale.keep.money; 
+    s_keep.volume += group.sale.keep.volume;
+
+    // 3. 累加 neutral 相关
+    n_down.money  += group.neutral.down.money; 
+    n_down.volume += group.neutral.down.volume;
+    n_up.money    += group.neutral.up.money;   
+    n_up.volume   += group.neutral.up.volume;
+    n_keep.money  += group.neutral.keep.money; 
+    n_keep.volume += group.neutral.keep.volume;
+}
+
+// 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
+inline void calculate_total(trade& total,
+                     const trade& b_down, const trade& b_up, const trade& b_keep,
+                     const trade& s_down, const trade& s_up, const trade& s_keep,
+                     const trade& n_down, const trade& n_up, const trade& n_keep) 
+{
+    // 先清空 total，防止脏数据
+    total.money = 0.0;
+    total.volume = 0;
+
+    // 1. 累加 buy 系列
+    total.money  += b_down.money + b_up.money + b_keep.money;
+    total.volume += b_down.volume + b_up.volume + b_keep.volume;
+
+    // 2. 累加 sale 系列
+    total.money  += s_down.money + s_up.money + s_keep.money;
+    total.volume += s_down.volume + s_up.volume + s_keep.volume;
+
+    // 3. 累加 neutral 系列
+    total.money  += n_down.money + n_up.money + n_keep.money;
+    total.volume += n_down.volume + n_up.volume + n_keep.volume;
+}
+
+inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+    int i = 0;
+
+    std::vector<Col> cols = quiet_buying_table_cols;
+
+    // 定义 9 个方向的 trade 变量
+    trade buy_down{};
+    trade buy_up{};
+    trade buy_keep{};
+
+    trade sale_down{};
+    trade sale_up{};
+    trade sale_keep{};
+
+    trade neutral_down{};
+    trade neutral_up{};
+    trade neutral_keep{};
+
+    trade total{};
+    const auto& h = out.metrics.header;
+
+    // 1. 调用累加辅助函数，把 4 个档位的数据加到 9 个变量中
+    accumulate_group(h.super,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+    accumulate_group(h.big,    buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+    accumulate_group(h.middle, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+    accumulate_group(h.small,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+
+    // 2. 计算出 total 中的 money 和 volume
+    calculate_total(total, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    // 打印日期
+    print_next(out.date_str, i, cols);
+
+    // 3. 修正后的 Buy 系列打印（分别对应 down, keep, up）
+    print_next(pct_base(buy_down.money, total.money), i, cols);
+    print_next(pct_base(buy_keep.money, total.money), i, cols);
+    print_next(pct_base(buy_up.money,   total.money), i, cols);
+
+    // std::cout << "[DEBUG] "
+    //       << "buy_up.money: " << buy_up.money << ", "
+    //       << "buy_keep.money: " << buy_keep.money << ", "
+    //       << "buy_down.money: " << buy_down.money << ", "
+    //       << "total.money: " << total.money << std::endl;
+
+    // 4. 修正后的 Sale 系列打印（分别对应 down, keep, up）
+    print_next(pct_base(sale_down.money, total.money), i, cols);
+    print_next(pct_base(sale_keep.money, total.money), i, cols);
+    print_next(pct_base(sale_up.money,   total.money), i, cols);
+
+    // 5. 修正后的 Neutral 系列打印（分别对应 down, keep, up）
+    print_next(pct_base(neutral_down.money, total.money), i, cols);
+    print_next(pct_base(neutral_keep.money, total.money), i, cols);
+    print_next(pct_base(neutral_up.money,   total.money), i, cols);
+    
+    // 其他基础指标打印
+    print_next(prev_out.metrics.closing_price, i, cols);
+
+    print_next_pos(out.start_change, i, cols);
+    print_next_pos(out.pct_change_base_925, i, cols);
+
+    print_next(out.metrics.closing_price, i, cols);
+
+    std::cout << std::endl;
+}
 
 inline void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;

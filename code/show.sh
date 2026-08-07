@@ -25,7 +25,7 @@ if [ -n "$limit" ]; then
 fi
 
 # 在调用时使用变量 target_dir
-./bin/parse_tick -d "$target_dir" -a -m -w -p -s -b -M -S $limit_opt > "$output"
+./bin/parse_tick -d "$target_dir" -a -m -w -p -s -b -M -S -q $limit_opt > "$output"
 
 echo "Done: $output"
 

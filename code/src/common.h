@@ -16,6 +16,10 @@ inline double pct(double target, double base){
     return ((target - base) / base) * 100.0;
 }
 
+inline double pct_base(double target, double base){
+    return (target / base) * 100.0;
+}
+
 
 inline int check_time(const tickTime& self, const tickTime& that) {
     if (self.hour != that.hour) {
