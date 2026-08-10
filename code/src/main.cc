@@ -564,13 +564,45 @@ inline std::string get_display_file(const std::string& file) {
     return file;
 }
 
+int process_metrics_backward(const std::vector<DayOutputMetrics>& out_vector) {
+    int i = 0;
+    size_t size = out_vector.size();
+
+    if (out_vector.size() < 2 ) {
+        return 0;
+    }
+
+    const auto& current_out  = out_vector[size - 1];
+
+
+    for (i = size - 1; i >= 1; --i) {
+
+        const auto& prev_out     = out_vector[i - 1];
+
+        if (metrics_total_volume(current_out.metrics) > metrics_total_volume(prev_out.metrics)){
+            break;
+        }
+
+    }
+
+    return i;
+}
+
+
+// 定义子条件结构体：包含条件结果与描述说明
+struct SubCondition {
+    bool satisfied;         // 子条件是否满足
+    std::string description; // 子条件说明
+};
+
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
-    std::string divergengce;
-    DayOutputMetrics prev_out;  
+    if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
+        return;
+    }
 
     const auto& file = files_to_process[size - 1]; 
     const auto& out = out_vector[size - 1];
-    const auto& pre_out = out_vector[size -2];
+    const auto& pre_out = out_vector[size - 2];
 
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics);
@@ -578,26 +610,53 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double prev_all_will_netin = metrics_bsn_net(pre_out.metrics);
     double prev_all_price_netin = metrics_price_net(pre_out.metrics);
 
-    double will_netin_change = (all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin);
-    double price_netin_change = (all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin);
+    double will_netin_change = (all_will_netin - prev_all_will_netin) / std::abs(prev_all_will_netin);
+    double price_netin_change = (all_price_netin - prev_all_price_netin) / std::abs(prev_all_price_netin);
 
-    struct signal_info a;
+    int i = process_metrics_backward(out_vector);
 
+    // 1. 基础条件
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
-    bool sub_condition = (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1) 
-                        ||(will_netin_change > 0 && price_netin_change > 0 && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0);
 
-    if (base_condition && sub_condition) {
-        struct signal_info a;
+    // 2. 用结构体数组管理子条件及其说明
+    std::vector<SubCondition> sub_conditions = {
+        {
+            (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
+            "NO GROW"
+        },
+        {
+            (will_netin_change > 0 && price_netin_change > 0 && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0),
+            "SPEED UP "
+        },
+        {
+            ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i >= 3),
+            "DES and SHRINK 3"
+        }
+    };
+
+    // 3. 检查是否有任意子条件满足（如果需要，还可以顺便记录是哪条规则触发的）
+    bool any_sub_condition = false;
+    std::string triggered_desc;
+
+    for (const auto& sc : sub_conditions) {
+        if (sc.satisfied) {
+            any_sub_condition = true;
+            triggered_desc = sc.description; // 可用于日志调试
+            break;
+        }
+    }
+
+    // 4. 最终触发判断
+    if (base_condition && any_sub_condition) {
+        signal_info a;
         a.all_price_netin = all_price_netin;
         a.all_will_netin = all_will_netin;
-
         a.will_netin_change = will_netin_change;
         a.price_netin_change = price_netin_change;
-
-
         a.display_file = get_display_file(file);
         a.out = out;
+
+        a.trigger_reason = triggered_desc;
 
         print_signal(out, a);
     }

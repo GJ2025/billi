@@ -118,6 +118,7 @@ struct signal_info {
     double price_netin_change = 0.0;
     std::string display_file;
     DayOutputMetrics out;
+    std::string trigger_reason;
 };
 
 struct Col {
@@ -182,7 +183,8 @@ inline const std::vector<Col> signal_table_cols = {
     {"Will-NET-P", 16},
     {"PRICE-NET-P", 16},  
     {"PctChange925", 12},
-    {"PctChangePre", 12}
+    {"PctChangePre", 12},
+    {"REASON", 12}
 };
 
 static const std::vector<Col> will_table_cols = {
@@ -889,6 +891,7 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
 
     print_next(out.pct_change_base_925, i, cols);
     print_next(out.pct_change_base_pre, i, cols);
+    print_next(abc.trigger_reason, i, cols);
     
 
     std::cout << std::endl;
