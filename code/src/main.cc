@@ -662,10 +662,10 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         {
             (will_netin_change > 0 && price_netin_change > 0 
                 && out.pct_change_base_925 > 0 && out.pct_change_base_pre > 0 
-                && pre_out.pct_change_base_925 > -0.2 && pre_out.pct_change_base_pre > -0.2
-                && out_buyup > prev_out_buyup),
+                && pre_out.pct_change_base_925 > -0.9 && pre_out.pct_change_base_pre > -0.9
+                && out_buyup > prev_out_buyup ),
                 // && metrics_total_volume(out.metrics) > metrics_total_volume(pre_out.metrics),
-            "SPEED UP "
+            "SPEED UP (" + std::to_string(out_buyup) + " vs " + std::to_string(out_buyup - prev_out_buyup) + ")"
         },
         {
             ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i >= 3),
