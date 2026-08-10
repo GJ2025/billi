@@ -589,37 +589,8 @@ int process_metrics_backward(const std::vector<DayOutputMetrics>& out_vector) {
 }
 
 
-// 定义子条件结构体：包含条件结果与描述说明
-struct SubCondition {
-    bool satisfied;         // 子条件是否满足
-    std::string description; // 子条件说明
-};
-
-
-// 定义一个结构体来存放所有分类的 trade 统计
-struct TradeCategoryStats {
-    trade buy_down{};
-    trade buy_up{};
-    trade buy_keep{};
-
-    trade sale_down{};
-    trade sale_up{};
-    trade sale_keep{};
-
-    trade neutral_down{};
-    trade neutral_up{};
-    trade neutral_keep{};
-
-    trade total{};
-};
-
-/**
- * @brief 根据指标头部数据计算并填充所有的 Trade 统计信息
- * @param h 指标头部数据 (包含 super, big, middle, small)
- * @param stats 传入的 TradeCategoryStats 结构体引用，用于输出结果
- */
 void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
-    // 1. 调用累加辅助函数，把 4 个档位的数据加到 stats 的各个成员中
+   
     accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
                               stats.sale_down, stats.sale_up, stats.sale_keep, 
                               stats.neutral_down, stats.neutral_up, stats.neutral_keep);
@@ -637,7 +608,6 @@ void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
                               stats.neutral_down, stats.neutral_up, stats.neutral_keep);
 
 
-    // 2. 计算出 total 中的 money 和 volume
     calculate_total(stats.total, stats.buy_down, stats.buy_up, stats.buy_keep, 
                                  stats.sale_down, stats.sale_up, stats.sale_keep, 
                                  stats.neutral_down, stats.neutral_up, stats.neutral_keep);
@@ -676,12 +646,14 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double out_buyup = pct_base(current.buy_up.money,   current.total.money);
     double prev_out_buyup = pct_base(prev.buy_up.money,   prev.total.money);
 
+    double out_buy_down = pct_base(current.buy_down.money,   current.total.money);
+    double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
+    double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
+
     int i = process_metrics_backward(out_vector);
 
-    // 1. 基础条件
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
 
-    // 2. 用结构体数组管理子条件及其说明
     std::vector<SubCondition> sub_conditions = {
         {
             (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
@@ -690,14 +662,18 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         {
             (will_netin_change > 0 && price_netin_change > 0 
                 && out.pct_change_base_925 > 0 && out.pct_change_base_pre > 0 
-                && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0)
-                && out_buyup > prev_out_buyup,
+                && pre_out.pct_change_base_925 > -0.2 && pre_out.pct_change_base_pre > -0.2
+                && out_buyup > prev_out_buyup),
                 // && metrics_total_volume(out.metrics) > metrics_total_volume(pre_out.metrics),
             "SPEED UP "
         },
         {
             ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i >= 3),
             "DES and SHRINK 3"
+        },
+        {
+            ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
+            "WILL DOWN"
         }
     };
 

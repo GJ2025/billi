@@ -92,6 +92,31 @@ struct DailyMetrics {
     deal_price deal_total_price; 
 };
 
+// 定义子条件结构体：包含条件结果与描述说明
+struct SubCondition {
+    bool satisfied;         // 子条件是否满足
+    std::string description; // 子条件说明
+};
+
+
+// 定义一个结构体来存放所有分类的 trade 统计
+struct TradeCategoryStats {
+    trade buy_down{};
+    trade buy_up{};
+    trade buy_keep{};
+
+    trade sale_down{};
+    trade sale_up{};
+    trade sale_keep{};
+
+    trade neutral_down{};
+    trade neutral_up{};
+    trade neutral_keep{};
+
+    trade total{};
+};
+
+
 
 struct DayOutputMetrics {
     
