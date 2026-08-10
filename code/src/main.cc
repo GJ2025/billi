@@ -595,14 +595,74 @@ struct SubCondition {
     std::string description; // 子条件说明
 };
 
+
+// 定义一个结构体来存放所有分类的 trade 统计
+struct TradeCategoryStats {
+    trade buy_down{};
+    trade buy_up{};
+    trade buy_keep{};
+
+    trade sale_down{};
+    trade sale_up{};
+    trade sale_keep{};
+
+    trade neutral_down{};
+    trade neutral_up{};
+    trade neutral_keep{};
+
+    trade total{};
+};
+
+/**
+ * @brief 根据指标头部数据计算并填充所有的 Trade 统计信息
+ * @param h 指标头部数据 (包含 super, big, middle, small)
+ * @param stats 传入的 TradeCategoryStats 结构体引用，用于输出结果
+ */
+void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
+    // 1. 调用累加辅助函数，把 4 个档位的数据加到 stats 的各个成员中
+    accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.big,    stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.middle, stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.small,  stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+
+    // 2. 计算出 total 中的 money 和 volume
+    calculate_total(stats.total, stats.buy_down, stats.buy_up, stats.buy_keep, 
+                                 stats.sale_down, stats.sale_up, stats.sale_keep, 
+                                 stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+}
+
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
         return;
     }
 
+    TradeCategoryStats current;
+    TradeCategoryStats prev;
+
     const auto& file = files_to_process[size - 1]; 
     const auto& out = out_vector[size - 1];
     const auto& pre_out = out_vector[size - 2];
+
+
+    
+    const auto& h = out.metrics.header;
+    const auto& prev_h = pre_out.metrics.header;
+
+
+    calculate_trade_stats(h, current);
+    calculate_trade_stats(prev_h, prev);
 
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics);
@@ -612,6 +672,9 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     double will_netin_change = (all_will_netin - prev_all_will_netin) / std::abs(prev_all_will_netin);
     double price_netin_change = (all_price_netin - prev_all_price_netin) / std::abs(prev_all_price_netin);
+
+    double out_buyup = pct_base(current.buy_up.money,   current.total.money);
+    double prev_out_buyup = pct_base(prev.buy_up.money,   prev.total.money);
 
     int i = process_metrics_backward(out_vector);
 
@@ -625,7 +688,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "NO GROW"
         },
         {
-            (will_netin_change > 0 && price_netin_change > 0 && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0),
+            (will_netin_change > 0 && price_netin_change > 0 
+                && out.pct_change_base_925 > 0 && out.pct_change_base_pre > 0 
+                && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0)
+                && out_buyup > prev_out_buyup,
+                // && metrics_total_volume(out.metrics) > metrics_total_volume(pre_out.metrics),
             "SPEED UP "
         },
         {
