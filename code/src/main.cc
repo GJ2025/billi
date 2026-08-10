@@ -344,6 +344,7 @@ bool record_should_process(TickRecord& record){
     if (record.deal_count == 0){
         return false;   
     }  
+
     if (after_15(record.t)){
        return false;   
     } 
@@ -552,38 +553,53 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
+
+inline std::string get_display_file(const std::string& file) {
+    namespace fs = std::filesystem;
+    fs::path p(file);
+    
+    if (p.has_parent_path() && p.has_filename()) {
+        return p.parent_path().filename().string() + "/" + p.filename().string();
+    }
+    return file;
+}
+
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     std::string divergengce;
     DayOutputMetrics prev_out;  
 
     const auto& file = files_to_process[size - 1]; 
     const auto& out = out_vector[size - 1];
+    const auto& pre_out = out_vector[size -2];
 
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics);
 
-    if ((all_will_netin > 0 || all_price_netin > 0) && (out.pct_change_base_925 < 0.1 ||out.pct_change_base_pre < 0.1)){
-        // 使用 std::filesystem 获取路径最后两级（目录名 + 文件名）
-        namespace fs = std::filesystem;
-        fs::path p(file);
-        std::string display_file = file;
-        if (p.has_parent_path() && p.has_filename()) {
-            display_file = p.parent_path().filename().string() + "/" + p.filename().string();
-        }
+    double prev_all_will_netin = metrics_bsn_net(pre_out.metrics);
+    double prev_all_price_netin = metrics_price_net(pre_out.metrics);
 
+    double will_netin_change = (all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin);
+    double price_netin_change = (all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin);
+
+    struct signal_info a;
+
+    bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
+    bool sub_condition = (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1) 
+                        ||(will_netin_change > 0 && price_netin_change > 0 && pre_out.pct_change_base_925 > 0 && pre_out.pct_change_base_pre > 0);
+
+    if (base_condition && sub_condition) {
         struct signal_info a;
         a.all_price_netin = all_price_netin;
         a.all_will_netin = all_will_netin;
-        a.display_file = display_file;
+
+        a.will_netin_change = will_netin_change;
+        a.price_netin_change = price_netin_change;
+
+
+        a.display_file = get_display_file(file);
         a.out = out;
 
         print_signal(out, a);
-
-        // std::cout << " | WillNetIn: " << all_will_netin/WAN 
-        //           << " | PriceNetIn: " << all_price_netin/WAN  
-        //           << " | PctChange925: " << out.pct_change_base_925 
-        //           << " File: " << display_file 
-        //           << std::endl;
     }
 }
 
@@ -652,7 +668,7 @@ void select_stock(const std::string& data_dir_path) {
 
     size_t size = std::min(files_to_process.size(), out_vector.size());
 
-    if (size == 0){
+    if (size != 5 ){
         std::cout << "impossible: " << data_dir_path << " " << std::endl; 
         return;
     }

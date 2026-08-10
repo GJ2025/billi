@@ -113,6 +113,9 @@ struct DayOutputMetrics {
 struct signal_info {
     double all_will_netin = 0.0;
     double all_price_netin = 0.0;
+
+    double will_netin_change = 0.0;
+    double price_netin_change = 0.0;
     std::string display_file;
     DayOutputMetrics out;
 };
@@ -163,16 +166,23 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"Neutral-Up", 12, false},
     {"Pre", 5},     
     {"StartCh", 9}, 
-    {"Pct_925", 9},   
+    {"Pct_925", 9},
+    {"Pct_Pre", 9},
+    {"Total_m", 9, false},
+    {"Total_v", 9}, 
+    {"WILL-Net", 10}, 
+    {"PRICE-Net", 12},    
     {"Close", 5}
 };
 
 inline const std::vector<Col> signal_table_cols = {
     {"File", 40,true},
     {"WillNetIn", 12, true}, 
-    {"PriceNetIn", 12, true},  
+    {"PriceNetIn", 12, true},
+    {"Will-NET-P", 16},
+    {"PRICE-NET-P", 16},  
     {"PctChange925", 12},
-    {"PctChangepre", 12}
+    {"PctChangePre", 12}
 };
 
 static const std::vector<Col> will_table_cols = {
@@ -365,6 +375,33 @@ inline double total_money(const deal_bsn& deal) {
 inline size_t total_volume(const deal_bsn& deal) {
     return deal.buy.volume + deal.sale.volume + deal.neutral.volume;
 }
+
+inline double metrics_total_money(const DailyMetrics& metrics){
+
+    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+
+    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
+
+    return total_money;
+}
+
+inline double metrics_total_volume(const DailyMetrics& metrics){
+
+    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+
+    return deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
+}
+
+inline double metrics_bsn_net(const DailyMetrics& metrics){
+    double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
+    return all_will_netin;
+}
+
+inline double metrics_price_net(const DailyMetrics& metrics){
+    double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
+    return all_price_netin;
+} 
+
 
 template<typename T>
 inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
@@ -633,6 +670,10 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     trade neutral_keep{};
 
     trade total{};
+
+    double all_will_netin = metrics_bsn_net(out.metrics);
+    double all_price_netin = metrics_price_net(out.metrics);
+    
     const auto& h = out.metrics.header;
 
     // 1. 调用累加辅助函数，把 4 个档位的数据加到 9 个变量中
@@ -675,6 +716,12 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change_base_925, i, cols);
+    print_next_pos(out.pct_change_base_pre, i, cols);
+    print_next(total.money/WAN, i, cols);
+    print_next(total.volume/WAN, i, cols);
+
+    print_next_pos(all_will_netin/WAN, i, cols);
+    print_next_pos(all_price_netin/WAN, i, cols);
 
     print_next(out.metrics.closing_price, i, cols);
 
@@ -835,6 +882,11 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
     print_next(abc.display_file, i, cols);
     print_next(abc.all_will_netin/WAN, i, cols);
     print_next(abc.all_price_netin/WAN, i, cols);
+
+
+    print_next_pos(abc.will_netin_change, i, cols);
+    print_next_pos(abc.price_netin_change, i, cols);
+
     print_next(out.pct_change_base_925, i, cols);
     print_next(out.pct_change_base_pre, i, cols);
     
@@ -877,32 +929,6 @@ inline void print_merge(const DayOutputMetrics& out, const DayOutputMetrics& pre
 
     std::cout << std::endl;
 }
-
-inline double metrics_total_money(const DailyMetrics& metrics){
-
-    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
-
-    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
-
-    return total_money;
-}
-
-inline double metrics_total_volume(const DailyMetrics& metrics){
-
-    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
-
-    return deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
-}
-
-inline double metrics_bsn_net(const DailyMetrics& metrics){
-    double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
-    return all_will_netin;
-}
-
-inline double metrics_price_net(const DailyMetrics& metrics){
-    double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
-    return all_price_netin;
-} 
 
 inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const std::string& divergence_str) {
     int i = 0;
