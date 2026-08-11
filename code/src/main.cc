@@ -564,28 +564,38 @@ inline std::string get_display_file(const std::string& file) {
     return file;
 }
 
-int process_metrics_backward(const std::vector<DayOutputMetrics>& out_vector) {
-    int i = 0;
-    size_t size = out_vector.size();
-
-    if (out_vector.size() < 2 ) {
+int metrics_shrink(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
         return 0;
     }
 
-    const auto& current_out  = out_vector[size - 1];
-
-
-    for (i = size - 1; i >= 1; --i) {
-
-        const auto& prev_out     = out_vector[i - 1];
-
-        if (metrics_total_volume(current_out.metrics) > metrics_total_volume(prev_out.metrics)){
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (metrics_total_volume(out_vector[i].metrics) > metrics_total_volume(out_vector[i - 1].metrics)) {
             break;
         }
-
+        ++j;
     }
 
-    return i;
+    return j;
+}
+
+int metrics_grow(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
+        return 0;
+    }
+
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (metrics_total_volume(out_vector[i].metrics) < metrics_total_volume(out_vector[i - 1].metrics)) {
+            break;
+        }
+        ++j;
+    }
+
+    return j;
 }
 
 
@@ -625,11 +635,8 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     const auto& out = out_vector[size - 1];
     const auto& pre_out = out_vector[size - 2];
 
-
-    
     const auto& h = out.metrics.header;
     const auto& prev_h = pre_out.metrics.header;
-
 
     calculate_trade_stats(h, current);
     calculate_trade_stats(prev_h, prev);
@@ -650,14 +657,15 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
     double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
 
-    int i = process_metrics_backward(out_vector);
+    int i = metrics_shrink(out_vector);
+    int j = metrics_grow(out_vector);
 
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
 
     std::vector<SubCondition> sub_conditions = {
         {
             (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
-            "NO GROW"
+            "decs"
         },
         {
             (will_netin_change > 0 && price_netin_change > 0 
@@ -665,15 +673,19 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
                 && pre_out.pct_change_base_925 > -0.9 && pre_out.pct_change_base_pre > -0.9
                 && out_buyup > prev_out_buyup ),
                 // && metrics_total_volume(out.metrics) > metrics_total_volume(pre_out.metrics),
-            "SPEED UP (" + std::to_string(out_buyup) + " vs " + std::to_string(out_buyup - prev_out_buyup) + ")"
+            "SPEEDUP(" + std::to_string(out_buyup) + "vs" + std::to_string(out_buyup - prev_out_buyup) + ")" 
         },
         {
             ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i >= 3),
-            "DES and SHRINK 3"
+            "desc_shr"
         },
         {
             ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
-            "WILL DOWN"
+            "will_down"
+        },
+        {
+            i >= 3,
+            "shr" 
         }
     };
 
@@ -684,11 +696,13 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     for (const auto& sc : sub_conditions) {
         if (sc.satisfied) {
             any_sub_condition = true;
-            triggered_desc = sc.description; // 可用于日志调试
-            break;
+            if (triggered_desc.empty()) {
+                triggered_desc = sc.description;
+            } else {
+                triggered_desc += "---" + sc.description; // 如果需要用其他符号连接，修改这里
+            }
         }
     }
-
     // 4. 最终触发判断
     if (base_condition && any_sub_condition) {
         signal_info a;
@@ -700,6 +714,8 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         a.out = out;
 
         a.trigger_reason = triggered_desc;
+        a.shrink = i;
+        a.grow = j;
 
         print_signal(out, a);
     }
