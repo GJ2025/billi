@@ -205,14 +205,14 @@ inline const std::vector<Col> quiet_buying_table_cols = {
 
 inline const std::vector<Col> signal_table_cols = {
     {"File", 40,true},
-    {"WillNetIn", 12, true}, 
-    {"PriceNetIn", 12, true},
-    {"Will-NET-P", 16},
-    {"PRICE-NET-P", 16}, 
-    {"Shrink", 6},
-    {"grow", 5}, 
-    {"PctChange925", 12},
-    {"PctChangePre", 12},
+    {"WNetIn", 9, true}, 
+    {"PNetIn", 9, true},
+    {"WNET-P", 9},
+    {"PNET-P", 9}, 
+    {"shk", 3},
+    {"gro", 3}, 
+    {"Pct925", 8},
+    {"PctCPre", 8},
     {"REASON", 12}
 };
 
@@ -911,8 +911,8 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
 
 
     print_next(abc.display_file, i, cols);
-    print_next(abc.all_will_netin/WAN, i, cols);
-    print_next(abc.all_price_netin/WAN, i, cols);
+    print_next_pos(abc.all_will_netin/WAN, i, cols);
+    print_next_pos(abc.all_price_netin/WAN, i, cols);
 
 
     print_next_pos(abc.will_netin_change, i, cols);
