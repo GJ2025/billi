@@ -599,6 +599,41 @@ int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector) {
 }
 
 
+int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
+        return 0;
+    }
+
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (metrics_total_volume(out_vector[out_vector.size() - 1].metrics) > metrics_total_volume(out_vector[i - 1].metrics)) {
+            break;
+        }
+        ++j;
+    }
+
+    return j;
+}
+
+int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
+        return 0;
+    }
+
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (metrics_total_volume(out_vector[out_vector.size() - 1].metrics) < metrics_total_volume(out_vector[i - 1].metrics)) {
+            break;
+        }
+        ++j;
+    }
+
+    return j;
+}
+
+
 void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
    
     accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
@@ -657,18 +692,21 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
     double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
 
-    int i = metrics_shrink_firm(out_vector);
-    int j = metrics_grow_firm(out_vector);
+    int i_firm = metrics_shrink_firm(out_vector);
+    int j_firm = metrics_grow_firm(out_vector);
+
+    int i_loose = metrics_shrink_loose(out_vector);
+    int j_loose = metrics_grow_loose(out_vector);
 
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
 
     std::vector<SubCondition> sub_conditions = {
         {
-            (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
+            base_condition && (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
             "decs"
         },
         {
-            (will_netin_change > 0 && price_netin_change > 0 
+            base_condition && (will_netin_change > 0 && price_netin_change > 0 
                 && out.pct_change_base_925 > 0 && out.pct_change_base_pre > 0 
                 && pre_out.pct_change_base_925 > -0.9 && pre_out.pct_change_base_pre > -0.9
                 && out_buyup > prev_out_buyup ),
@@ -676,16 +714,20 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "SPEEDUP(" + std::to_string(out_buyup) + "vs" + std::to_string(out_buyup - prev_out_buyup) + ")" 
         },
         {
-            ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i >= 3),
+            base_condition && ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i_firm >= 3),
             "desc_shr"
         },
         {
-            ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
+            base_condition && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
             "will_down"
         },
         {
-            i >= 3,
+            base_condition && i_firm >= 3,
             "shr" 
+        },
+        {
+            i_loose >= 6,
+            "shr_loose" 
         }
     };
 
@@ -704,7 +746,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         }
     }
     // 4. 最终触发判断
-    if (base_condition && any_sub_condition) {
+    if (any_sub_condition) {
         signal_info a;
         a.all_price_netin = all_price_netin;
         a.all_will_netin = all_will_netin;
@@ -714,8 +756,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         a.out = out;
 
         a.trigger_reason = triggered_desc;
-        a.shrink = i;
-        a.grow = j;
+        a.shrink_firm = i_firm;
+        a.grow_firm = j_firm;
+
+        a.shrink_loose = i_loose;
+        a.grow_loose = j_loose;
 
         print_signal(out, a);
     }

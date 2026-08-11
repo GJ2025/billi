@@ -141,8 +141,10 @@ struct signal_info {
 
     double will_netin_change = 0.0;
     double price_netin_change = 0.0;
-    size_t shrink;
-    size_t grow;
+    size_t shrink_firm;
+    size_t grow_firm;
+    size_t shrink_loose;
+    size_t grow_loose;
     std::string display_file;
     DayOutputMetrics out;
     std::string trigger_reason;
@@ -209,8 +211,10 @@ inline const std::vector<Col> signal_table_cols = {
     {"PNetIn", 9, true},
     {"WNET-P", 9},
     {"PNET-P", 9}, 
-    {"shk", 3},
-    {"gro", 3}, 
+    {"shk_f", 5},
+    {"shk_l", 5},
+    {"gro", 5}, 
+    {"gro_l", 5},
     {"Pct925", 8},
     {"PctCPre", 8},
     {"REASON", 12}
@@ -918,8 +922,10 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
     print_next_pos(abc.will_netin_change, i, cols);
     print_next_pos(abc.price_netin_change, i, cols);
 
-    print_next(abc.shrink, i, cols);
-    print_next(abc.grow, i, cols);
+    print_next(abc.shrink_firm, i, cols);
+    print_next(abc.shrink_loose, i, cols);
+    print_next(abc.grow_firm, i, cols);
+    print_next(abc.grow_loose, i, cols);
 
     print_next(out.pct_change_base_925, i, cols);
     print_next(out.pct_change_base_pre, i, cols);
