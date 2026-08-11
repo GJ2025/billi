@@ -692,11 +692,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
     double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
 
-    int i_firm = metrics_shrink_firm(out_vector);
-    int j_firm = metrics_grow_firm(out_vector);
+    int shrink_firm = metrics_shrink_firm(out_vector);
+    int grow_firm = metrics_grow_firm(out_vector);
 
-    int i_loose = metrics_shrink_loose(out_vector);
-    int j_loose = metrics_grow_loose(out_vector);
+    int shrink_loose = metrics_shrink_loose(out_vector);
+    int grow_loose = metrics_grow_loose(out_vector);
 
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
 
@@ -714,7 +714,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "SPEEDUP(" + std::to_string(out_buyup) + "vs" + std::to_string(out_buyup - prev_out_buyup) + ")" 
         },
         {
-            base_condition && ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && i_firm >= 3),
+            base_condition && ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && shrink_firm >= 3),
             "desc_shr"
         },
         {
@@ -722,11 +722,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "will_down"
         },
         {
-            base_condition && i_firm >= 3,
+            base_condition && shrink_firm >= 3,
             "shr" 
         },
         {
-            i_loose >= 6,
+            shrink_loose >= 6,
             "shr_loose" 
         }
     };
@@ -756,11 +756,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         a.out = out;
 
         a.trigger_reason = triggered_desc;
-        a.shrink_firm = i_firm;
-        a.grow_firm = j_firm;
+        a.shrink_firm = shrink_firm;
+        a.grow_firm = grow_firm;
 
-        a.shrink_loose = i_loose;
-        a.grow_loose = j_loose;
+        a.shrink_loose = shrink_loose;
+        a.grow_loose = grow_loose;
 
         print_signal(out, a);
     }
