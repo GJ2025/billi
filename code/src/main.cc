@@ -698,12 +698,13 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     int shrink_loose = metrics_shrink_loose(out_vector);
     int grow_loose = metrics_grow_loose(out_vector);
 
-    bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
+    // bool base_condition = (all_will_netin > 0 && all_price_netin > 0);
+    bool base_condition = (all_price_netin > 0);
 
     std::vector<SubCondition> sub_conditions = {
         {
-            base_condition && (out.pct_change_base_925 < 0.1 || out.pct_change_base_pre < 0.1),
-            "decs"
+            base_condition && (out.pct_change_base_925 < 0.3 || out.pct_change_base_pre < 0),
+            "warmer"
         },
         {
             base_condition && (will_netin_change > 0 && price_netin_change > 0 
@@ -715,7 +716,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         },
         {
             base_condition && ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && shrink_firm >= 3),
-            "desc_shr"
+            "warmer_shrink3"
         },
         {
             base_condition && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
@@ -723,11 +724,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         },
         {
             base_condition && shrink_firm >= 3,
-            "shr" 
+            "shrink_firm3" 
         },
         {
             shrink_loose >= 6,
-            "shr_loose" 
+            "shrink_loose6" 
         }
     };
 
@@ -741,7 +742,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             if (triggered_desc.empty()) {
                 triggered_desc = sc.description;
             } else {
-                triggered_desc += "---" + sc.description; // 如果需要用其他符号连接，修改这里
+                triggered_desc += "+" + sc.description; // 如果需要用其他符号连接，修改这里
             }
         }
     }

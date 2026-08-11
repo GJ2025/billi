@@ -207,8 +207,8 @@ inline const std::vector<Col> quiet_buying_table_cols = {
 
 inline const std::vector<Col> signal_table_cols = {
     {"File", 40,true},
-    {"WNetIn", 9, true}, 
-    {"PNetIn", 9, true},
+    {"WNetIn", 12, true}, 
+    {"PNetIn", 12, true},
     {"WNET-P", 9},
     {"PNET-P", 9}, 
     {"shk_f", 5},
@@ -912,7 +912,7 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
 
     const std::vector<Col>& cols = signal_table_cols;
 
-
+    std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(abc.display_file, i, cols);
     print_next_pos(abc.all_will_netin/WAN, i, cols);
@@ -927,8 +927,8 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
     print_next(abc.grow_firm, i, cols);
     print_next(abc.grow_loose, i, cols);
 
-    print_next(out.pct_change_base_925, i, cols);
-    print_next(out.pct_change_base_pre, i, cols);
+    print_next_pos(out.pct_change_base_925, i, cols);
+    print_next_pos(out.pct_change_base_pre, i, cols);
     print_next(abc.trigger_reason, i, cols);
     
 
