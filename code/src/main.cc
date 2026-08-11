@@ -564,7 +564,7 @@ inline std::string get_display_file(const std::string& file) {
     return file;
 }
 
-int metrics_shrink(const std::vector<DayOutputMetrics>& out_vector) {
+int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector) {
     if (out_vector.size() < 2) {
         return 0;
     }
@@ -581,7 +581,7 @@ int metrics_shrink(const std::vector<DayOutputMetrics>& out_vector) {
     return j;
 }
 
-int metrics_grow(const std::vector<DayOutputMetrics>& out_vector) {
+int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector) {
     if (out_vector.size() < 2) {
         return 0;
     }
@@ -657,8 +657,8 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
     double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
 
-    int i = metrics_shrink(out_vector);
-    int j = metrics_grow(out_vector);
+    int i = metrics_shrink_firm(out_vector);
+    int j = metrics_grow_firm(out_vector);
 
     bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
 
@@ -777,26 +777,27 @@ int init_and_get_files_wrapper(const ProgramOptions& opts, std::vector<std::stri
     return initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
 }
 
-void select_stock(const std::string& data_dir_path) {
+void select_stock(const std::string& data_dir_path, size_t show_limit) {
     std::vector<std::string> files_to_process;
     std::vector<DayOutputMetrics> out_vector;
 
-    initialize_and_get_files(data_dir_path, 5, files_to_process);
+    initialize_and_get_files(data_dir_path, show_limit, files_to_process);
     process_files_to_metrics(files_to_process, out_vector); 
 
-    size_t size = std::min(files_to_process.size(), out_vector.size());
-
-    if (size != 5 ){
+    if (files_to_process.size() !=  out_vector.size() ){
         std::cout << "impossible: " << data_dir_path << " " << std::endl; 
         return;
     }
 
+    size_t size = std::min(show_limit, out_vector.size());
+
+    
     get_signal_from_metrics(size, files_to_process, out_vector);
 
 
 }
 
-void process_subdirectories(const std::string& data_dir_path) {
+void process_subdirectories(const std::string& data_dir_path, size_t show_limit) {
     namespace fs = std::filesystem;
 
     // 检查目录是否存在且是一个目录
@@ -819,7 +820,7 @@ void process_subdirectories(const std::string& data_dir_path) {
             }
 
             // std::cout << entry.path().string() << "\r\n" << std::endl;
-            select_stock(entry.path().string());
+            select_stock(entry.path().string(), show_limit);
         }
     }
 
@@ -841,7 +842,7 @@ int main(int argc, char* argv[]) {
         handle_tseq_mode(opts, files_to_process);
     }if (!opts.data_dir_path.empty()){
 
-        process_subdirectories(opts.data_dir_path);
+        process_subdirectories(opts.data_dir_path, opts.show_limit);
 
     }else{
         initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
