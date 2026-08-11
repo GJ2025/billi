@@ -673,6 +673,9 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     const auto& h = out.metrics.header;
     const auto& prev_h = pre_out.metrics.header;
 
+    double super_buy_down = out.metrics.header.super.buy.down.money/WAN;
+    double super_sale_up  = out.metrics.header.super.sale.up.money/WAN;
+
     calculate_trade_stats(h, current);
     calculate_trade_stats(prev_h, prev);
 
@@ -729,41 +732,36 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         {
             shrink_loose >= 6,
             "shrink_loose6" 
+        },
+        {
+            super_buy_down == 0 && super_sale_up == 0 && current.total.volume * 4 < prev.total.volume * 3,
+            "controlled" 
         }
     };
 
     // 3. 检查是否有任意子条件满足（如果需要，还可以顺便记录是哪条规则触发的）
-    bool any_sub_condition = false;
+    // bool any_sub_condition = false;
     std::string triggered_desc;
 
     for (const auto& sc : sub_conditions) {
         if (sc.satisfied) {
-            any_sub_condition = true;
-            if (triggered_desc.empty()) {
-                triggered_desc = sc.description;
-            } else {
-                triggered_desc += "+" + sc.description; // 如果需要用其他符号连接，修改这里
-            }
+            signal_info a;
+            a.all_price_netin = all_price_netin;
+            a.all_will_netin = all_will_netin;
+            a.will_netin_change = will_netin_change;
+            a.price_netin_change = price_netin_change;
+            a.display_file = get_display_file(file);
+            a.out = out;
+
+            a.trigger_reason = sc.description;
+            a.shrink_firm = shrink_firm;
+            a.grow_firm = grow_firm;
+
+            a.shrink_loose = shrink_loose;
+            a.grow_loose = grow_loose;
+
+            print_signal(out, a);
         }
-    }
-    // 4. 最终触发判断
-    if (any_sub_condition) {
-        signal_info a;
-        a.all_price_netin = all_price_netin;
-        a.all_will_netin = all_will_netin;
-        a.will_netin_change = will_netin_change;
-        a.price_netin_change = price_netin_change;
-        a.display_file = get_display_file(file);
-        a.out = out;
-
-        a.trigger_reason = triggered_desc;
-        a.shrink_firm = shrink_firm;
-        a.grow_firm = grow_firm;
-
-        a.shrink_loose = shrink_loose;
-        a.grow_loose = grow_loose;
-
-        print_signal(out, a);
     }
 }
 
