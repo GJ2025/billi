@@ -145,6 +145,7 @@ struct signal_info {
     size_t grow_firm;
     size_t shrink_loose;
     size_t grow_loose;
+    int price_day;
     std::string display_file;
     DayOutputMetrics out;
     std::string trigger_reason;
@@ -215,6 +216,7 @@ inline const std::vector<Col> signal_table_cols = {
     {"shk_l", 5},
     {"gro", 5}, 
     {"gro_l", 5},
+    {"price_day", 9},
     {"Pct925", 8},
     {"PctCPre", 8},
     {"REASON", 12}
@@ -926,6 +928,7 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
     print_next(abc.shrink_loose, i, cols);
     print_next(abc.grow_firm, i, cols);
     print_next(abc.grow_loose, i, cols);
+    print_next(abc.price_day, i, cols);
 
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);

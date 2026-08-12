@@ -16,8 +16,13 @@ inline double pct(double target, double base){
     return ((target - base) / base) * 100.0;
 }
 
-inline double pct_base(double target, double base){
-    return (target / base) * 100.0;
+#include <cmath>
+
+inline double pct_base(double target, double base) {
+    if (base == 0.0) return 0.0; // 防止除以零
+    double pct = (target / base) * 100.0;
+    // 先乘以 100 四舍五入，再除以 100
+    return std::round(pct * 100.0) / 100.0;
 }
 
 

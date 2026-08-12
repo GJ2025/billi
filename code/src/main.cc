@@ -616,6 +616,59 @@ int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector) {
     return j;
 }
 
+int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
+        return 0;
+    }
+
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (out_vector[out_vector.size() - 1].metrics.closing_price < out_vector[i - 1].metrics.closing_price) {
+             ++j;
+        }else{
+            break;
+        }
+    }
+
+    return j;
+}
+
+int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
+    if (out_vector.size() < 2) {
+        return 0;
+    }
+
+    int j = 0;
+    // 从末尾向前遍历：对比 out_vector[i] 和 out_vector[i - 1]
+    for (size_t i = out_vector.size() - 1; i >= 1; --i) {
+        if (out_vector[out_vector.size() - 1].metrics.closing_price > out_vector[i - 1].metrics.closing_price) {
+             ++j;
+        }else{
+            break;
+        }
+    }
+
+    return j;
+}
+
+int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
+
+    int down_day = metrics_down_check(out_vector);
+    int up_day = metrics_up_check(out_vector);
+
+    if (down_day != 0) {
+        return 0 - down_day;
+    }
+
+    if (up_day != 0){
+        return 0- up_day;
+    }
+
+    return 0;
+
+}
+
 int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
     if (out_vector.size() < 2) {
         return 0;
@@ -658,42 +711,54 @@ void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
                                  stats.neutral_down, stats.neutral_up, stats.neutral_keep);
 }
 
+std::string pct_base_string(double  pct) {
+
+    
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << pct;
+    return oss.str(); // 返回例如 "12.34" 的字符串
+}
+
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
         return;
     }
 
-    TradeCategoryStats current;
-    TradeCategoryStats prev;
+    TradeCategoryStats this_day_stats;
+    TradeCategoryStats prev_day_stats;
 
     const auto& file = files_to_process[size - 1]; 
-    const auto& out = out_vector[size - 1];
-    const auto& pre_out = out_vector[size - 2];
+    const auto& this_day_metry = out_vector[size - 1];
+    const auto& pre_day_metry = out_vector[size - 2];
 
-    const auto& h = out.metrics.header;
-    const auto& prev_h = pre_out.metrics.header;
+    const auto& this_day_metryh = this_day_metry.metrics.header;
+    const auto& prev_day_metryh = pre_day_metry.metrics.header;
 
-    double super_buy_down = out.metrics.header.super.buy.down.money/WAN;
-    double super_sale_up  = out.metrics.header.super.sale.up.money/WAN;
+    double super_buy_down = this_day_metry.metrics.header.super.buy.down.money/WAN;
+    double super_sale_up  = this_day_metry.metrics.header.super.sale.up.money/WAN;
 
-    calculate_trade_stats(h, current);
-    calculate_trade_stats(prev_h, prev);
+    calculate_trade_stats(this_day_metryh, this_day_stats);
+    calculate_trade_stats(prev_day_metryh, prev_day_stats);
 
-    double all_will_netin = metrics_bsn_net(out.metrics);
-    double all_price_netin = metrics_price_net(out.metrics);
+    double all_will_netin = metrics_bsn_net(this_day_metry.metrics);
+    double all_price_netin = metrics_price_net(this_day_metry.metrics);
+    int down_day = metrics_down_check(out_vector);
+    int up_day = metrics_up_check(out_vector);
 
-    double prev_all_will_netin = metrics_bsn_net(pre_out.metrics);
-    double prev_all_price_netin = metrics_price_net(pre_out.metrics);
+    int price_day = metrics_price_check(out_vector);
+
+    double prev_all_will_netin = metrics_bsn_net(pre_day_metry.metrics);
+    double prev_all_price_netin = metrics_price_net(pre_day_metry.metrics);
 
     double will_netin_change = (all_will_netin - prev_all_will_netin) / std::abs(prev_all_will_netin);
     double price_netin_change = (all_price_netin - prev_all_price_netin) / std::abs(prev_all_price_netin);
 
-    double out_buyup = pct_base(current.buy_up.money,   current.total.money);
-    double prev_out_buyup = pct_base(prev.buy_up.money,   prev.total.money);
+    double this_day_buyup_pct = pct_base(this_day_stats.buy_up.money,   this_day_stats.total.money);
+    double prev_day_buyup_pct = pct_base(prev_day_stats.buy_up.money,   prev_day_stats.total.money);
 
-    double out_buy_down = pct_base(current.buy_down.money,   current.total.money);
-    double out_sale_up = pct_base(current.sale_up.money,   current.total.money);
-    double prev_out_sale_up = pct_base(prev.sale_up.money,   current.total.money);
+    double out_buy_down = pct_base(this_day_stats.buy_down.money,   this_day_stats.total.money);
+    double out_sale_up = pct_base(this_day_stats.sale_up.money,   this_day_stats.total.money);
+    double prev_out_sale_up = pct_base(prev_day_stats.sale_up.money,   this_day_stats.total.money);
 
     int shrink_firm = metrics_shrink_firm(out_vector);
     int grow_firm = metrics_grow_firm(out_vector);
@@ -701,42 +766,39 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     int shrink_loose = metrics_shrink_loose(out_vector);
     int grow_loose = metrics_grow_loose(out_vector);
 
-    // bool base_condition = (all_will_netin > 0 && all_price_netin > 0);
-    bool base_condition = (all_price_netin > 0);
+    bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
+    // bool base_condition = (all_price_netin > 0);
 
     std::vector<SubCondition> sub_conditions = {
         {
-            base_condition && (out.pct_change_base_925 < 0.3 || out.pct_change_base_pre < 0),
+            base_condition && this_day_metry.pct_change_base_925 < 0 &&  down_day > 3,
             "warmer"
         },
         {
-            base_condition && (will_netin_change > 0 && price_netin_change > 0 
-                && out.pct_change_base_925 > 0 && out.pct_change_base_pre > 0 
-                && pre_out.pct_change_base_925 > -0.9 && pre_out.pct_change_base_pre > -0.9
-                && out_buyup > prev_out_buyup ),
-                // && metrics_total_volume(out.metrics) > metrics_total_volume(pre_out.metrics),
-            "SPEEDUP(" + std::to_string(out_buyup) + "vs" + std::to_string(out_buyup - prev_out_buyup) + ")" 
+            base_condition && (will_netin_change > 0 && price_netin_change > 0) && up_day > 1 && up_day <= 3,
+            "SPEEDUP(" + pct_base_string(this_day_buyup_pct) + "vs" + pct_base_string(this_day_buyup_pct - prev_day_buyup_pct) + ")" 
         },
         {
-            base_condition && ((out.pct_change_base_925 < 0 || out.pct_change_base_pre < 0) && shrink_firm >= 3),
-            "warmer_shrink3"
-        },
-        {
-            base_condition && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && out.pct_change_base_pre > 1.0)),
+            base_condition && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && this_day_metry.pct_change_base_pre > 1.0)),
             "will_down"
         },
+        // {
+        //     base_condition && shrink_firm >= 3,
+        //     "shrink_firm3" 
+        // },
+        // {
+        //     shrink_loose >= 6,
+        //     "shrink_loose6" 
+        // },
         {
-            base_condition && shrink_firm >= 3,
-            "shrink_firm3" 
-        },
-        {
-            shrink_loose >= 6,
-            "shrink_loose6" 
-        },
-        {
-            super_buy_down == 0 && super_sale_up == 0 && current.total.volume * 4 < prev.total.volume * 3,
+            super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
             "controlled" 
+        },
+        {
+            this_day_metry.pct_change_base_925 > 0 && will_netin_change < 0,
+            "up_out" 
         }
+
     };
 
     // 3. 检查是否有任意子条件满足（如果需要，还可以顺便记录是哪条规则触发的）
@@ -751,7 +813,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             a.will_netin_change = will_netin_change;
             a.price_netin_change = price_netin_change;
             a.display_file = get_display_file(file);
-            a.out = out;
+            a.out = this_day_metry;
 
             a.trigger_reason = sc.description;
             a.shrink_firm = shrink_firm;
@@ -759,8 +821,9 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
             a.shrink_loose = shrink_loose;
             a.grow_loose = grow_loose;
+            a.price_day = price_day;
 
-            print_signal(out, a);
+            print_signal(this_day_metry, a);
         }
     }
 }
