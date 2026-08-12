@@ -662,7 +662,7 @@ int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     if (up_day != 0){
-        return 0- up_day;
+        return up_day;
     }
 
     return 0;
@@ -786,14 +786,14 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         //     base_condition && shrink_firm >= 3,
         //     "shrink_firm3" 
         // },
-        // {
-        //     shrink_loose >= 6,
-        //     "shrink_loose6" 
-        // },
         {
-            super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
-            "controlled" 
+            shrink_loose >= 10,
+            "shrink_loose6" 
         },
+        // {
+        //     super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
+        //     "controlled" 
+        // },
         {
             this_day_metry.pct_change_base_925 > 0 && will_netin_change < 0,
             "up_out" 

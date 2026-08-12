@@ -928,7 +928,7 @@ inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
     print_next(abc.shrink_loose, i, cols);
     print_next(abc.grow_firm, i, cols);
     print_next(abc.grow_loose, i, cols);
-    print_next(abc.price_day, i, cols);
+    print_next_pos(abc.price_day, i, cols);
 
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);
