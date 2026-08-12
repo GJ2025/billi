@@ -743,7 +743,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     double all_will_netin = metrics_bsn_net(this_day_metry.metrics);
     double all_price_netin = metrics_price_net(this_day_metry.metrics);
     int down_day = metrics_down_check(out_vector);
-    int up_day = metrics_up_check(out_vector);
+    // int up_day = metrics_up_check(out_vector);
 
     int price_day = metrics_price_check(out_vector);
 
@@ -775,7 +775,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "warmer"
         },
         {
-            base_condition && (will_netin_change > 0 && price_netin_change > 0) && up_day > 1 && up_day <= 3,
+            base_condition && (will_netin_change > 0 && price_netin_change > 0) && price_day > -1 && price_day < 3,
             "SPEEDUP(" + pct_base_string(this_day_buyup_pct) + "vs" + pct_base_string(this_day_buyup_pct - prev_day_buyup_pct) + ")" 
         },
         {
