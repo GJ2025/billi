@@ -238,7 +238,7 @@ void read_tick_records(const std::string& filename, std::vector<TickRecord>& rec
     infile.close();
 }
 
-void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics, DailyMetrics& am_metrics) {
+void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics, DailyMetrics& am_metrics, double prev_closing_price) {
 
     TickRecord pre_record;
     StreamRecord stream;
@@ -256,7 +256,7 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
             am_metrics = metrics;
         }
 
-        update_stream(stream, record, pre_record);
+        update_stream(stream, record, pre_record, prev_closing_price);
         update_metrics_by_record(metrics, record);
 
         process_last_record(metrics, stream, record);
@@ -304,7 +304,7 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
                 tick_idx++; 
             }
 
-            update_stream(stream, record, pre_record);
+            update_stream(stream, record, pre_record, pre_record.price);
             update_metrics_by_record(current_metrics, record);
 
             process_last_record(current_metrics, stream, record);
@@ -353,7 +353,7 @@ bool record_should_process(TickRecord& record){
 
 }
 
-bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
+bool process_single_file(const std::string& filename, DayOutputMetrics& out, DayOutputMetrics& pre_out) {
 
     std::vector<TickRecord> records;
 
@@ -362,7 +362,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out) {
 
     read_tick_records(filename, records);
 
-    parse_tick_records(records, metrics, am_metrics);
+    parse_tick_records(records, metrics, am_metrics, pre_out.metrics.closing_price);
 
     if (metrics.ticks_count == 0) {
         return false;
@@ -512,7 +512,7 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
 
         DayOutputMetrics out;
 
-        if (!process_single_file(file, out)) {
+        if (!process_single_file(file, out, prev_out)) {
             continue;
         }
 
@@ -734,8 +734,8 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     const auto& this_day_metryh = this_day_metry.metrics.header;
     const auto& prev_day_metryh = pre_day_metry.metrics.header;
 
-    double super_buy_down = this_day_metry.metrics.header.super.buy.down.money/WAN;
-    double super_sale_up  = this_day_metry.metrics.header.super.sale.up.money/WAN;
+    // double super_buy_down = this_day_metry.metrics.header.super.buy.down.money/WAN;
+    // double super_sale_up  = this_day_metry.metrics.header.super.sale.up.money/WAN;
 
     calculate_trade_stats(this_day_metryh, this_day_stats);
     calculate_trade_stats(prev_day_metryh, prev_day_stats);
@@ -771,7 +771,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     std::vector<SubCondition> sub_conditions = {
         {
-            base_condition && this_day_metry.pct_change_base_925 < 0 &&  down_day > 3,
+            base_condition && this_day_metry.pct_change_base_pre < 0 &&  down_day > 3,
             "warmer"
         },
         {
