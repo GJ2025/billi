@@ -74,19 +74,19 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 
     std::vector<std::string> signals;
 
-    if (out.pct_change_base_925 > 0 && will_net_money < 0) {
+    if (out.pct_change_base_pre > 0 && will_net_money < 0) {
         signals.push_back("[UP_OUT]");
     }
     
-    if (out.pct_change_base_925 > 0 && price_net_money < 0) {
+    if (out.pct_change_base_pre > 0 && price_net_money < 0) {
         signals.push_back("[UP_POUT]");
     } 
     
-    if (out.pct_change_base_925 < 0 && will_net_money > 0) {
+    if (out.pct_change_base_pre < 0 && will_net_money > 0) {
         signals.push_back("[DN_IN]");
     }
 
-    if (out.pct_change_base_925 < 0 && price_net_money > 0) {
+    if (out.pct_change_base_pre < 0 && price_net_money > 0) {
         signals.push_back("[DN_PIN]");
     }
 
@@ -771,11 +771,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     std::vector<SubCondition> sub_conditions = {
         {
-            base_condition && this_day_metry.pct_change_base_pre < 0 &&  down_day > 3,
+            base_condition && this_day_metry.pct_change_base_pre < 0.3 &&  down_day > 3,
             "warmer"
         },
         {
-            base_condition && (will_netin_change > 0 && price_netin_change > 0) && price_day > -1 && price_day < 3,
+            base_condition && (will_netin_change > 0 && price_netin_change > 0) && price_day >= -1 && price_day <= 3,
             "SPEEDUP(" + pct_base_string(this_day_buyup_pct) + "vs" + pct_base_string(this_day_buyup_pct - prev_day_buyup_pct) + ")" 
         },
         {
@@ -786,10 +786,10 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         //     base_condition && shrink_firm >= 3,
         //     "shrink_firm3" 
         // },
-        {
-            shrink_loose >= 10,
-            "shrink_loose6" 
-        },
+        // {
+        //     shrink_loose >= 10,
+        //     "shrink_loose6" 
+        // },
         // {
         //     super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
         //     "controlled" 

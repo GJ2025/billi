@@ -117,7 +117,6 @@ struct TradeCategoryStats {
 };
 
 
-
 struct DayOutputMetrics {
     
     std::string date_str = "";
@@ -370,6 +369,7 @@ static const std::vector<Col> data_all_table_cols = {
 
     {"Will-NET-P", 16},
     {"PRICE-NET-P", 16},
+    {"Distribute", 16},
     {"Money", 11},
     {"Volume", 9}, 
     
@@ -408,9 +408,62 @@ inline double total_money(const deal_bsn& deal) {
     return deal.buy.money + deal.sale.money + deal.neutral.money;
 }
 
-// 计算总成交量
 inline size_t total_volume(const deal_bsn& deal) {
     return deal.buy.volume + deal.sale.volume + deal.neutral.volume;
+}
+
+struct deal_probability_distribution {
+    double super = 0.0;
+    double big = 0.0;
+    double middle = 0.0;
+    double small = 0.0;
+    std::string description;
+};
+
+struct DailyDistributions {
+    deal_probability_distribution vol_dist;
+    deal_probability_distribution money_dist;
+};
+
+template <typename RetType>
+using MetricFunc = RetType(*)(const deal_bsn&);
+
+template <typename RetType>
+inline deal_probability_distribution deal_pro_distri(const DailyMetrics& metrics, MetricFunc<RetType> get_value) {
+    double super_v  = static_cast<double>(get_value(metrics.deal_super_bsn));
+    double big_v    = static_cast<double>(get_value(metrics.deal_big_bsn));
+    double middle_v = static_cast<double>(get_value(metrics.deal_middle_bsn));
+    double small_v  = static_cast<double>(get_value(metrics.deal_small_bsn));
+    double total_v  = static_cast<double>(get_value(metrics.deal_total_bsn));
+
+    deal_probability_distribution abc;
+    if (total_v > 0) {
+        abc.super   = super_v / total_v;
+        abc.big     = big_v / total_v;
+        abc.middle  = middle_v / total_v;
+        abc.small   = small_v / total_v;
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    // oss << "Super: " << (abc.super * 100) << "%, "
+    //     << "Big: " << (abc.big * 100) << "%, "
+    //     << "Middle: " << (abc.middle * 100) << "%, "
+    //     << "Small: " << (abc.small * 100) << "%";
+    oss << ":" << (abc.super * 100) << "%, "
+    << ":" << (abc.big * 100) << "%, "
+    << ":" << (abc.middle * 100) << "%, "
+    << ":" << (abc.small * 100) << "%";
+    abc.description = oss.str();
+
+    return abc;
+}
+
+inline void get_daily_distributions(const DailyMetrics& metrics, DailyDistributions& result) {
+
+    result.vol_dist   = deal_pro_distri(metrics, total_volume);
+    result.money_dist = deal_pro_distri(metrics, total_money);
+    return ;
 }
 
 inline double metrics_total_money(const DailyMetrics& metrics){
@@ -1026,6 +1079,10 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
     print_next_pos((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
     print_next_pos((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
+
+    DailyDistributions result;
+    get_daily_distributions(out.metrics,  result);
+    print_next(result.money_dist.description, i, cols);
 
 
     print_next(total_money/WAN, i, cols);
