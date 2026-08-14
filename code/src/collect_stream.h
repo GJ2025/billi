@@ -1095,11 +1095,10 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
     print_next(avg_price, i, cols);
 
+    std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.avg_pct_change, i, cols);
-
-
 
     print_next(out.am_metrics.closing_price, i, cols);
 

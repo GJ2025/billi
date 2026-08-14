@@ -507,16 +507,19 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
 
     for (const auto& file : files_to_process) {
         if (!check_company_id_match(file, target_company_id)) {
+            std::cout << file << ":" << target_company_id << std::endl;
             continue;
         }
 
         DayOutputMetrics out;
 
         if (!process_single_file(file, out, prev_out)) {
+             std::cout << file << ":" << __LINE__ << std::endl;
             continue;
         }
 
         if (out.metrics.ticks_count <= 0) {
+            std::cout << file << ":" << __LINE__ << std::endl;
             continue;
         }
 
@@ -775,6 +778,10 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "warmer"
         },
         {
+            base_condition && this_day_metry.pct_change_base_pre < 0,
+            "abnormal"
+        },
+        {
             base_condition && (will_netin_change > 0 && price_netin_change > 0) && price_day >= -1 && price_day <= 3,
             "SPEEDUP(" + pct_base_string(this_day_buyup_pct) + "vs" + pct_base_string(this_day_buyup_pct - prev_day_buyup_pct) + ")" 
         },
@@ -892,7 +899,7 @@ void select_stock(const std::string& data_dir_path, size_t show_limit) {
     process_files_to_metrics(files_to_process, out_vector); 
 
     if (files_to_process.size() !=  out_vector.size() ){
-        std::cout << "impossible: " << data_dir_path << " " << std::endl; 
+        std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl; 
         return;
     }
 
