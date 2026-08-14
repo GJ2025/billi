@@ -364,12 +364,13 @@ static const std::vector<Col> data_all_table_cols = {
     {"AM-P-NET", 11, false}, 
     {"PM-P-NET", 11, false}, 
 
-    {"Will-NET", 16},
-    {"PRICE-NET", 16},
+    {"WNET", 8},
+    {"PNET", 8},
 
-    {"Will-NET-P", 16},
-    {"PRICE-NET-P", 16},
-    {"Distribute", 16},
+    {"WillP", 8},
+    {"PRICEP", 8},
+    {"Distribute_M", 24, false},
+    {"Distribute_V", 24},
     {"Money", 11},
     {"Volume", 9}, 
     
@@ -445,15 +446,15 @@ inline deal_probability_distribution deal_pro_distri(const DailyMetrics& metrics
     }
 
     std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
+    oss << std::fixed << std::setprecision(1);
     // oss << "Super: " << (abc.super * 100) << "%, "
     //     << "Big: " << (abc.big * 100) << "%, "
     //     << "Middle: " << (abc.middle * 100) << "%, "
     //     << "Small: " << (abc.small * 100) << "%";
-    oss << ":" << (abc.super * 100) << "%, "
-    << ":" << (abc.big * 100) << "%, "
-    << ":" << (abc.middle * 100) << "%, "
-    << ":" << (abc.small * 100) << "%";
+    oss <<  (abc.super * 100) <<
+        "  " << (abc.big * 100) <<
+        "  " << (abc.middle * 100) << 
+        "  " << (abc.small * 100) ;
     abc.description = oss.str();
 
     return abc;
@@ -1056,7 +1057,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
     // std::cout <<"avg data in print all DATA: " <<avg_price << " = " << total_money << " / " << total_volume << std::endl;
 
-    std::cout << std::left << std::fixed << std::setprecision(2);
+    std::cout << std::left << std::fixed << std::setprecision(1);
 
     print_next(out.date_str, i, cols);
     print_next(out.metrics.ticks_count, i, cols);
@@ -1083,6 +1084,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     DailyDistributions result;
     get_daily_distributions(out.metrics,  result);
     print_next(result.money_dist.description, i, cols);
+    print_next(result.vol_dist.description, i, cols);
 
 
     print_next(total_money/WAN, i, cols);
