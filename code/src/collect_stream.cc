@@ -87,7 +87,7 @@ void update_stream(StreamRecord& stream, const TickRecord& record, const TickRec
     if (first_record(record)){
 
         if (pre_closing_price == 0 ){
-            pre_closing_price = pre_record.price;
+            pre_closing_price = record.price;
         }
 
         stream_new(stream, record, pre_closing_price);

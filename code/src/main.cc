@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record);
-void process_first_record(DailyMetrics& metrics, TickRecord record, TickRecord& pre_record);
+void process_first_record(DailyMetrics& metrics, TickRecord record);
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -245,7 +245,7 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
     bool has_pre = false;
 
     for (const auto& record : records) {
-        process_first_record(metrics, record, pre_record);
+        process_first_record(metrics, record);
 
         if (has_pre && record_change(record, pre_record)) {
             update_metrics_header(metrics.header, stream);
@@ -284,21 +284,29 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
 
         std::stringstream ss(line);
         TickRecord record;
-        
+        bool has_pre = false;
+
         if (ss >> record) {
             
             if (!record_should_process(record)){
                 continue;
             }
 
-            process_first_record(current_metrics, record, pre_record);
+            process_first_record(current_metrics, record);
 
-            if (record_change(record, pre_record)) {
+            if (has_pre && record_change(record, pre_record)) {
                 update_metrics_header(current_metrics.header, stream);
             }
 
-            if (tick_idx < tick_times.size() 
-                && (is_tick_time_end(record.t, pre_record.t, tick_times[tick_idx]) || is_tick_time_end(record.t, pre_seq_time, tick_times[tick_idx]))) {
+            // if (tick_idx < tick_times.size() 
+            //     && ((has_pre && is_tick_time_end(record.t, pre_record.t, tick_times[tick_idx])) 
+            //             || is_tick_time_end(record.t, pre_seq_time, tick_times[tick_idx]))) {
+            //     pre_seq_time = tick_times[tick_idx];
+            //     all_metrics.push_back(current_metrics);
+            //     tick_idx++; 
+            // }
+
+            if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) >= 0) {
                 pre_seq_time = tick_times[tick_idx];
                 all_metrics.push_back(current_metrics);
                 tick_idx++; 
@@ -315,6 +323,7 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
         }
 
         pre_record = record;
+        has_pre =true;
     }
     infile.close();
 }
@@ -328,9 +337,8 @@ void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord
     }
 }
 
-void process_first_record(DailyMetrics& metrics, TickRecord record, TickRecord& pre_record){
+void process_first_record(DailyMetrics& metrics, TickRecord record){
     if (first_record(record)) {
-        pre_record = record;
         set_metrics_record(metrics, record, RecordType::FIRST);
     }
 }

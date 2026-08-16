@@ -379,6 +379,7 @@ static const std::vector<Col> data_all_table_cols = {
     // {"HistNetIn(W)", 11, false}, 
 
     {"AvgPrice", 9, true},
+    {"1st", 8}, 
     {"StartCh%", 8}, 
     {"AvgPct%", 8, false},
     {"AM-Close", 8, false}, 
@@ -458,6 +459,25 @@ inline deal_probability_distribution deal_pro_distri(const DailyMetrics& metrics
     abc.description = oss.str();
 
     return abc;
+}
+
+inline double get_first_record_net(const DailyMetrics& metrics){
+
+    double total_money =  metrics.daily_first_record.volume * 100 * metrics.daily_first_record.price/WAN;
+
+    if (metrics.daily_first_record.bs_type == "B"){
+
+        return total_money;
+
+    }else if (metrics.daily_first_record.bs_type == "S"){
+
+        return 0 - total_money;
+
+    }else{
+
+        return 0;
+    }
+
 }
 
 inline void get_daily_distributions(const DailyMetrics& metrics, DailyDistributions& result) {
@@ -1094,6 +1114,8 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     print_next_pos(all_will_netin/total_money, i, cols);
 
     print_next(avg_price, i, cols);
+
+    print_next_pos(get_first_record_net(out.metrics), i, cols);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
