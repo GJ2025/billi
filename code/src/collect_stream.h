@@ -66,6 +66,8 @@ struct HeadTickData {
 struct DailyMetrics {
     size_t ticks_count = 0;
     double closing_price = 0.0;
+    double pre_closing_price = 0.0;
+    double this_1457_pirce = 0.0;
     double avg_price = 0.0;
     double all_money = 0.0;
     size_t all_volume = 0.0;

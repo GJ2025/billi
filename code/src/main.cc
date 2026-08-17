@@ -25,7 +25,7 @@
 namespace fs = std::filesystem;
 
 bool record_should_process(TickRecord& record);
-void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record);
+void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_price);
 void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_closing_price);
 
 bool is_loading_data(const std::string& str) {
@@ -263,7 +263,7 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
 
         update_metrics_by_record(metrics, record);
 
-        process_last_record(metrics, stream, record);
+        process_last_record(metrics, stream, record, pre_record.price);
 
         pre_record = record;
         has_pre = true;
@@ -312,7 +312,7 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
 
             update_metrics_by_record(current_metrics, record);
 
-            process_last_record(current_metrics, stream, record);
+            process_last_record(current_metrics, stream, record, pre_record.price);
 
         }else{
                 std::cout << "failed=========== " << record.time << std::endl;
@@ -325,11 +325,12 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
     infile.close();
 }
 
-void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record){
+void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_price){
     if (last_record(record)) {
 
         update_metrics_header(metrics.header, stream);
         set_metrics_record(metrics, record, RecordType::LAST);
+        metrics.this_1457_pirce = pre_price;
 
     }
 }
@@ -341,8 +342,9 @@ void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecor
         if (pre_closing_price == 0){
             pre_closing_price = record.price;
         }
-        
+
         stream_new(stream, record, pre_closing_price);
+        metrics.pre_closing_price = pre_closing_price;
     }
 }
 
