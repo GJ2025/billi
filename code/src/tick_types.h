@@ -15,6 +15,11 @@ struct TickRecord {
     std::string bs_type = "-";
     tickTime t;
 
+    bool full() const {
+        // 如果 time 为空，通常代表这是一个未被正确赋值或初始化为空的记录
+        return deal_count != 0;
+    }
+
     // 为了保持内联，operator>> 依然放在这里
     friend std::istream& operator>>(std::istream& is, TickRecord& record) {
         if (is >> record.time >> record.price >> record.volume >> record.deal_count) {

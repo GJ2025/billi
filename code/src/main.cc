@@ -242,22 +242,21 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
 
     TickRecord pre_record;
     StreamRecord stream;
-    bool has_pre = false;
 
 
     for (const auto& record : records) {
         process_first_record(metrics, stream, record, prev_closing_price);
 
-        if (has_pre && record_change(record, pre_record)) {
+        if (pre_record.full() && record_change(record, pre_record)) {
             update_metrics_header(metrics.header, stream);
         }
 
-        if (has_pre && is_am_end(record.t, pre_record.t)) {
+        if (pre_record.full() && is_am_end(record.t, pre_record.t)) {
             update_metrics_header(metrics.header, stream);
             am_metrics = metrics;
         }
 
-        if (has_pre){
+        if (pre_record.full()){
             update_stream(stream, record, pre_record);
         }
 
@@ -266,7 +265,6 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
         process_last_record(metrics, stream, record, pre_record.price);
 
         pre_record = record;
-        has_pre = true;
     }
 }
 
@@ -287,7 +285,6 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
 
         std::stringstream ss(line);
         TickRecord record;
-        bool has_pre = false;
 
         if (ss >> record) {
             
@@ -297,7 +294,7 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
 
             process_first_record(current_metrics, stream, record, record.price);
 
-            if (has_pre && record_change(record, pre_record)) {
+            if (pre_record.full() && record_change(record, pre_record)) {
                 update_metrics_header(current_metrics.header, stream);
             }
 
@@ -306,7 +303,7 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
                 tick_idx++; 
             }
 
-            if (has_pre){
+            if (pre_record.full()){
                 update_stream(stream, record, pre_record);
             }
 
@@ -320,7 +317,6 @@ void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& a
         }
 
         pre_record = record;
-        has_pre =true;
     }
     infile.close();
 }
@@ -331,6 +327,9 @@ void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord
         update_metrics_header(metrics.header, stream);
         set_metrics_record(metrics, record, RecordType::LAST);
         metrics.this_1457_pirce = pre_price;
+
+
+        get_record_stream_point(metrics.start_point,  record, pre_price);
 
     }
 }
@@ -345,6 +344,8 @@ void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecor
 
         stream_new(stream, record, pre_closing_price);
         metrics.pre_closing_price = pre_closing_price;
+
+        get_record_stream_point(metrics.start_point,  record, pre_closing_price);
     }
 }
 

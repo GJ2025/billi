@@ -50,18 +50,18 @@ void collect_price_action(deal_price& rp, double trade, size_t volume, double ga
     } 
 }
 
-void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap) {
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap) {
     if (bs_type == "B"){
-        collect_price_action(group.buy, trade, volume, gap);
+        collect_price_action(group.buy, money, volume, gap);
     }else if (bs_type == "S"){
-        collect_price_action(group.sale, trade, volume, gap);
+        collect_price_action(group.sale, money, volume, gap);
     } else{
-        collect_price_action(group.neutral, trade, volume, gap);
+        collect_price_action(group.neutral, money, volume, gap);
     } 
 }
 
 void update_metrics_header(record_stream& header, StreamRecord& stream) {
-    double total_trade = 0.0;
+    double total_money = 0.0;
     size_t total_volume = 0;
     
     if (stream.records.empty()) {
@@ -69,17 +69,60 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
     }
 
     for (const auto& r : stream.records){
-        total_trade += (r.volume * r.price * 100.0);
+        total_money += (r.volume * r.price * 100.0);
         total_volume += r.volume * 100;
     } 
     
-    bsn_action_group* group = (total_trade > 100 * WAN) ? &header.super :
-                             (total_trade > 30 * WAN) ? &header.big :
-                             (total_trade > 5 * WAN)  ? &header.middle : &header.small;
+    bsn_action_group* group = (total_money > 100 * WAN) ? &header.super :
+                             (total_money > 30 * WAN) ? &header.big :
+                             (total_money > 5 * WAN)  ? &header.middle : &header.small;
     
-    collect_bs_action(*group, stream.records[0].bs_type, total_trade, total_volume, stream.gap);
+    collect_bs_action(*group, stream.records[0].bs_type, total_money, total_volume, stream.gap);
 
     stream.records.clear();
+}
+
+void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price) {
+    double total_money = 0.0;
+    size_t total_volume = 0;
+
+
+    total_money += (r.volume * r.price * 100.0);
+    total_volume += r.volume * 100;
+    
+    bsn_action_group* group = (total_money > 100 * WAN) ? &this_point.super :
+                             (total_money > 30 * WAN) ? &this_point.big :
+                             (total_money > 5 * WAN)  ? &this_point.middle : &this_point.small;
+    
+    collect_bs_action(*group, r.bs_type, total_money, total_volume, r.price - pre_price);
+}
+
+void sub_record_stream_point(record_stream& this_point, record_stream& that_point) {
+    // 定义一个 Lambda 表达式用于处理单个 trade 的相减
+    auto sub_trade = [](trade& t1, const trade& t2) {
+        t1.money  -= t2.money;
+        t1.volume -= t2.volume;
+    };
+
+    // 定义一个 Lambda 表达式处理整个 deal_price
+    auto sub_deal_price = [&](deal_price& d1, const deal_price& d2) {
+        sub_trade(d1.up,    d2.up);
+        sub_trade(d1.down,     d2.down);
+        sub_trade(d1.keep,    d2.keep);
+    };
+
+    // 定义一个 Lambda 表达式处理整个 bsn_action_group
+    auto sub_group = [&](bsn_action_group& g1, const bsn_action_group& g2) {
+        sub_deal_price(g1.buy,     g2.buy);
+        sub_deal_price(g1.sale,    g2.sale);
+        sub_deal_price(g1.neutral, g2.neutral);
+    };
+
+    // 对所有分组执行相减
+    sub_group(this_point.super,  that_point.super);
+    sub_group(this_point.big,    that_point.big);
+    sub_group(this_point.middle, that_point.middle);
+    sub_group(this_point.small,  that_point.small);
 }
 
 

@@ -80,6 +80,8 @@ struct DailyMetrics {
     TickRecord daily_first_record;
     TickRecord daily_last_record;
     record_stream header;
+    record_stream start_point;
+    record_stream end_point;
 
     deal_bsn deal_super_bsn;
     deal_bsn deal_big_bsn;
@@ -130,7 +132,7 @@ struct DayOutputMetrics {
     double avg_pct_change = 0.0;
     double historical_total_inflow = 0.0;
     
-
+    DailyMetrics middle_metrics;
     DailyMetrics metrics;
     DailyMetrics am_metrics;
 
@@ -1141,7 +1143,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     return;
 }
 
-void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double trade, size_t volume, double gap);
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap);
 void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 void print__headers(const std::string& title, const std::vector<Col>& cols);
@@ -1149,5 +1151,8 @@ void print__headers(const std::string& title, const std::vector<Col>& cols);
 extern void update_metrics_header(record_stream& header, StreamRecord& stream);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
+extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);
+extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);
+
 
 #endif // COLLECT_STREAM_H
