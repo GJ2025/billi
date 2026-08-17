@@ -83,16 +83,8 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
 }
 
 
-void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record, double pre_closing_price) {
-    if (first_record(record)){
-
-        if (pre_closing_price == 0 ){
-            pre_closing_price = record.price;
-        }
-
-        stream_new(stream, record, pre_closing_price);
-
-    }else if (stream.records.empty() || record_change(record, pre_record)) {
+void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record) {
+    if (stream.records.empty() || record_change(record, pre_record)) {
 
         stream_new(stream, record, pre_record.price);
 
