@@ -537,8 +537,16 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
             continue;
         }
 
+        out.middle_metrics = out.metrics;
+
+        sub_record_stream_point(out.middle_metrics.header, out.middle_metrics.start_point);
+        sub_record_stream_point(out.middle_metrics.header, out.middle_metrics.end_point);
+
         deal_classfy(out.metrics);
         deal_classfy(out.am_metrics);
+        deal_classfy(out.middle_metrics);
+
+
         process_out(out, prev_out);
 
         out_vector.push_back(out);
@@ -759,6 +767,11 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     double all_will_netin = metrics_bsn_net(this_day_metry.metrics);
     double all_price_netin = metrics_price_net(this_day_metry.metrics);
+
+    double middle_will_netin = metrics_bsn_net(this_day_metry.middle_metrics);
+    double middle_price_netin = metrics_price_net(this_day_metry.middle_metrics);
+
+
     int down_day = metrics_down_check(out_vector);
     // int up_day = metrics_up_check(out_vector);
 
@@ -783,24 +796,29 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     int shrink_loose = metrics_shrink_loose(out_vector);
     int grow_loose = metrics_grow_loose(out_vector);
 
-    bool base_condition = (all_will_netin > 0 || all_price_netin > 0);
+    bool all_netin = (all_will_netin > 0 || all_price_netin > 0);
+    bool middle_netin = (middle_will_netin > 0 || middle_price_netin > 0);
     // bool base_condition = (all_price_netin > 0);
 
     std::vector<SubCondition> sub_conditions = {
         {
-            base_condition && this_day_metry.pct_change_base_pre < 0.3 &&  down_day > 3,
-            "warmer"
+            all_will_netin > 0 && all_price_netin > 0 && this_day_metry.pct_change_base_pre < 0.3 &&  down_day > 3,
+            "will_up"
         },
         {
-            base_condition && this_day_metry.pct_change_base_pre < 0,
-            "abnormal"
+            all_netin && this_day_metry.pct_change_base_pre < 0.1,
+            "abnormal_all"
         },
         {
-            base_condition && (will_netin_change > 0 && price_netin_change > 0) && price_day >= -1 && price_day <= 3,
+            middle_netin && this_day_metry.pct_change_base_925 < 0.1,
+            "abnormal_middle"
+        },
+        {
+            all_will_netin > 0 && all_price_netin > 0  && (will_netin_change > 0 && price_netin_change > 0) && price_day >= -1 && price_day <= 3,
             "SPEEDUP(" + pct_base_string(this_day_buyup_pct) + "vs" + pct_base_string(this_day_buyup_pct - prev_day_buyup_pct) + ")" 
         },
         {
-            base_condition && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && this_day_metry.pct_change_base_pre > 1.0)),
+            all_netin && ((out_buy_down == 0 &&  out_sale_up > prev_out_sale_up && this_day_metry.pct_change_base_pre > 1.0)),
             "will_down"
         },
         // {
@@ -816,8 +834,12 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         //     "controlled" 
         // },
         {
-            this_day_metry.pct_change_base_925 > 0 && will_netin_change < 0,
-            "up_out" 
+            this_day_metry.pct_change_base_925 > 0 && middle_netin == false,
+            "up_out_m" 
+        },
+        {
+            this_day_metry.pct_change_base_pre > 0 && all_netin == false,
+            "up_out_all" 
         }
 
     };
