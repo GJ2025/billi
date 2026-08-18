@@ -179,9 +179,66 @@ void deal_classfy(DailyMetrics& metrics) {
     sum_price_up(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
     sum_price_down(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
     sum_price_keep(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
+}
+
+void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
+   
+    accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.big,    stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.middle, stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+
+    accumulate_group(h.small,  stats.buy_down, stats.buy_up, stats.buy_keep, 
+                              stats.sale_down, stats.sale_up, stats.sale_keep, 
+                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
 
 
-    
+    calculate_total(stats.total, stats.buy_down, stats.buy_up, stats.buy_keep, 
+                                 stats.sale_down, stats.sale_up, stats.sale_keep, 
+                                 stats.neutral_down, stats.neutral_up, stats.neutral_keep);
+}
+
+
+void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
+
+    calculate_trade_stats(out.metrics.header, stats);
+
+    stats.all_will_netin = metrics_bsn_net(out.metrics);
+    stats.all_price_netin = metrics_price_net(out.metrics);
+
+    stats.middle_will_netin = metrics_bsn_net(out.middle_metrics);
+    stats.middle_price_netin = metrics_price_net(out.middle_metrics);
+
+
+    stats.buyup_pct = pct_base(stats.buy_up.money,   stats.total.money);
+    stats.buydown_pct = pct_base(stats.buy_down.money,   stats.total.money);
+
+    stats.saleup_pct = pct_base(stats.sale_up.money,   stats.total.money);
+
+    stats.pct_change_base_925 = out.pct_change_base_925;
+    stats.pct_change_base_pre = out.pct_change_base_pre;
+
+}
+
+void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
+
+    stats.down_day = metrics_down_check(out_vector);
+    // int up_day = metrics_up_check(out_vector);
+
+    stats.price_day = metrics_price_check(out_vector);
+
+    stats.shrink_firm = metrics_shrink_firm(out_vector);
+    stats.grow_firm = metrics_grow_firm(out_vector);
+
+    stats.shrink_loose = metrics_shrink_loose(out_vector);
+    stats.grow_loose = metrics_grow_loose(out_vector);
 
 }
 

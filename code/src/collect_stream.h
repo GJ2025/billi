@@ -118,6 +118,34 @@ struct TradeCategoryStats {
     trade neutral_keep{};
 
     trade total{};
+
+    double all_will_netin = 0.0;
+    double all_price_netin = 0.0;
+    double middle_will_netin = 0.0; 
+    double middle_price_netin = 0.0;
+
+    double buyup_pct = 0.0;
+    double buydown_pct = 0.0;
+
+    double saleup_pct = 0.0;
+
+    double pct_change_base_pre = 0.0;
+    double pct_change_base_925 = 0.0;
+
+};
+
+struct VectorStats {
+    int down_day = 0;
+    int up_day = 0;
+
+    int price_day = 0;
+
+    int shrink_firm = 0;
+    int grow_firm = 0;
+
+    int shrink_loose = 0;
+    int grow_loose = 0;
+
 };
 
 
@@ -1153,6 +1181,17 @@ extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);
 extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);
+void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats);
+void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats); 
+
+int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector);
+void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats);
 
 
 #endif // COLLECT_STREAM_H
