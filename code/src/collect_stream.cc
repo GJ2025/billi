@@ -225,20 +225,31 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     stats.pct_change_base_925 = out.pct_change_base_925;
     stats.pct_change_base_pre = out.pct_change_base_pre;
 
+    //     stats.will_netin_change = (stats.all_will_netin - a1.all_will_netin) / std::abs(a1.all_will_netin);
+    // stats.price_netin_change = (a0.all_price_netin - a1.all_price_netin) / std::abs(a1.all_price_netin);
+
 }
 
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
+void metry_vector_summary(size_t size, const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
 
-    stats.down_day = metrics_down_check(out_vector);
-    // int up_day = metrics_up_check(out_vector);
-
+    stats.price_down_day = metrics_down_check(out_vector);
+    stats.price_up_day = metrics_up_check(out_vector);
     stats.price_day = metrics_price_check(out_vector);
+    stats.volume_shrink_firm = metrics_shrink_firm(out_vector);
+    stats.volume_grow_firm = metrics_grow_firm(out_vector);
+    stats.volume_shrink_loose = metrics_shrink_loose(out_vector);
+    stats.volume_grow_loose = metrics_grow_loose(out_vector);
 
-    stats.shrink_firm = metrics_shrink_firm(out_vector);
-    stats.grow_firm = metrics_grow_firm(out_vector);
 
-    stats.shrink_loose = metrics_shrink_loose(out_vector);
-    stats.grow_loose = metrics_grow_loose(out_vector);
+    metry_summary(out_vector[size - 1], stats.a0);
+    metry_summary(out_vector[size - 2], stats.a1);
+
+    stats.a0.all_will_netin_pct = (stats.a0.all_will_netin - stats.a1.all_will_netin) / std::abs(stats.a1.all_will_netin);
+    stats.a0.all_price_netin_pct = (stats.a0.all_price_netin - stats.a1.all_price_netin) / std::abs(stats.a1.all_price_netin);
+
+
+    stats.a0.middle_will_netin_pct = (stats.a0.middle_will_netin - stats.a1.middle_will_netin) / std::abs(stats.a1.middle_will_netin);
+    stats.a0.middle_price_netin_pct = (stats.a0.middle_price_netin - stats.a1.middle_price_netin) / std::abs(stats.a1.middle_price_netin);
 
 }
 

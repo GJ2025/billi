@@ -578,17 +578,6 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
-
-inline std::string get_display_file(const std::string& file) {
-    namespace fs = std::filesystem;
-    fs::path p(file);
-    
-    if (p.has_parent_path() && p.has_filename()) {
-        return p.parent_path().filename().string() + "/" + p.filename().string();
-    }
-    return file;
-}
-
 int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector) {
     if (out_vector.size() < 2) {
         return 0;
@@ -727,22 +716,14 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         return;
     }
 
-    TradeCategoryStats a0;
-    TradeCategoryStats a1;
-
     VectorStats v_stats;
 
     const auto& file = files_to_process[size - 1]; 
-    const auto& this_day_metry = out_vector[size - 1];
-    const auto& pre_day_metry = out_vector[size - 2];
 
-    metry_summary(this_day_metry, a0);
-    metry_summary(pre_day_metry, a1);
+    metry_vector_summary(size, out_vector, v_stats);
 
-    metry_vector_summary(out_vector, v_stats);
-
-    double will_netin_change = (a0.all_will_netin - a1.all_will_netin) / std::abs(a1.all_will_netin);
-    double price_netin_change = (a0.all_price_netin - a1.all_price_netin) / std::abs(a1.all_price_netin);
+    TradeCategoryStats& a0 = v_stats.a0;
+    TradeCategoryStats& a1 = v_stats.a1;
 
     bool all_netin = (a0.all_will_netin > 0 || a0.all_price_netin > 0);
     bool middle_netin = (a0.middle_will_netin > 0 || a0.middle_price_netin > 0);
@@ -750,7 +731,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     std::vector<SubCondition> sub_conditions = {
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.down_day > 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_down_day > 3,
             "will_up"
         },
         {
@@ -762,7 +743,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "abnormal_middle"
         },
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0  && (will_netin_change > 0 && price_netin_change > 0) && v_stats.price_day >= -1 && v_stats.price_day <= 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day >= -1 && v_stats.price_day <= 3,
             "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
         },
         {
@@ -797,23 +778,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     for (const auto& sc : sub_conditions) {
         if (sc.satisfied) {
-            signal_info a;
-            a.all_price_netin = a0.all_price_netin;
-            a.all_will_netin = a0.all_will_netin;
-            a.will_netin_change = will_netin_change;
-            a.price_netin_change = price_netin_change;
-            a.display_file = get_display_file(file);
-            a.out = this_day_metry;
-
-            a.trigger_reason = sc.description;
-            a.shrink_firm = v_stats.shrink_firm;
-            a.grow_firm = v_stats.grow_firm;
-
-            a.shrink_loose = v_stats.shrink_loose;
-            a.grow_loose = v_stats.grow_loose;
-            a.price_day = v_stats.price_day;
-
-            print_signal(this_day_metry, a);
+            print_signal(file, v_stats, sc);
         }
     }
 }

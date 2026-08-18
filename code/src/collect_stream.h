@@ -132,19 +132,31 @@ struct TradeCategoryStats {
     double pct_change_base_pre = 0.0;
     double pct_change_base_925 = 0.0;
 
+    double all_will_netin_pct = 0.0;
+    double all_price_netin_pct = 0.0;
+
+    double middle_will_netin_pct = 0.0;
+    double middle_price_netin_pct = 0.0; 
+
 };
 
 struct VectorStats {
-    int down_day = 0;
-    int up_day = 0;
+    int price_down_day = 0;
+    int price_up_day = 0;
 
     int price_day = 0;
 
-    int shrink_firm = 0;
-    int grow_firm = 0;
+    int volume_shrink_firm = 0;
+    int volume_grow_firm = 0;
 
-    int shrink_loose = 0;
-    int grow_loose = 0;
+    int volume_shrink_loose = 0;
+    int volume_grow_loose = 0;
+
+    TradeCategoryStats a0;
+    TradeCategoryStats a1;
+
+    // double all_will_netin_pct = 0.0;
+    // double all_netin_pct = 0.0;
 
 };
 
@@ -1015,30 +1027,33 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
 
 }
 
-inline void print_signal(const DayOutputMetrics& out, signal_info& abc) {
+inline void print_signal(const std::string& file, const VectorStats& v_stats, SubCondition sc) {
     int i = 0;
 
     const std::vector<Col>& cols = signal_table_cols;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    print_next(abc.display_file, i, cols);
-    print_next_pos(abc.all_will_netin/WAN, i, cols);
-    print_next_pos(abc.all_price_netin/WAN, i, cols);
+    print_next(get_display_file(file), i, cols);
+    print_next_pos(v_stats.a0.all_will_netin/WAN, i, cols);
+    print_next_pos(v_stats.a0.all_price_netin/WAN, i, cols);
 
 
-    print_next_pos(abc.will_netin_change, i, cols);
-    print_next_pos(abc.price_netin_change, i, cols);
+    print_next_pos(v_stats.a0.all_will_netin_pct, i, cols);
+    print_next_pos(v_stats.a0.all_price_netin_pct, i, cols);
 
-    print_next(abc.shrink_firm, i, cols);
-    print_next(abc.shrink_loose, i, cols);
-    print_next(abc.grow_firm, i, cols);
-    print_next(abc.grow_loose, i, cols);
-    print_next_pos(abc.price_day, i, cols);
 
-    print_next_pos(out.pct_change_base_925, i, cols);
-    print_next_pos(out.pct_change_base_pre, i, cols);
-    print_next(abc.trigger_reason, i, cols);
+    print_next(v_stats.volume_shrink_firm, i, cols);
+    print_next(v_stats.volume_shrink_loose, i, cols);
+    print_next(v_stats.volume_grow_firm, i, cols);
+    print_next(v_stats.volume_grow_loose, i, cols);
+    print_next_pos(v_stats.price_day, i, cols);
+
+
+    print_next_pos(v_stats.a0.pct_change_base_925, i, cols);
+    print_next_pos(v_stats.a0.pct_change_base_pre, i, cols);
+
+    print_next(sc.description, i, cols);
     
 
     std::cout << std::endl;
@@ -1191,7 +1206,7 @@ int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector);
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats);
+void metry_vector_summary(size_t size, const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats);
 
 
 #endif // COLLECT_STREAM_H

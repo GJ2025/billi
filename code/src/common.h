@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <iostream>
+#include <filesystem>
 
 #define WAN 10000
 #define BAI 100
@@ -84,6 +85,16 @@ inline std::string format_tick_times(const tickTime& t) {
         << std::setw(2) << std::setfill('0') << t.minute ;
     
     return oss.str();
+}
+
+inline std::string get_display_file(const std::string& file) {
+    namespace fs = std::filesystem;
+    fs::path p(file);
+    
+    if (p.has_parent_path() && p.has_filename()) {
+        return p.parent_path().filename().string() + "/" + p.filename().string();
+    }
+    return file;
 }
 
 
