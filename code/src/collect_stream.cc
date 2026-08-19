@@ -213,8 +213,8 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     stats.all_will_netin = metrics_bsn_net(out.metrics);
     stats.all_price_netin = metrics_price_net(out.metrics);
 
-    stats.middle_will_netin = metrics_bsn_net(out.middle_metrics);
-    stats.middle_price_netin = metrics_price_net(out.middle_metrics);
+    stats.strip_will_netin = metrics_bsn_net(out.middle_metrics);
+    stats.strip_price_netin = metrics_price_net(out.middle_metrics);
 
 
     stats.buyup_pct = pct_base(stats.buy_up.money,   stats.total.money);
@@ -224,9 +224,6 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
 
     stats.pct_change_base_925 = out.pct_change_base_925;
     stats.pct_change_base_pre = out.pct_change_base_pre;
-
-    //     stats.will_netin_change = (stats.all_will_netin - a1.all_will_netin) / std::abs(a1.all_will_netin);
-    // stats.price_netin_change = (a0.all_price_netin - a1.all_price_netin) / std::abs(a1.all_price_netin);
 
 }
 
@@ -248,8 +245,8 @@ void metry_vector_summary(size_t size, const std::vector<DayOutputMetrics>& out_
     stats.a0.all_price_netin_pct = (stats.a0.all_price_netin - stats.a1.all_price_netin) / std::abs(stats.a1.all_price_netin);
 
 
-    stats.a0.middle_will_netin_pct = (stats.a0.middle_will_netin - stats.a1.middle_will_netin) / std::abs(stats.a1.middle_will_netin);
-    stats.a0.middle_price_netin_pct = (stats.a0.middle_price_netin - stats.a1.middle_price_netin) / std::abs(stats.a1.middle_price_netin);
+    stats.a0.strip_will_netin_pct = (stats.a0.strip_will_netin - stats.a1.strip_will_netin) / std::abs(stats.a1.strip_will_netin);
+    stats.a0.strip_price_netin_pct = (stats.a0.strip_price_netin - stats.a1.strip_price_netin) / std::abs(stats.a1.strip_price_netin);
 
 }
 

@@ -121,8 +121,8 @@ struct TradeCategoryStats {
 
     double all_will_netin = 0.0;
     double all_price_netin = 0.0;
-    double middle_will_netin = 0.0; 
-    double middle_price_netin = 0.0;
+    double strip_will_netin = 0.0; 
+    double strip_price_netin = 0.0;
 
     double buyup_pct = 0.0;
     double buydown_pct = 0.0;
@@ -135,8 +135,8 @@ struct TradeCategoryStats {
     double all_will_netin_pct = 0.0;
     double all_price_netin_pct = 0.0;
 
-    double middle_will_netin_pct = 0.0;
-    double middle_price_netin_pct = 0.0; 
+    double strip_will_netin_pct = 0.0;
+    double strip_price_netin_pct = 0.0; 
 
 };
 

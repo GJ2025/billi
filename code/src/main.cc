@@ -725,7 +725,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     TradeCategoryStats& a1 = v_stats.a1;
 
     bool all_netin = (a0.all_will_netin > 0 || a0.all_price_netin > 0);
-    bool middle_netin = (a0.middle_will_netin > 0 || a0.middle_price_netin > 0);
+    bool middle_netin = (a0.strip_will_netin > 0 || a0.middle_price_netin > 0);
 
 
     std::vector<SubCondition> sub_conditions = {
@@ -745,6 +745,14 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day >= -1 && v_stats.price_day <= 3,
             "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
         },
+        {
+            a0.pct_change_base_925 > 0 && middle_netin == false,
+            "up_out_m" 
+        },
+        {
+            a0.pct_change_base_pre > 0 && all_netin == false,
+            "up_out_all" 
+        }        
         // {
         //     all_netin && ((a0.buydown_pct == 0 &&  a0.saleup_pct > a1.saleup_pct && a0.pct_change_base_pre > 1.0)),
         //     "will_down"
@@ -761,22 +769,9 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
         //     super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
         //     "controlled" 
         // },
-        {
-            a0.pct_change_base_925 > 0 && middle_netin == false,
-            "up_out_m" 
-        },
-        {
-            a0.pct_change_base_pre > 0 && all_netin == false,
-            "up_out_all" 
-        }
-
     };
 
-    // for (const auto& sc : sub_conditions) {
-    //     if (sc.satisfied) {
-    //         print_signal(file, v_stats, sc);
-    //     }
-    // }
+
     check_sub_conditions(file, v_stats, sub_conditions);
 }
 
