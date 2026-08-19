@@ -701,15 +701,14 @@ int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
 }
 
 
-
-
-std::string pct_base_string(double  pct) {
-
-    
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2) << pct;
-    return oss.str(); // 返回例如 "12.34" 的字符串
+void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
+    for (const auto& sc : sub_conditions) {
+        if (sc.satisfied) {
+            print_signal(file, v_stats, sc);
+        }
+    }
 }
+
 
 void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
     if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
@@ -746,10 +745,10 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day >= -1 && v_stats.price_day <= 3,
             "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
         },
-        {
-            all_netin && ((a0.buydown_pct == 0 &&  a0.saleup_pct > a1.saleup_pct && a0.pct_change_base_pre > 1.0)),
-            "will_down"
-        },
+        // {
+        //     all_netin && ((a0.buydown_pct == 0 &&  a0.saleup_pct > a1.saleup_pct && a0.pct_change_base_pre > 1.0)),
+        //     "will_down"
+        // },
         // {
         //     base_condition && shrink_firm >= 3,
         //     "shrink_firm3" 
@@ -773,14 +772,12 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     };
 
-
-    std::string triggered_desc;
-
-    for (const auto& sc : sub_conditions) {
-        if (sc.satisfied) {
-            print_signal(file, v_stats, sc);
-        }
-    }
+    // for (const auto& sc : sub_conditions) {
+    //     if (sc.satisfied) {
+    //         print_signal(file, v_stats, sc);
+    //     }
+    // }
+    check_sub_conditions(file, v_stats, sub_conditions);
 }
 
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {

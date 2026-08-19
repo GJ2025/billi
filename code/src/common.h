@@ -98,6 +98,13 @@ inline std::string get_display_file(const std::string& file) {
 }
 
 
+inline std::string pct_base_string(double  pct) {
+    
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << pct;
+    return oss.str(); // 返回例如 "12.34" 的字符串
+}
+
 
 
 #endif // COMMON_H
