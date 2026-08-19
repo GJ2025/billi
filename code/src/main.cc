@@ -725,7 +725,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
     TradeCategoryStats& a1 = v_stats.a1;
 
     bool all_netin = (a0.all_will_netin > 0 || a0.all_price_netin > 0);
-    bool middle_netin = (a0.strip_will_netin > 0 || a0.middle_price_netin > 0);
+    bool middle_netin = (a0.strip_will_netin > 0 || a0.strip_price_netin > 0);
 
 
     std::vector<SubCondition> sub_conditions = {
