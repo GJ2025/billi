@@ -227,7 +227,7 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
 
 }
 
-void metry_vector_summary(size_t size, const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
+void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
 
     stats.price_down_day = metrics_down_check(out_vector);
     stats.price_up_day = metrics_up_check(out_vector);
@@ -238,8 +238,8 @@ void metry_vector_summary(size_t size, const std::vector<DayOutputMetrics>& out_
     stats.volume_grow_loose = metrics_grow_loose(out_vector);
 
 
-    metry_summary(out_vector[size - 1], stats.a0);
-    metry_summary(out_vector[size - 2], stats.a1);
+    metry_summary(out_vector[0], stats.a0);
+    metry_summary(out_vector[1], stats.a1);
 
     stats.a0.all_will_netin_pct = (stats.a0.all_will_netin - stats.a1.all_will_netin) / std::abs(stats.a1.all_will_netin);
     stats.a0.all_price_netin_pct = (stats.a0.all_price_netin - stats.a1.all_price_netin) / std::abs(stats.a1.all_price_netin);
