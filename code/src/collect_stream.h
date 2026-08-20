@@ -22,6 +22,7 @@ enum class RecordScale {
 struct trade {
     double money = 0.0;
     size_t volume = 0;
+    size_t tick_count = 0;
 };
 
 
@@ -203,10 +204,10 @@ struct Col {
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
     {"Buy-Dn", 12, false}, 
-    {"Buy-Kp", 12, false},  
+    {"Buy-Kp", 12},  
     {"Buy-Up", 12},
     {"Sale-Dn", 12}, 
-    {"Sale-Kp", 12, false}, 
+    {"Sale-Kp", 12}, 
     {"Sale-Up", 12, false}, 
     {"Neutral-Dn", 12, false},
     {"Neutral-Kp", 12, false},  
@@ -216,7 +217,7 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Tot-Neutral", 12, false},    
     {"Tot-Up", 12}, 
     {"Tot-Dn", 12},
-    {"Tot-Kp", 12, false}, 
+    {"Tot-Kp", 12}, 
     {"WILL-Net", 10}, 
     {"PRICE-Net", 12},     
     {"Money", 12},  
@@ -232,7 +233,8 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"Buy-Dn", 12, true}, 
     {"Buy-Kp", 12, true},  
     {"Buy-Up", 12},
-    {"Sale-Dn", 12,true}, 
+    {"Sale-Dn", 12,true},
+    {"Sale-Dn-t", 12,true}, 
     {"Sale-Kp", 12, true}, 
     {"Sale-Up", 12,true}, 
     {"Neutral-Dn", 12, false},
@@ -615,9 +617,14 @@ inline size_t sum_volume(const deal_price& price) {
     return price.up.volume + price.down.volume + price.keep.volume; 
 }
 
+inline size_t sum_tick_count(const deal_price& price) { 
+    return price.up.tick_count + price.down.tick_count + price.keep.tick_count; 
+}
+
 inline void add_trade(trade& target, const trade& s, const trade& b, const trade& m, const trade& sm) {
     target.money += (s.money + b.money + m.money + sm.money);
     target.volume += (s.volume + b.volume + m.volume + sm.volume);
+    target.tick_count += (s.tick_count + b.tick_count + m.tick_count + sm.tick_count);
 }
 
 inline void sum_bsn_buy(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
@@ -763,26 +770,41 @@ inline void accumulate_group(const bsn_action_group& group,
     // 1. 累加 buy 相关
     b_down.money  += group.buy.down.money;  
     b_down.volume += group.buy.down.volume;
+    b_down.tick_count += group.buy.down.tick_count;
+
     b_up.money    += group.buy.up.money;    
     b_up.volume   += group.buy.up.volume;
+    b_up.tick_count   += group.buy.up.tick_count;
+
     b_keep.money  += group.buy.keep.money;  
     b_keep.volume += group.buy.keep.volume;
+    b_keep.tick_count += group.buy.keep.tick_count;
 
     // 2. 累加 sale 相关
     s_down.money  += group.sale.down.money; 
     s_down.volume += group.sale.down.volume;
+    s_down.tick_count += group.sale.down.tick_count;
+
     s_up.money    += group.sale.up.money;   
     s_up.volume   += group.sale.up.volume;
+    s_up.tick_count   += group.sale.up.tick_count;
+    
     s_keep.money  += group.sale.keep.money; 
     s_keep.volume += group.sale.keep.volume;
+    s_keep.tick_count += group.sale.keep.tick_count;
 
     // 3. 累加 neutral 相关
     n_down.money  += group.neutral.down.money; 
     n_down.volume += group.neutral.down.volume;
+    n_down.tick_count += group.neutral.down.tick_count;
+    
     n_up.money    += group.neutral.up.money;   
     n_up.volume   += group.neutral.up.volume;
+    n_up.tick_count   += group.neutral.up.tick_count;
+    
     n_keep.money  += group.neutral.keep.money; 
     n_keep.volume += group.neutral.keep.volume;
+    n_keep.tick_count += group.neutral.keep.tick_count;
 }
 
 // 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
@@ -794,18 +816,22 @@ inline void calculate_total(trade& total,
     // 先清空 total，防止脏数据
     total.money = 0.0;
     total.volume = 0;
+    total.tick_count = 0;
 
     // 1. 累加 buy 系列
     total.money  += b_down.money + b_up.money + b_keep.money;
     total.volume += b_down.volume + b_up.volume + b_keep.volume;
+    total.tick_count += b_down.tick_count + b_up.tick_count + b_keep.tick_count;
 
     // 2. 累加 sale 系列
     total.money  += s_down.money + s_up.money + s_keep.money;
     total.volume += s_down.volume + s_up.volume + s_keep.volume;
+    total.tick_count += s_down.tick_count + s_up.tick_count + s_keep.tick_count;
 
     // 3. 累加 neutral 系列
     total.money  += n_down.money + n_up.money + n_keep.money;
     total.volume += n_down.volume + n_up.volume + n_keep.volume;
+    total.tick_count += n_down.tick_count + n_up.tick_count + n_keep.tick_count;
 }
 
 inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
@@ -860,6 +886,10 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
     // 4. 修正后的 Sale 系列打印（分别对应 down, keep, up）
     print_next(pct_base(sale_down.money, total.money), i, cols);
+    print_next(pct_base((double)sale_down.tick_count, total.tick_count), i, cols);
+
+    // std::cout << sale_down.money << ":dd" << total.tick_count << std::endl;
+
     print_next(pct_base(sale_keep.money, total.money), i, cols);
     print_next(pct_base(sale_up.money,   total.money), i, cols);
 
@@ -1191,7 +1221,7 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     return;
 }
 
-void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap);
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
 void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
 void deal_classfy(DailyMetrics& out);
 void print__headers(const std::string& title, const std::vector<Col>& cols);
