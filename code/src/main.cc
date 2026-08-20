@@ -584,7 +584,6 @@ int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 从头向后遍历：对比 out_vector[i - 1] 和 out_vector[i]
     for (size_t i = 0; i+1 < out_vector.size(); ++i) {
         if (metrics_total_volume(out_vector[i].metrics) > metrics_total_volume(out_vector[i + 1].metrics)) {
             break;
@@ -601,7 +600,6 @@ int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 从头向后遍历：依次对比 out_vector[i] 和 out_vector[i + 1]
     for (size_t i = 0; i+1 < out_vector.size() ; ++i) {
         if (metrics_total_volume(out_vector[i].metrics) < metrics_total_volume(out_vector[i+1].metrics)) {
             break;
@@ -619,7 +617,6 @@ int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 从头向后遍历：用固定的 out_vector[0] 对比后续的 out_vector[i]
     for (size_t i = 1; i < out_vector.size(); ++i) {
         if (metrics_total_volume(out_vector[0].metrics) > metrics_total_volume(out_vector[i].metrics)) {
             break;
@@ -636,11 +633,7 @@ int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 反转后，基准是以原本末尾元素（现在是 out_vector[0]）为准，向后遍历对比
-    // 对比 out_vector[0] 和 out_vector[i]
     for (size_t i = 1; i < out_vector.size(); ++i) {
-        // 注意：这里保持了你原代码的逻辑：用最初的对比基准（即现在的 out_vector[0]）
-        // 去和后面的元素 out_vector[i].metrics.closing_price 比较
         if (out_vector[0].metrics.closing_price < out_vector[i].metrics.closing_price) {
              ++j;
         } else {
@@ -657,7 +650,6 @@ int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 从头向后遍历：对比 out_vector[0] 和后续的 out_vector[i]
     for (size_t i = 1; i < out_vector.size(); ++i) {
         if (out_vector[0].metrics.closing_price > out_vector[i].metrics.closing_price) {
              ++j;
@@ -692,9 +684,7 @@ int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     int j = 0;
-    // 从头向后遍历：对比 out_vector[0] 和后续的 out_vector[i]
     for (size_t i = 1; i < out_vector.size(); ++i) {
-        // 原末尾元素现在是 out_vector[0]，原 i-1 位置现在对应 out_vector[i]
         if (metrics_total_volume(out_vector[0].metrics) < metrics_total_volume(out_vector[i].metrics)) {
             break;
         }
