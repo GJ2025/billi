@@ -578,87 +578,79 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
-int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
+template <typename F>
+int generic_adjacent_check(const std::vector<DayOutputMetrics>& out_vector, F should_break) {
+    if (out_vector.size() < 2){
         return 0;
-    }
+    } 
 
     int j = 0;
-    for (size_t i = 0; i+1 < out_vector.size(); ++i) {
-        if (metrics_total_volume(out_vector[i].metrics) > metrics_total_volume(out_vector[i + 1].metrics)) {
-            break;
-        }
+    for (size_t i = 0; i + 1 < out_vector.size(); ++i) {
+        if (should_break(out_vector[i].metrics, out_vector[i + 1].metrics)){
+            break;    
+        } 
         ++j;
     }
-
     return j;
 }
 
-int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
+template <typename F>
+int generic_fixed_base_check(const std::vector<DayOutputMetrics>& out_vector, F should_break) {
+    if (out_vector.size() < 2){
         return 0;
-    }
+    } 
 
     int j = 0;
-    for (size_t i = 0; i+1 < out_vector.size() ; ++i) {
-        if (metrics_total_volume(out_vector[i].metrics) < metrics_total_volume(out_vector[i+1].metrics)) {
+    for (size_t i = 1; i < out_vector.size(); ++i) {
+        if (should_break(out_vector[0].metrics, out_vector[i].metrics)){
             break;
-        }
+        } 
         ++j;
     }
-
     return j;
+}
+
+
+int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector) {
+    auto pred = [](const auto& a, const auto& b) { 
+        return metrics_total_volume(a) > metrics_total_volume(b); 
+    };
+
+    return generic_adjacent_check(out_vector, pred);
+}
+
+
+int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector) {
+    auto pred = [](const auto& a, const auto& b) { 
+        return metrics_total_volume(a) < metrics_total_volume(b); 
+    };
+    
+    return generic_adjacent_check(out_vector, pred);
 }
 
 
 int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
-        return 0;
-    }
+    auto pred = [](const auto& base, const auto& curr) { 
+        return metrics_total_volume(base) > metrics_total_volume(curr); 
+    };
 
-    int j = 0;
-    for (size_t i = 1; i < out_vector.size(); ++i) {
-        if (metrics_total_volume(out_vector[0].metrics) > metrics_total_volume(out_vector[i].metrics)) {
-            break;
-        }
-        ++j;
-    }
-
-    return j;
+    return generic_fixed_base_check(out_vector, pred);
 }
 
 int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
-        return 0;
-    }
-
-    int j = 0;
-    for (size_t i = 1; i < out_vector.size(); ++i) {
-        if (out_vector[0].metrics.closing_price < out_vector[i].metrics.closing_price) {
-             ++j;
-        } else {
-             break;
-        }
-    }
-
-    return j;
+    auto pred = [](const auto& base, const auto& curr) { 
+        return base.closing_price >= curr.closing_price; 
+    };
+    
+    return generic_fixed_base_check(out_vector, pred);
 }
 
 int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
-        return 0;
-    }
-
-    int j = 0;
-    for (size_t i = 1; i < out_vector.size(); ++i) {
-        if (out_vector[0].metrics.closing_price > out_vector[i].metrics.closing_price) {
-             ++j;
-        } else {
-             break;
-        }
-    }
-
-    return j;
+    auto pred = [](const auto& base, const auto& curr) { 
+        return base.closing_price < curr.closing_price; 
+    };
+    
+    return generic_fixed_base_check(out_vector, pred);
 }
 
 int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
@@ -675,23 +667,14 @@ int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
     }
 
     return 0;
-
 }
 
 int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
-    if (out_vector.size() < 2) {
-        return 0;
-    }
+    auto pred = [](const auto& base, const auto& curr) { 
+        return metrics_total_volume(base) < metrics_total_volume(curr); 
+    };
 
-    int j = 0;
-    for (size_t i = 1; i < out_vector.size(); ++i) {
-        if (metrics_total_volume(out_vector[0].metrics) < metrics_total_volume(out_vector[i].metrics)) {
-            break;
-        }
-        ++j;
-    }
-
-    return j;
+    return generic_fixed_base_check(out_vector, pred);
 }
 
 
@@ -711,7 +694,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     VectorStats v_stats;
 
-    const auto& file = files_to_process[size - 1]; 
+    const auto& file = files_to_process[0]; 
 
     metry_vector_summary(out_vector, v_stats);
 
@@ -841,6 +824,7 @@ void select_stock(const std::string& data_dir_path, size_t show_limit) {
 
     
     std::reverse(out_vector.begin(), out_vector.end());
+    std::reverse(files_to_process.begin(), files_to_process.end());
 
     get_signal_from_metrics(size, files_to_process, out_vector);
 
