@@ -23,6 +23,13 @@ struct trade {
     double money = 0.0;
     size_t volume = 0;
     size_t tick_count = 0;
+
+    trade& operator+=(const trade& rhs) {
+        money += rhs.money;
+        volume += rhs.volume;
+        tick_count += rhs.tick_count;
+        return *this;
+    }
 };
 
 
@@ -763,48 +770,24 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
 }
 
 inline void accumulate_group(const bsn_action_group& group,
-                    trade& b_down, trade& b_up, trade& b_keep,
-                    trade& s_down, trade& s_up, trade& s_keep,
-                    trade& n_down, trade& n_up, trade& n_keep) 
+                             trade& b_down, trade& b_up, trade& b_keep,
+                             trade& s_down, trade& s_up, trade& s_keep,
+                             trade& n_down, trade& n_up, trade& n_keep) 
 {
-    // 1. 累加 buy 相关
-    b_down.money  += group.buy.down.money;  
-    b_down.volume += group.buy.down.volume;
-    b_down.tick_count += group.buy.down.tick_count;
+    // 1. buy
+    b_down += group.buy.down;
+    b_up   += group.buy.up;
+    b_keep += group.buy.keep;
 
-    b_up.money    += group.buy.up.money;    
-    b_up.volume   += group.buy.up.volume;
-    b_up.tick_count   += group.buy.up.tick_count;
+    // 2. sale
+    s_down += group.sale.down;
+    s_up   += group.sale.up;
+    s_keep += group.sale.keep;
 
-    b_keep.money  += group.buy.keep.money;  
-    b_keep.volume += group.buy.keep.volume;
-    b_keep.tick_count += group.buy.keep.tick_count;
-
-    // 2. 累加 sale 相关
-    s_down.money  += group.sale.down.money; 
-    s_down.volume += group.sale.down.volume;
-    s_down.tick_count += group.sale.down.tick_count;
-
-    s_up.money    += group.sale.up.money;   
-    s_up.volume   += group.sale.up.volume;
-    s_up.tick_count   += group.sale.up.tick_count;
-    
-    s_keep.money  += group.sale.keep.money; 
-    s_keep.volume += group.sale.keep.volume;
-    s_keep.tick_count += group.sale.keep.tick_count;
-
-    // 3. 累加 neutral 相关
-    n_down.money  += group.neutral.down.money; 
-    n_down.volume += group.neutral.down.volume;
-    n_down.tick_count += group.neutral.down.tick_count;
-    
-    n_up.money    += group.neutral.up.money;   
-    n_up.volume   += group.neutral.up.volume;
-    n_up.tick_count   += group.neutral.up.tick_count;
-    
-    n_keep.money  += group.neutral.keep.money; 
-    n_keep.volume += group.neutral.keep.volume;
-    n_keep.tick_count += group.neutral.keep.tick_count;
+    // 3. neutral
+    n_down += group.neutral.down;
+    n_up   += group.neutral.up;
+    n_keep += group.neutral.keep;
 }
 
 // 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
@@ -813,25 +796,21 @@ inline void calculate_total(trade& total,
                      const trade& s_down, const trade& s_up, const trade& s_keep,
                      const trade& n_down, const trade& n_up, const trade& n_keep) 
 {
-    // 先清空 total，防止脏数据
-    total.money = 0.0;
-    total.volume = 0;
-    total.tick_count = 0;
+    // 1. 先清空 total（也可以直接用 total = {}; 初始化）
+    total = {}; 
 
-    // 1. 累加 buy 系列
-    total.money  += b_down.money + b_up.money + b_keep.money;
-    total.volume += b_down.volume + b_up.volume + b_keep.volume;
-    total.tick_count += b_down.tick_count + b_up.tick_count + b_keep.tick_count;
+    // 2. 利用重载的 += 依次累加 9 个 trade 对象
+    total += b_down;
+    total += b_up;
+    total += b_keep;
 
-    // 2. 累加 sale 系列
-    total.money  += s_down.money + s_up.money + s_keep.money;
-    total.volume += s_down.volume + s_up.volume + s_keep.volume;
-    total.tick_count += s_down.tick_count + s_up.tick_count + s_keep.tick_count;
+    total += s_down;
+    total += s_up;
+    total += s_keep;
 
-    // 3. 累加 neutral 系列
-    total.money  += n_down.money + n_up.money + n_keep.money;
-    total.volume += n_down.volume + n_up.volume + n_keep.volume;
-    total.tick_count += n_down.tick_count + n_up.tick_count + n_keep.tick_count;
+    total += n_down;
+    total += n_up;
+    total += n_keep;
 }
 
 inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
