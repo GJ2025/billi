@@ -241,7 +241,7 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"Buy-Kp", 12, true},  
     {"Buy-Up", 12},
     {"Sale-Dn", 12,true},
-    {"Sale-Dn-t", 12,true}, 
+    {"Sale-Dn-t", 12,false}, 
     {"Sale-Kp", 12, true}, 
     {"Sale-Up", 12,true}, 
     {"Neutral-Dn", 12, false},
@@ -878,7 +878,7 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     print_next(pct_base(neutral_up.money,   total.money), i, cols);
 
     print_next(pct_base(neutral_keep.money+sale_keep.money+buy_keep.money,   total.money), i, cols);
-    print_next_pos(pct_base(sale_up.money+buy_up.money-buy_down.money-sale_down.money,   total.money), i, cols);
+    print_next_pos(pct_base(sale_keep.money+sale_up.money-buy_down.money-buy_keep.money,   total.money), i, cols);
     
     // 其他基础指标打印
     print_next(prev_out.metrics.closing_price, i, cols);

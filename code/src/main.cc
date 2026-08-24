@@ -642,7 +642,7 @@ int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
         return base.closing_price >= curr.closing_price; 
     };
     
-    return generic_fixed_base_check(out_vector, pred);
+    return generic_fixed_base_check(std::vector<DayOutputMetrics>(out_vector.begin() + 1, out_vector.end()), pred);
 }
 
 int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
@@ -650,7 +650,7 @@ int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
         return base.closing_price < curr.closing_price; 
     };
     
-    return generic_fixed_base_check(out_vector, pred);
+    return generic_fixed_base_check(std::vector<DayOutputMetrics>(out_vector.begin() + 1, out_vector.end()), pred);
 }
 
 int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
