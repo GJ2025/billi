@@ -797,7 +797,7 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     print_next_pos((bsn.buy.money - bsn.sale.money) / WAN, i, cols);
     // print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
 
-    print_next_pos((metrics_price_net(out.metrics.header.total)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(bsn_group)) / WAN, i, cols);
 
     print_next((bsn.buy.money + bsn.sale.money + bsn.neutral.money) / WAN, i, cols);
     print_next((bsn.buy.volume + bsn.sale.volume + bsn.neutral.volume)/ WAN, i, cols);
