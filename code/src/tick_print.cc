@@ -118,6 +118,10 @@ void print_headers(const ProgramOptions& opts) {
         print__headers("SMALL", will_price_table_cols);
     }
 
+    if (opts.show_total){
+        print__headers("TOTAL", will_price_table_cols);
+    }
+
     if (opts.show_quiet){
         print__headers("QUIET", quiet_buying_table_cols);
     }
@@ -161,6 +165,10 @@ void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const 
 
         if (opts.show_small){
             print_slim_price(out, prev_out, RecordScale::SMALL, will_price_table_cols);
+        } 
+
+        if (opts.show_total){
+            print_slim_price(out, prev_out, RecordScale::TOTAL, will_price_table_cols);
         } 
 
         if (opts.show_quiet){

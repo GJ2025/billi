@@ -16,7 +16,8 @@ enum class RecordScale {
     SUPER,       
     BIG,
     MIDDLE,
-    SMALL
+    SMALL,
+    TOTAL
 };
 
 struct trade {
@@ -30,8 +31,25 @@ struct trade {
         tick_count += rhs.tick_count;
         return *this;
     }
+
+    trade& operator-=(const trade& rhs) {
+        money -= rhs.money;
+        volume -= rhs.volume;
+        tick_count -= rhs.tick_count;
+        return *this;
+    }
 };
 
+
+inline trade operator+(trade lhs, const trade& rhs) {
+    lhs += rhs; // 利用已有的 += 运算符
+    return lhs; // 返回相加后的副本
+}
+
+inline trade operator-(trade lhs, const trade& rhs) {
+    lhs -= rhs;
+    return lhs;
+}
 
 struct deal_price {
     trade up;
@@ -50,6 +68,7 @@ struct record_stream {
     bsn_action_group big;
     bsn_action_group middle;
     bsn_action_group small;
+    bsn_action_group total;
 };
 
 struct deal_bsn {
@@ -210,18 +229,18 @@ struct Col {
 
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12, false}, 
+    {"Buy-Dn", 12}, 
     {"Buy-Kp", 12},  
     {"Buy-Up", 12},
     {"Sale-Dn", 12}, 
     {"Sale-Kp", 12}, 
-    {"Sale-Up", 12, false}, 
-    {"Neutral-Dn", 12, false},
-    {"Neutral-Kp", 12, false},  
-    {"Neutral-Up", 12, false},
+    {"Sale-Up", 12}, 
+    {"Neutral-Dn", 12},
+    {"Neutral-Kp", 12},  
+    {"Neutral-Up", 12},
     {"Tot-Buy", 12}, 
     {"Tot-Sale", 12},
-    {"Tot-Neutral", 12, false},    
+    {"Tot-Neutral", 12},    
     {"Tot-Up", 12}, 
     {"Tot-Dn", 12},
     {"Tot-Kp", 12}, 
@@ -559,13 +578,32 @@ inline double metrics_total_volume(const DailyMetrics& metrics){
 }
 
 inline double metrics_bsn_net(const DailyMetrics& metrics){
-    double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
-    return all_will_netin;
+    // double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
+
+    trade buy = metrics.header.total.buy.down + metrics.header.total.buy.keep + metrics.header.total.buy.up;
+    trade sale = metrics.header.total.sale.down + metrics.header.total.sale.keep + metrics.header.total.sale.up;
+
+    trade net_in = buy - sale;
+
+    // double all_will_netin = metrics.header.total.buy.down.money
+
+     return net_in.money;
 }
 
-inline double metrics_price_net(const DailyMetrics& metrics){
-    double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
-    return all_price_netin;
+inline double metrics_price_net(const bsn_action_group& total){
+    // double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
+    // return all_price_netin;
+
+    // trade up = metrics.header.total.sale.up + metrics.header.total.buy.up + metrics.header.total.neutral.up;
+    // trade down = metrics.header.total.sale.down + metrics.header.total.buy.down +  metrics.header.total.neutral.down;
+    
+    trade up =  total.buy.up + total.sale.up + total.sale.keep;
+    trade down = total.sale.down +total.buy.down +  total.buy.keep;
+    
+    trade net_in = up - down;
+
+
+    return net_in.money;
 } 
 
 
@@ -712,10 +750,14 @@ inline void get_slim_base(const DayOutputMetrics& out, RecordScale t,  bsn_actio
         bsn = out.metrics.deal_middle_bsn;
         price =  out.metrics.deal_middle_price;
 
-    }else{
+    }else if(t == RecordScale::SMALL){
         super = out.metrics.header.small;
         bsn = out.metrics.deal_small_bsn;
         price =  out.metrics.deal_small_price;
+    }else{
+        super = out.metrics.header.total;
+        bsn = out.metrics.deal_total_bsn;
+        price =  out.metrics.deal_total_price;
     }
 
 }
@@ -753,7 +795,9 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     print_next(price.keep.money / WAN, i, cols);
 
     print_next_pos((bsn.buy.money - bsn.sale.money) / WAN, i, cols);
-    print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
+    // print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
+
+    print_next_pos((metrics_price_net(out.metrics.header.total)) / WAN, i, cols);
 
     print_next((bsn.buy.money + bsn.sale.money + bsn.neutral.money) / WAN, i, cols);
     print_next((bsn.buy.volume + bsn.sale.volume + bsn.neutral.volume)/ WAN, i, cols);
@@ -834,7 +878,7 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     trade total{};
 
     double all_will_netin = metrics_bsn_net(out.metrics);
-    double all_price_netin = metrics_price_net(out.metrics);
+    double all_price_netin = metrics_price_net(out.metrics.header.total);
     
     const auto& h = out.metrics.header;
 
@@ -970,11 +1014,18 @@ inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& pre
     print_next(metrics.deal_small_price.down.money / WAN, i, cols);
 
 
-    print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
+    // print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
+    // print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
+    // print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
+    // print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
+    // print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
+
+
+    print_next_pos((metrics_price_net(out.metrics.header.super)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(out.metrics.header.big)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(out.metrics.header.middle)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(out.metrics.header.small)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(out.metrics.header.total)) / WAN, i, cols);
 
     print_next(metrics.deal_total_price.up.money / WAN, i, cols);
     print_next(metrics.deal_total_price.down.money / WAN, i, cols);
@@ -1094,7 +1145,7 @@ inline void print_merge(const DayOutputMetrics& out, const DayOutputMetrics& pre
 
     // 4. 净额 (带有正负号)
     print_next_pos((metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.total)) / WAN, i, cols);
 
     // 5. 成交总量相关
     print_next((metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money) / WAN, i, cols);
@@ -1119,15 +1170,15 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     double am_money_ratio = 0.0;
     double am_total_money = metrics_total_money(out.am_metrics);
     double am_will_netin = metrics_bsn_net(out.am_metrics);
-    double am_price_netin = metrics_price_net(out.am_metrics);
+    double am_price_netin = metrics_price_net(out.am_metrics.header.total);
 
     double total_money = metrics_total_money(out.metrics);
 
     double all_will_netin = metrics_bsn_net(out.metrics);
-    double all_price_netin = metrics_price_net(out.metrics);
+    double all_price_netin = metrics_price_net(out.metrics.header.total);
 
     double prev_all_will_netin = metrics_bsn_net(prev_out.metrics);
-    double prev_all_price_netin = metrics_price_net(prev_out.metrics);
+    double prev_all_price_netin = metrics_price_net(prev_out.metrics.header.total);
 
     
 

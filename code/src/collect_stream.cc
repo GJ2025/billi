@@ -81,6 +81,7 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
                              (total_money > 5 * WAN)  ? &header.middle : &header.small;
     
     collect_bs_action(*group, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
+    collect_bs_action(header.total, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
 
     stream.records.clear();
 }
@@ -98,6 +99,7 @@ void get_record_stream_point(record_stream& this_point, TickRecord r, double pre
                              (total_money > 5 * WAN)  ? &this_point.middle : &this_point.small;
     
     collect_bs_action(*group, r.bs_type, total_money, total_volume, r.price - pre_price, 1);
+    collect_bs_action(this_point.total, r.bs_type, total_money, total_volume, r.price - pre_price, 1);
 }
 
 void sub_record_stream_point(record_stream& this_point, record_stream& that_point) {
@@ -127,6 +129,7 @@ void sub_record_stream_point(record_stream& this_point, record_stream& that_poin
     sub_group(this_point.big,    that_point.big);
     sub_group(this_point.middle, that_point.middle);
     sub_group(this_point.small,  that_point.small);
+    sub_group(this_point.total,  that_point.total);
 }
 
 
@@ -223,10 +226,10 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     calculate_trade_stats(out.metrics.header, stats);
 
     stats.all_will_netin = metrics_bsn_net(out.metrics);
-    stats.all_price_netin = metrics_price_net(out.metrics);
+    stats.all_price_netin = metrics_price_net(out.metrics.header.total);
 
     stats.strip_will_netin = metrics_bsn_net(out.middle_metrics);
-    stats.strip_price_netin = metrics_price_net(out.middle_metrics);
+    stats.strip_price_netin = metrics_price_net(out.middle_metrics.header.total);
 
 
     stats.buyup_pct = pct_base(stats.buy_up.money,   stats.total.money);

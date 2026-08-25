@@ -48,6 +48,7 @@ struct ProgramOptions {
     bool show_big = false;
     bool show_middle = false;
     bool show_small = false;
+    bool show_total = false;
     bool show_merge = false;
     bool show_quiet = false;
     bool show_t= false;

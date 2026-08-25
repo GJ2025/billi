@@ -329,7 +329,7 @@ void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord
         metrics.this_1457_pirce = pre_price;
 
 
-        get_record_stream_point(metrics.start_point,  record, pre_price);
+        get_record_stream_point(metrics.end_point,  record, pre_price);
 
     }
 }
@@ -466,7 +466,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsqSmbl:MtD:")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsqSTmbl:MtD:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.lvmeng_dir_path = optarg; break;
@@ -485,6 +485,10 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             }
             case 'S': {
                 opts.show_small = true; 
+                break;
+            }
+            case 'T': {
+                opts.show_total = true; 
                 break;
             }
             case 'l': 
@@ -764,6 +768,7 @@ void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutpu
         &ProgramOptions::show_big,
         &ProgramOptions::show_middle,
         &ProgramOptions::show_small,
+        &ProgramOptions::show_total,
         &ProgramOptions::show_quiet,
     };
 
