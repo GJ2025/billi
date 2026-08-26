@@ -284,14 +284,13 @@ inline const std::vector<Col> signal_table_cols = {
     {"WNetIn", 12, true}, 
     {"PNetIn", 12, true},
     {"WNET-P", 9},
-    {"PNET-P", 9}, 
-    {"shk_f", 5},
-    {"shk_l", 5},
-    {"gro", 5}, 
-    {"gro_l", 5},
-    {"price_day", 9},
-    {"Pct925", 8},
-    {"PctCPre", 8},
+    {"PNET-P", 9},
+    {"Strip-WNetIn", 12, true}, 
+    {"Strip-PNetIn", 12, true}, 
+    {"shrink_grow", 12},
+    {"pday", 4},
+    {"Pct0", 5},
+    {"Pct1", 5},
     {"REASON", 12}
 };
 
@@ -1107,11 +1106,22 @@ inline void print_signal(const std::string& file, const VectorStats& v_stats, Su
     print_next_pos(v_stats.a0.all_will_netin_pct, i, cols);
     print_next_pos(v_stats.a0.all_price_netin_pct, i, cols);
 
+    print_next_pos(v_stats.a0.strip_will_netin/WAN, i, cols);
+    print_next_pos(v_stats.a0.strip_price_netin/WAN, i, cols);
 
-    print_next(v_stats.volume_shrink_firm, i, cols);
-    print_next(v_stats.volume_shrink_loose, i, cols);
-    print_next(v_stats.volume_grow_firm, i, cols);
-    print_next(v_stats.volume_grow_loose, i, cols);
+
+    std::string volume_shrink_or_grow = std::to_string(v_stats.volume_shrink_firm) + "-" +
+                     std::to_string(v_stats.volume_shrink_loose) + "-" +
+                     std::to_string(v_stats.volume_grow_firm) + "-" +
+                     std::to_string(v_stats.volume_grow_loose);
+
+
+    print_next(volume_shrink_or_grow, i, cols);
+    // print_next(v_stats.volume_shrink_loose, i, cols);
+    // print_next(v_stats.volume_grow_firm, i, cols);
+    // print_next(v_stats.volume_grow_loose, i, cols);
+
+
     print_next_pos(v_stats.price_day, i, cols);
 
 
