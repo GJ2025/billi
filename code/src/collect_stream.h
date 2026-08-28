@@ -168,10 +168,14 @@ struct TradeCategoryStats {
 };
 
 struct VectorStats {
-    int price_down_day = 0;
-    int price_up_day = 0;
+    int price_down_day_pre_max = 0;
+    int price_up_day_pre_max = 0;
+    int price_day_pre_max = 0;
 
-    int price_day = 0;
+
+    int price_down_day_adjacent = 0;
+    int price_up_day_adjacent = 0;
+    int price_day_adjacent = 0;
 
     int volume_shrink_firm = 0;
     int volume_grow_firm = 0;
@@ -268,8 +272,8 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"Neutral-Up", 12, false},
     {"Keep", 7},
     {"Neutral", 7},
-    {"NeuSub", 7},
-    {"Up-Dn", 12},
+    {"NeuUp", 7},
+    {"KeepBuy", 12},
     {"Pre", 5},     
     {"StartCh", 9}, 
     {"Pct_925", 9},
@@ -931,7 +935,7 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     print_next(pct_base(keep_all.money,   total.money), i, cols);
     print_next(pct_base(neutral_all.money,   total.money), i, cols);
     print_next_pos(pct_base(neutral_up.money - neutral_down.money,   total.money), i, cols);
-    print_next_pos(pct_base(sale_keep.money+sale_up.money-buy_down.money-buy_keep.money,   total.money), i, cols);
+    print_next_pos(pct_base(buy_keep.money - sale_keep.money ,   total.money), i, cols);
     
     // 其他基础指标打印
     print_next(prev_out.metrics.closing_price, i, cols);
@@ -1127,12 +1131,11 @@ inline void print_signal(const std::string& file, const VectorStats& v_stats, Su
 
 
     print_next(volume_shrink_or_grow, i, cols);
-    // print_next(v_stats.volume_shrink_loose, i, cols);
-    // print_next(v_stats.volume_grow_firm, i, cols);
-    // print_next(v_stats.volume_grow_loose, i, cols);
 
 
-    print_next_pos(v_stats.price_day, i, cols);
+
+
+    print_next_pos(v_stats.price_day_adjacent, i, cols);
 
 
     print_next_pos(v_stats.a0.pct_change_base_925, i, cols);
@@ -1284,10 +1287,18 @@ extern void sub_record_stream_point(record_stream& this_point, record_stream& th
 void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats);
 void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats); 
 
-int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_up_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_down_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_price_check_pre_max(const std::vector<DayOutputMetrics>& out_vector);
+
+int metrics_up_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_down_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
+int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector);
+
+
+
+
 int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector);

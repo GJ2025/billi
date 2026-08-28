@@ -34,10 +34,10 @@ int time_to_minutes(const tickTime& t) {
 }
 
 bool should_filter(int t_min) {
-    int m_0930 = 9 * 60 + 30;   // 570
-    int m_1130 = 11 * 60 + 30;  // 690
-    int m_1300 = 13 * 60;       // 780
-    int m_1500 = 15 * 60;       // 900
+    int m_0930 = 9 * 60 + 30;  
+    int m_1130 = 11 * 60 + 30; 
+    int m_1300 = 13 * 60;      
+    int m_1500 = 15 * 60;      
 
 
     if (t_min < m_0930){
@@ -60,6 +60,8 @@ std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t 
 
     int total_minutes = time_to_minutes(current);
 
+    result.push_back(current);
+
     while (total_minutes > 0) {
         total_minutes -= interval_minutes;
 
@@ -78,6 +80,8 @@ std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t 
             break;
         }
     }
+
+    //  result.push_back(current);
 
     return result;
 }

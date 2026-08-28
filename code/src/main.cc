@@ -641,7 +641,7 @@ int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector) {
     return generic_fixed_base_check(out_vector, pred);
 }
 
-int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
+int metrics_down_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector) {
     auto pred = [](const auto& base, const auto& curr) { 
         return base.closing_price >= curr.closing_price; 
     };
@@ -649,7 +649,7 @@ int metrics_down_check(const std::vector<DayOutputMetrics>& out_vector) {
     return generic_fixed_base_check(std::vector<DayOutputMetrics>(out_vector.begin() + 1, out_vector.end()), pred);
 }
 
-int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
+int metrics_up_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector) {
     auto pred = [](const auto& base, const auto& curr) { 
         return base.closing_price < curr.closing_price; 
     };
@@ -657,10 +657,42 @@ int metrics_up_check(const std::vector<DayOutputMetrics>& out_vector) {
     return generic_fixed_base_check(std::vector<DayOutputMetrics>(out_vector.begin() + 1, out_vector.end()), pred);
 }
 
-int metrics_price_check(const std::vector<DayOutputMetrics>& out_vector) {
+int metrics_down_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
+    auto pred = [](const auto& base, const auto& curr) { 
+        return base.closing_price >= curr.closing_price; 
+    };
+    
+    return generic_adjacent_check(out_vector, pred);
+}
 
-    int down_day = metrics_down_check(out_vector);
-    int up_day = metrics_up_check(out_vector);
+int metrics_up_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
+    auto pred = [](const auto& base, const auto& curr) { 
+        return base.closing_price < curr.closing_price; 
+    };
+    
+    return generic_adjacent_check(out_vector, pred);
+}
+
+int metrics_price_check_pre_max(const std::vector<DayOutputMetrics>& out_vector) {
+
+    int down_day = metrics_down_check_price_pre_max(out_vector);
+    int up_day = metrics_up_check_price_pre_max(out_vector);
+
+    if (down_day != 0) {
+        return 0 - down_day;
+    }
+
+    if (up_day != 0){
+        return up_day;
+    }
+
+    return 0;
+}
+
+int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
+
+    int down_day = metrics_down_check_price_adjacent(out_vector);
+    int up_day = metrics_up_check_price_adjacent(out_vector);
 
     if (down_day != 0) {
         return 0 - down_day;
@@ -711,7 +743,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
 
     std::vector<SubCondition> sub_conditions = {
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_down_day > 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_down_day_adjacent > 3,
             "will_up"
         },
         {
@@ -723,7 +755,7 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "abnormal_middle"
         },
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day >= -1 && v_stats.price_day <= 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day_adjacent >= -1 && v_stats.price_day_adjacent <= 3,
             "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
         },
         {
@@ -877,8 +909,10 @@ int main(int argc, char* argv[]) {
     }
 
     if (opts.tseq.cnt != 0){
+        
         initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);    
         handle_tseq_mode(opts, files_to_process);
+
     }if (!opts.data_dir_path.empty()){
 
         process_subdirectories(opts.data_dir_path, opts.show_limit);

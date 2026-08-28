@@ -244,9 +244,15 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
 
 void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
 
-    stats.price_down_day = metrics_down_check(out_vector);
-    stats.price_up_day = metrics_up_check(out_vector);
-    stats.price_day = metrics_price_check(out_vector);
+    stats.price_down_day_pre_max = metrics_down_check_price_pre_max(out_vector);
+    stats.price_up_day_pre_max = metrics_up_check_price_pre_max(out_vector);
+    stats.price_day_pre_max = metrics_price_check_pre_max(out_vector);
+
+    stats.price_down_day_adjacent = metrics_down_check_price_adjacent(out_vector);
+    stats.price_up_day_adjacent = metrics_up_check_price_adjacent(out_vector);
+    stats.price_day_adjacent = metrics_price_check_adjacent(out_vector);
+
+
     stats.volume_shrink_firm = metrics_shrink_firm(out_vector);
     stats.volume_grow_firm = metrics_grow_firm(out_vector);
     stats.volume_shrink_loose = metrics_shrink_loose(out_vector);
