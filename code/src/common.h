@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <span>
 
 #define WAN 10000
 #define BAI 100
@@ -106,5 +107,21 @@ inline std::string pct_base_string(double  pct) {
 }
 
 
+#include <vector>
+
+template <typename T>
+std::vector<T> get_sub_vector(const std::vector<T>& vec, size_t start_index = 1) {
+    if (start_index >= vec.size()) {
+        return {};
+    }
+    return std::vector<T>(vec.begin() + start_index, vec.end());
+}
+
+inline std::string format_with_sign(int val) {
+    if (val > 0) {
+        return "+" + std::to_string(val);
+    }
+    return std::to_string(val); // 负数或 0 保持原样
+}
 
 #endif // COMMON_H

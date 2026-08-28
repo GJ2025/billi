@@ -250,7 +250,8 @@ void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, Vecto
 
     stats.price_down_day_adjacent = metrics_down_check_price_adjacent(out_vector);
     stats.price_up_day_adjacent = metrics_up_check_price_adjacent(out_vector);
-    stats.price_day_adjacent = metrics_price_check_adjacent(out_vector);
+    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(out_vector));
+    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,1)));
 
 
     stats.volume_shrink_firm = metrics_shrink_firm(out_vector);

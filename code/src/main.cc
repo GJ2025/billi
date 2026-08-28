@@ -755,7 +755,9 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             "abnormal_middle"
         },
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0  && (a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0) && v_stats.price_day_adjacent >= -1 && v_stats.price_day_adjacent <= 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0  
+            && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 
+            && v_stats.price_day_adjacent[0] >= -1 && v_stats.price_day_adjacent[0] <= 3,
             "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
         },
         {
@@ -909,7 +911,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (opts.tseq.cnt != 0){
-        
+
         initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);    
         handle_tseq_mode(opts, files_to_process);
 

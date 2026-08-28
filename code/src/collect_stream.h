@@ -175,7 +175,8 @@ struct VectorStats {
 
     int price_down_day_adjacent = 0;
     int price_up_day_adjacent = 0;
-    int price_day_adjacent = 0;
+    // int price_day_adjacent = 0;
+    std::vector<int> price_day_adjacent;
 
     int volume_shrink_firm = 0;
     int volume_grow_firm = 0;
@@ -1133,9 +1134,13 @@ inline void print_signal(const std::string& file, const VectorStats& v_stats, Su
     print_next(volume_shrink_or_grow, i, cols);
 
 
+    std::string price_adjacent_up_days = format_with_sign(v_stats.price_day_adjacent[0]) + ":" +
+                     format_with_sign(v_stats.price_day_adjacent[1]);
 
 
-    print_next_pos(v_stats.price_day_adjacent, i, cols);
+
+
+    print_next(price_adjacent_up_days, i, cols);
 
 
     print_next_pos(v_stats.a0.pct_change_base_925, i, cols);
