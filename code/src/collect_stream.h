@@ -266,7 +266,9 @@ inline const std::vector<Col> quiet_buying_table_cols = {
     {"Neutral-Dn", 12, false},
     {"Neutral-Kp", 12, false},  
     {"Neutral-Up", 12, false},
-    {"Keep", 12},
+    {"Keep", 7},
+    {"Neutral", 7},
+    {"NeuSub", 7},
     {"Up-Dn", 12},
     {"Pre", 5},     
     {"StartCh", 9}, 
@@ -596,8 +598,8 @@ inline double metrics_price_net(const bsn_action_group& total){
     // trade up = metrics.header.total.sale.up + metrics.header.total.buy.up + metrics.header.total.neutral.up;
     // trade down = metrics.header.total.sale.down + metrics.header.total.buy.down +  metrics.header.total.neutral.down;
     
-    trade up =  total.buy.up + total.sale.up + total.sale.keep;
-    trade down = total.sale.down +total.buy.down +  total.buy.keep;
+    trade up =  total.buy.up + total.sale.up + total.neutral.up;
+    trade down = total.sale.down +total.buy.down +  total.neutral.down;
     
     trade net_in = up - down;
 
@@ -875,6 +877,8 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     trade neutral_keep{};
 
     trade total{};
+    trade neutral_all{};
+    trade keep_all{};
 
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics.header.total);
@@ -889,6 +893,10 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
     // 2. 计算出 total 中的 money 和 volume
     calculate_total(total, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+
+
+    neutral_all = neutral_down + neutral_up + neutral_keep;
+    keep_all = buy_keep + sale_keep + neutral_keep;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -920,7 +928,9 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     print_next(pct_base(neutral_keep.money, total.money), i, cols);
     print_next(pct_base(neutral_up.money,   total.money), i, cols);
 
-    print_next(pct_base(neutral_keep.money+sale_keep.money+buy_keep.money,   total.money), i, cols);
+    print_next(pct_base(keep_all.money,   total.money), i, cols);
+    print_next(pct_base(neutral_all.money,   total.money), i, cols);
+    print_next_pos(pct_base(neutral_up.money - neutral_down.money,   total.money), i, cols);
     print_next_pos(pct_base(sale_keep.money+sale_up.money-buy_down.money-buy_keep.money,   total.money), i, cols);
     
     // 其他基础指标打印
@@ -1069,11 +1079,11 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
     print_next(metrics.deal_small_price.down.money / WAN, i, cols);
 
 
-    print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
-    print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.super)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.big)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.middle)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.small)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.total)) / WAN, i, cols);
 
     print_next(metrics.deal_total_price.up.money / WAN, i, cols);
     print_next(metrics.deal_total_price.down.money / WAN, i, cols);
