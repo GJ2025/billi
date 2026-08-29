@@ -51,11 +51,20 @@ inline trade operator-(trade lhs, const trade& rhs) {
     return lhs;
 }
 
+
+
+struct deal_bsn {
+    trade buy;
+    trade sale;
+    trade neutral;
+};
+
 struct deal_price {
     trade up;
     trade down;
     trade keep;
 };
+
 
 struct bsn_action_group {
     deal_price buy;
@@ -71,11 +80,49 @@ struct record_stream {
     bsn_action_group total;
 };
 
-struct deal_bsn {
-    trade buy;
-    trade sale;
-    trade neutral;
-};
+inline void accumulate_group(const bsn_action_group& group,
+                             trade& b_down, trade& b_up, trade& b_keep,
+                             trade& s_down, trade& s_up, trade& s_keep,
+                             trade& n_down, trade& n_up, trade& n_keep) 
+{
+    // 1. buy
+    b_down += group.buy.down;
+    b_up   += group.buy.up;
+    b_keep += group.buy.keep;
+
+    // 2. sale
+    s_down += group.sale.down;
+    s_up   += group.sale.up;
+    s_keep += group.sale.keep;
+
+    // 3. neutral
+    n_down += group.neutral.down;
+    n_up   += group.neutral.up;
+    n_keep += group.neutral.keep;
+}
+
+// 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
+inline void calculate_total(trade& total,
+                     const trade& b_down, const trade& b_up, const trade& b_keep,
+                     const trade& s_down, const trade& s_up, const trade& s_keep,
+                     const trade& n_down, const trade& n_up, const trade& n_keep) 
+{
+    // 1. 先清空 total（也可以直接用 total = {}; 初始化）
+    total = {}; 
+
+    // 2. 利用重载的 += 依次累加 9 个 trade 对象
+    total += b_down;
+    total += b_up;
+    total += b_keep;
+
+    total += s_down;
+    total += s_up;
+    total += s_keep;
+
+    total += n_down;
+    total += n_up;
+    total += n_keep;
+}
 
 struct StreamRecord {
     std::vector<TickRecord> records;
@@ -736,36 +783,34 @@ inline void print__headers(const std::string& title, const std::vector<Col>& col
 }
 
 
-inline void get_slim_base(const DayOutputMetrics& out, RecordScale t,  bsn_action_group& super, deal_bsn& bsn, deal_price& price){
+inline void get_slim_base(const DayOutputMetrics& out, RecordScale type,  bsn_action_group& h, deal_bsn& bsn, deal_price& price, trade& total){
     
-    if (t == RecordScale::SUPER){
+    const bsn_action_group& t = out.metrics.header.total;
 
-        super = out.metrics.header.super;
-        bsn = out.metrics.deal_super_bsn;
-        price =  out.metrics.deal_super_price;
-
-    }else if(t == RecordScale::BIG){
-
-        super = out.metrics.header.big;
-        bsn = out.metrics.deal_big_bsn;
-        price =  out.metrics.deal_big_price;
-
-    }else if(t == RecordScale::MIDDLE){
-
-        super = out.metrics.header.middle;
-        bsn = out.metrics.deal_middle_bsn;
-        price =  out.metrics.deal_middle_price;
-
-    }else if(t == RecordScale::SMALL){
-        super = out.metrics.header.small;
-        bsn = out.metrics.deal_small_bsn;
-        price =  out.metrics.deal_small_price;
+    if (type == RecordScale::SUPER){
+        h = out.metrics.header.super;
+    }else if(type == RecordScale::BIG){
+        h = out.metrics.header.big;
+    }else if(type == RecordScale::MIDDLE){
+        h = out.metrics.header.middle;
+    }else if(type == RecordScale::SMALL){
+        h = out.metrics.header.small;
     }else{
-        super = out.metrics.header.total;
-        bsn = out.metrics.deal_total_bsn;
-        price =  out.metrics.deal_total_price;
+        h = out.metrics.header.total;
     }
 
+    bsn.buy = h.buy.down + h.buy.keep + h.buy.up;
+    bsn.neutral = h.neutral.down + h.neutral.keep + h.neutral.up;
+    bsn.sale = h.sale.down + h.sale.keep + h.sale.up;
+
+    price.down = h.buy.down + h.sale.down + h.neutral.down;
+    price.up = h.buy.up + h.sale.up + h.neutral.up;
+    price.keep = h.buy.keep + h.sale.keep + h.neutral.keep;
+
+    calculate_total(total, t.buy.down, t.buy.up, t.buy.keep, t.sale.down, t.sale.up, t.sale.keep, t.neutral.down, t.neutral.up, t.neutral.keep);
+
+
+    return;
 }
 
 inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics& prev_out, RecordScale t, const std::vector<Col>& cols) {
@@ -774,8 +819,9 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     bsn_action_group bsn_group ;
     deal_bsn bsn; 
     deal_price price ;
+    trade total;
 
-    get_slim_base(out, t, bsn_group, bsn, price);
+    get_slim_base(out, t, bsn_group, bsn, price, total);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -819,49 +865,7 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     std::cout << std::endl;
 }
 
-inline void accumulate_group(const bsn_action_group& group,
-                             trade& b_down, trade& b_up, trade& b_keep,
-                             trade& s_down, trade& s_up, trade& s_keep,
-                             trade& n_down, trade& n_up, trade& n_keep) 
-{
-    // 1. buy
-    b_down += group.buy.down;
-    b_up   += group.buy.up;
-    b_keep += group.buy.keep;
 
-    // 2. sale
-    s_down += group.sale.down;
-    s_up   += group.sale.up;
-    s_keep += group.sale.keep;
-
-    // 3. neutral
-    n_down += group.neutral.down;
-    n_up   += group.neutral.up;
-    n_keep += group.neutral.keep;
-}
-
-// 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
-inline void calculate_total(trade& total,
-                     const trade& b_down, const trade& b_up, const trade& b_keep,
-                     const trade& s_down, const trade& s_up, const trade& s_keep,
-                     const trade& n_down, const trade& n_up, const trade& n_keep) 
-{
-    // 1. 先清空 total（也可以直接用 total = {}; 初始化）
-    total = {}; 
-
-    // 2. 利用重载的 += 依次累加 9 个 trade 对象
-    total += b_down;
-    total += b_up;
-    total += b_keep;
-
-    total += s_down;
-    total += s_up;
-    total += s_keep;
-
-    total += n_down;
-    total += n_up;
-    total += n_keep;
-}
 
 inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     int i = 0;
@@ -890,13 +894,10 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     
     const auto& h = out.metrics.header;
 
-    // 1. 调用累加辅助函数，把 4 个档位的数据加到 9 个变量中
-    accumulate_group(h.super,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
-    accumulate_group(h.big,    buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
-    accumulate_group(h.middle, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
-    accumulate_group(h.small,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
 
-    // 2. 计算出 total 中的 money 和 volume
+    accumulate_group(h.total,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+
+
     calculate_total(total, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
 
 
