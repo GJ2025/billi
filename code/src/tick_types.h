@@ -49,8 +49,11 @@ struct ProgramOptions {
     bool show_middle = false;
     bool show_small = false;
     bool show_total = false;
-    bool show_merge = false;
-    bool show_quiet = false;
+    bool show_super_ratio = false;
+    bool show_big_ratio = false;
+    bool show_middle_ratio = false;
+    bool show_small_ratio = false;
+    bool show_total_ratio = false;
     bool show_t= false;
     SeqTime tseq;
     size_t show_limit = 10000;

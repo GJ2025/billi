@@ -466,7 +466,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsqSTmbl:MtD:")) != -1) {
+    while ((opt = getopt(argc, argv, "hd:parwsqBSmnTRbl:MtD:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.lvmeng_dir_path = optarg; break;
@@ -475,10 +475,13 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 'a': opts.show_all = true; break;
             case 'w': opts.show_will = true; break;
             case 'p': opts.show_price = true; break;
-            case 'm': opts.show_merge = true; break;
+            case 'R': opts.show_super_ratio = true; break;
+            case 'B': opts.show_big_ratio = true; break;
+            case 'm': opts.show_middle_ratio = true; break;
+            case 'n': opts.show_small_ratio = true; break;
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
-            case 'q': opts.show_quiet = true; break;
+            case 'q': opts.show_total_ratio = true; break;
             case 'M': {
                 opts.show_middle = true; 
                 break;
@@ -795,15 +798,18 @@ void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutpu
     bool ProgramOptions::* const flags[] = {
         &ProgramOptions::show_head,
         &ProgramOptions::show_all,
-        &ProgramOptions::show_merge,
         &ProgramOptions::show_will,
         &ProgramOptions::show_price,
         &ProgramOptions::show_super,
+        &ProgramOptions::show_super_ratio,
         &ProgramOptions::show_big,
+        &ProgramOptions::show_big_ratio,
         &ProgramOptions::show_middle,
+        &ProgramOptions::show_middle_ratio,
         &ProgramOptions::show_small,
+        &ProgramOptions::show_small_ratio,
         &ProgramOptions::show_total,
-        &ProgramOptions::show_quiet,
+        &ProgramOptions::show_total_ratio,
     };
 
     for (auto flag_ptr : flags) {

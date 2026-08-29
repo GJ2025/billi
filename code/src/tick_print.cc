@@ -90,10 +90,6 @@ void print_headers(const ProgramOptions& opts) {
         print__headers("ALL", data_all_table_cols);
     } 
 
-    if (opts.show_merge){
-        print__headers("MERGE ", merge_table_cols) ;
-    }   
-
     if (opts.show_will){
         print__headers("WILL", will_table_cols);
     }
@@ -105,25 +101,41 @@ void print_headers(const ProgramOptions& opts) {
     if (opts.show_super){
         print__headers("SUPER", will_price_table_cols);
     }
+
+    if (opts.show_super_ratio){
+        print__headers("SUPER_RATIO ", will_price_ratio_table_cols) ;
+    }   
     
     if (opts.show_big){
         print__headers("BIG", will_price_table_cols);
     }
     
+    if (opts.show_big_ratio){
+        print__headers("BIG_RATIO ", will_price_ratio_table_cols) ;
+    }  
+
     if (opts.show_middle){
         print__headers("MIDDLE", will_price_table_cols);
     }
     
+    if (opts.show_middle_ratio){
+        print__headers("MIDDLE_RATIO ", will_price_ratio_table_cols) ;
+    }
+
     if (opts.show_small){
         print__headers("SMALL", will_price_table_cols);
+    }
+
+    if (opts.show_small_ratio){
+        print__headers("SMALL_RATIO ", will_price_ratio_table_cols) ;
     }
 
     if (opts.show_total){
         print__headers("TOTAL", will_price_table_cols);
     }
 
-    if (opts.show_quiet){
-        print__headers("QUIET", quiet_buying_table_cols);
+    if (opts.show_total_ratio){
+        print__headers("TOTAL_RATIO", will_price_ratio_table_cols);
     }
 }
 
@@ -139,10 +151,6 @@ void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const 
             print_all_data(out, prev_out, divergence);
         }
 
-        if (opts.show_merge){
-            print_merge(out, prev_out, out.metrics, merge_table_cols);
-        } 
-
         if (opts.show_will){
             print_will(out, prev_out, out.metrics, will_table_cols);
         }  
@@ -155,23 +163,40 @@ void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const 
             print_slim_price(out, prev_out, RecordScale::SUPER, will_price_table_cols);
         }
 
+        if (opts.show_super_ratio){
+            print_slim_price_ratio(out, prev_out, RecordScale::SUPER, will_price_ratio_table_cols);
+        } 
+
         if (opts.show_big){
             print_slim_price(out, prev_out, RecordScale::BIG, will_price_table_cols);
+        }
+        
+        if (opts.show_big_ratio){
+            print_slim_price_ratio(out, prev_out, RecordScale::BIG, will_price_ratio_table_cols);
         } 
 
         if (opts.show_middle){
             print_slim_price(out, prev_out, RecordScale::MIDDLE, will_price_table_cols);
+        }
+        
+        if (opts.show_middle_ratio){
+            print_slim_price_ratio(out, prev_out, RecordScale::MIDDLE, will_price_ratio_table_cols);
         } 
 
         if (opts.show_small){
             print_slim_price(out, prev_out, RecordScale::SMALL, will_price_table_cols);
+        }
+        
+        if (opts.show_small_ratio){
+            print_slim_price_ratio(out, prev_out, RecordScale::SMALL, will_price_ratio_table_cols);
         } 
 
         if (opts.show_total){
             print_slim_price(out, prev_out, RecordScale::TOTAL, will_price_table_cols);
         } 
 
-        if (opts.show_quiet){
-            print_quiet_buying_price(out, prev_out);
+        if (opts.show_total_ratio){
+            print_slim_price_ratio(out, prev_out, RecordScale::TOTAL, will_price_ratio_table_cols);
+            // print_quiet_buying_price(out, prev_out);
         } 
 }
