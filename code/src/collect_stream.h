@@ -51,8 +51,6 @@ inline trade operator-(trade lhs, const trade& rhs) {
     return lhs;
 }
 
-
-
 struct deal_bsn {
     trade buy;
     trade sale;
@@ -63,6 +61,13 @@ struct deal_price {
     trade up;
     trade down;
     trade keep;
+};
+
+struct deal_summary {
+    deal_bsn bsn; 
+    deal_price price ;
+    trade total;
+    trade type_total;
 };
 
 
@@ -299,10 +304,11 @@ inline const std::vector<Col> will_price_table_cols = {
     {"WILL-Net", 10}, 
     {"PRICE-Net", 12},     
     {"Money", 12},  
-    {"Volume", 12},
+    {"Volume", 5},
     {"Pre", 5},     
     {"StartCh", 9}, 
-    {"Pct_925", 9},   
+    {"Pct_925", 9},
+    {"Pct_Pre", 9},   
     {"Close", 5}
 };
 
@@ -783,7 +789,7 @@ inline void print__headers(const std::string& title, const std::vector<Col>& col
 }
 
 
-inline void get_slim_base(const DayOutputMetrics& out, RecordScale type,  bsn_action_group& h, deal_bsn& bsn, deal_price& price, trade& total){
+inline void get_slim_base(const DayOutputMetrics& out, RecordScale type,  bsn_action_group& h, deal_summary &deal_summary){
     
     const bsn_action_group& t = out.metrics.header.total;
 
@@ -799,15 +805,16 @@ inline void get_slim_base(const DayOutputMetrics& out, RecordScale type,  bsn_ac
         h = out.metrics.header.total;
     }
 
-    bsn.buy = h.buy.down + h.buy.keep + h.buy.up;
-    bsn.neutral = h.neutral.down + h.neutral.keep + h.neutral.up;
-    bsn.sale = h.sale.down + h.sale.keep + h.sale.up;
+    deal_summary.bsn.buy = h.buy.down + h.buy.keep + h.buy.up;
+    deal_summary.bsn.neutral = h.neutral.down + h.neutral.keep + h.neutral.up;
+    deal_summary.bsn.sale = h.sale.down + h.sale.keep + h.sale.up;
 
-    price.down = h.buy.down + h.sale.down + h.neutral.down;
-    price.up = h.buy.up + h.sale.up + h.neutral.up;
-    price.keep = h.buy.keep + h.sale.keep + h.neutral.keep;
+    deal_summary.price.down = h.buy.down + h.sale.down + h.neutral.down;
+    deal_summary.price.up = h.buy.up + h.sale.up + h.neutral.up;
+    deal_summary.price.keep = h.buy.keep + h.sale.keep + h.neutral.keep;
 
-    calculate_total(total, t.buy.down, t.buy.up, t.buy.keep, t.sale.down, t.sale.up, t.sale.keep, t.neutral.down, t.neutral.up, t.neutral.keep);
+    calculate_total(deal_summary.total, t.buy.down, t.buy.up, t.buy.keep, t.sale.down, t.sale.up, t.sale.keep, t.neutral.down, t.neutral.up, t.neutral.keep);
+    calculate_total(deal_summary.type_total, h.buy.down, h.buy.up, h.buy.keep, h.sale.down, h.sale.up, h.sale.keep, h.neutral.down, h.neutral.up, h.neutral.keep);
 
 
     return;
@@ -817,11 +824,9 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
 
     int i = 0;
     bsn_action_group bsn_group ;
-    deal_bsn bsn; 
-    deal_price price ;
-    trade total;
+    deal_summary deal_summary;
 
-    get_slim_base(out, t, bsn_group, bsn, price, total);
+    get_slim_base(out, t, bsn_group, deal_summary);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
@@ -838,26 +843,27 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     print_next(bsn_group.neutral.keep.money / WAN, i, cols);
     print_next(bsn_group.neutral.up.money / WAN, i, cols);
 
-    print_next(bsn.buy.money / WAN, i, cols);
-    print_next(bsn.sale.money / WAN, i, cols);
-    print_next(bsn.neutral.money / WAN, i, cols);
+    print_next(deal_summary.bsn.buy.money / WAN, i, cols);
+    print_next(deal_summary.bsn.sale.money / WAN, i, cols);
+    print_next(deal_summary.bsn.neutral.money / WAN, i, cols);
 
-    print_next(price.up.money / WAN, i, cols);
-    print_next(price.down.money / WAN, i, cols);
-    print_next(price.keep.money / WAN, i, cols);
+    print_next(deal_summary.price.up.money / WAN, i, cols);
+    print_next(deal_summary.price.down.money / WAN, i, cols);
+    print_next(deal_summary.price.keep.money / WAN, i, cols);
 
-    print_next_pos((bsn.buy.money - bsn.sale.money) / WAN, i, cols);
+    print_next_pos((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
     // print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
 
     print_next_pos((metrics_price_net(bsn_group)) / WAN, i, cols);
 
-    print_next((bsn.buy.money + bsn.sale.money + bsn.neutral.money) / WAN, i, cols);
-    print_next((bsn.buy.volume + bsn.sale.volume + bsn.neutral.volume)/ WAN, i, cols);
+    print_next(deal_summary.type_total.money / WAN, i, cols);
+    print_next(deal_summary.type_total.volume/ WAN, i, cols);
     
     print_next(prev_out.metrics.closing_price, i, cols);
 
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change_base_925, i, cols);
+    print_next_pos(out.pct_change_base_pre, i, cols);
 
     // print_next(out.pm_closing_price, i, cols);
     print_next(out.metrics.closing_price, i, cols);
