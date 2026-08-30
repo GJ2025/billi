@@ -693,31 +693,32 @@ inline void get_daily_distributions(const DailyMetrics& metrics, DailyDistributi
 
 inline double metrics_total_money(const DailyMetrics& metrics){
 
-    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+    bsn_action_group dump;
+    deal_summary deal_summary_total;
 
-    double total_money = deal_total_bsn.buy.money + deal_total_bsn.neutral.money + deal_total_bsn.sale.money;
+    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
 
-    return total_money;
+    return deal_summary_total.total.money;
 }
 
 inline double metrics_total_volume(const DailyMetrics& metrics){
 
-    const deal_bsn& deal_total_bsn = metrics.deal_total_bsn;
+    bsn_action_group dump;
+    deal_summary deal_summary_total;
 
-    return deal_total_bsn.buy.volume + deal_total_bsn.neutral.volume + deal_total_bsn.sale.volume;
+    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+    return deal_summary_total.total.volume;
 }
 
 inline double metrics_bsn_net(const DailyMetrics& metrics){
-    // double all_will_netin = metrics.deal_total_bsn.buy.money - metrics.deal_total_bsn.sale.money;
 
     trade buy = metrics.header.total.buy.down + metrics.header.total.buy.keep + metrics.header.total.buy.up;
     trade sale = metrics.header.total.sale.down + metrics.header.total.sale.keep + metrics.header.total.sale.up;
 
     trade net_in = buy - sale;
 
-    // double all_will_netin = metrics.header.total.buy.down.money
-
-     return net_in.money;
+    return net_in.money;
 }
 
 inline double metrics_price_net(const bsn_action_group& total){
@@ -1116,26 +1117,40 @@ inline void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev
 
 inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
-    double all_money = metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money;
+    
 
+    bsn_action_group dump;
+    deal_summary deal_summary_super;
+    deal_summary deal_summary_big;
+    deal_summary deal_summary_middle;
+    deal_summary deal_summary_small;
+    deal_summary deal_summary_total;
+
+    get_slim_base(metrics, RecordScale::SUPER, dump, deal_summary_super);
+    get_slim_base(metrics, RecordScale::BIG, dump, deal_summary_big);
+    get_slim_base(metrics, RecordScale::MIDDLE, dump, deal_summary_middle);
+    get_slim_base(metrics, RecordScale::SMALL, dump, deal_summary_small);
+    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+    double all_money = deal_summary_total.total.money;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
     print_next(out.date_str, i, cols);
 
-    print_next(metrics.deal_super_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_super_price.down.money / WAN, i, cols);
+    print_next(deal_summary_super.price.up.money / WAN, i, cols);
+    print_next(deal_summary_super.price.down.money / WAN, i, cols);
     
 
-    print_next(metrics.deal_big_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_big_price.down.money / WAN, i, cols);
+    print_next(deal_summary_big.price.up.money / WAN, i, cols);
+    print_next(deal_summary_big.price.down.money / WAN, i, cols);
 
 
-    print_next(metrics.deal_middle_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_middle_price.down.money / WAN, i, cols);
+    print_next(deal_summary_middle.price.up.money / WAN, i, cols);
+    print_next(deal_summary_middle.price.down.money / WAN, i, cols);
     
 
-    print_next(metrics.deal_small_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_small_price.down.money / WAN, i, cols);
+    print_next(deal_summary_small.price.up.money / WAN, i, cols);
+    print_next(deal_summary_small.price.down.money / WAN, i, cols);
 
 
     // print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
@@ -1151,14 +1166,14 @@ inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& pre
     print_next_pos((metrics_price_net(out.metrics.header.small)) / WAN, i, cols);
     print_next_pos((metrics_price_net(out.metrics.header.total)) / WAN, i, cols);
 
-    print_next(metrics.deal_total_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.down.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.keep.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.keep.money / all_money, i, cols);
+    print_next(deal_summary_total.price.up.money / WAN, i, cols);
+    print_next(deal_summary_total.price.down.money / WAN, i, cols);
+    print_next(deal_summary_total.price.keep.money / WAN, i, cols);
+    print_next(deal_summary_total.price.keep.money / all_money, i, cols);
 
 
     print_next(all_money/WAN , i, cols);
-    print_next((out.metrics.deal_total_price.down.volume + out.metrics.deal_total_price.up.volume + out.metrics.deal_total_price.keep.volume)/WAN, i, cols);
+    print_next((deal_summary_total.total.volume)/WAN, i, cols);
     print_next(prev_out.metrics.closing_price, i, cols);
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change_base_925, i, cols);
@@ -1173,25 +1188,39 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
     const std::vector<Col>& cols = tseq_price_table_cols;
     std::string tshow = format_tick_times(t);
 
-    double all_money = metrics.deal_total_price.down.money + metrics.deal_total_price.up.money + metrics.deal_total_price.keep.money;
+    bsn_action_group dump;
+    deal_summary deal_summary_super;
+    deal_summary deal_summary_big;
+    deal_summary deal_summary_middle;
+    deal_summary deal_summary_small;
+    deal_summary deal_summary_total;
+
+    get_slim_base(metrics, RecordScale::SUPER, dump, deal_summary_super);
+    get_slim_base(metrics, RecordScale::BIG, dump, deal_summary_big);
+    get_slim_base(metrics, RecordScale::MIDDLE, dump, deal_summary_middle);
+    get_slim_base(metrics, RecordScale::SMALL, dump, deal_summary_small);
+    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+
+    double all_money = deal_summary_total.total.money;
 
 
     print_next(tshow, i, cols);
 
-    print_next(metrics.deal_super_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_super_price.down.money / WAN, i, cols);
+    print_next(deal_summary_super.price.up.money / WAN, i, cols);
+    print_next(deal_summary_super.price.down.money / WAN, i, cols);
     
 
-    print_next(metrics.deal_big_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_big_price.down.money / WAN, i, cols);
+    print_next(deal_summary_big.price.up.money / WAN, i, cols);
+    print_next(deal_summary_big.price.down.money / WAN, i, cols);
 
 
-    print_next(metrics.deal_middle_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_middle_price.down.money / WAN, i, cols);
+    print_next(deal_summary_middle.price.up.money / WAN, i, cols);
+    print_next(deal_summary_middle.price.down.money / WAN, i, cols);
     
 
-    print_next(metrics.deal_small_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_small_price.down.money / WAN, i, cols);
+    print_next(deal_summary_small.price.up.money / WAN, i, cols);
+    print_next(deal_summary_small.price.down.money / WAN, i, cols);
 
 
     print_next_pos((metrics_price_net(metrics.header.super)) / WAN, i, cols);
@@ -1200,14 +1229,14 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
     print_next_pos((metrics_price_net(metrics.header.small)) / WAN, i, cols);
     print_next_pos((metrics_price_net(metrics.header.total)) / WAN, i, cols);
 
-    print_next(metrics.deal_total_price.up.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.down.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.keep.money / WAN, i, cols);
-    print_next(metrics.deal_total_price.keep.money / all_money, i, cols);
+    print_next(deal_summary_total.price.up.money / WAN, i, cols);
+    print_next(deal_summary_total.price.down.money / WAN, i, cols);
+    print_next(deal_summary_total.price.keep.money / WAN, i, cols);
+    print_next(deal_summary_total.price.keep.money / all_money, i, cols);
 
 
     print_next(all_money/WAN , i, cols);
-    print_next((metrics.deal_total_price.down.volume + metrics.deal_total_price.up.volume + metrics.deal_total_price.keep.volume)/WAN, i, cols);
+    print_next((deal_summary_total.total.volume)/WAN, i, cols);
     // print_next(prev_out.metrics.closing_price, i, cols);
     // print_next_pos(out.start_change, i, cols);
     // print_next_pos(out.pct_change, i, cols);
@@ -1357,7 +1386,6 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
 
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
 void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
-void deal_classfy(DailyMetrics& out);
 void print__headers(const std::string& title, const std::vector<Col>& cols);
 
 extern void update_metrics_header(record_stream& header, StreamRecord& stream);

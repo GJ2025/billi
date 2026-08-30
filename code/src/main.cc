@@ -66,8 +66,12 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     (void)prev_out;
 
-    double will_net_money = out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
-    double price_net_money = out.metrics.deal_total_price.up.money - out.metrics.deal_total_price.down.money;
+    bsn_action_group dump;
+    deal_summary deal_summary_total;
+    get_slim_base(out.metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+    double will_net_money = deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
+    double price_net_money = deal_summary_total.price.up.money - deal_summary_total.price.down.money;
 
     // double avg_change = out.metrics.avg_price - prev_out.metrics.avg_price;
     #define PRICE_THRESHOLD 0.05
@@ -393,8 +397,13 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, Day
 
 void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
 
+        bsn_action_group dump;
+        deal_summary deal_summary_total;
+        get_slim_base(out.metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+
         out.historical_total_inflow = prev_out.historical_total_inflow + 
-                                        out.metrics.deal_total_bsn.buy.money - out.metrics.deal_total_bsn.sale.money;
+                                        deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
         if (is_filled_tick(prev_out)) {
             out.pct_change_base_pre =pct(out.metrics.closing_price, prev_out.metrics.closing_price);
             out.am_pct_change = pct(out.am_metrics.closing_price, prev_out.metrics.closing_price);
@@ -413,22 +422,30 @@ void make_test(DayOutputMetrics& out){
     bool should_exist = false;
     const std::vector<Col>& cols = test_table_cols;
 
-    if (out.metrics.am_bsn.buy.money != out.am_metrics.deal_total_bsn.buy.money){
+    bsn_action_group dump;
+    deal_summary deal_summary_total_am;
+    get_slim_base(out.am_metrics, RecordScale::TOTAL, dump, deal_summary_total_am);
+
+    deal_summary deal_summary_total;
+    get_slim_base(out.am_metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+
+    if (out.metrics.am_bsn.buy.money != deal_summary_total_am.bsn.buy.money){
         print__headers("TEST", test_table_cols);
         print_next(out.date_str, i, cols);
         print_next(out.metrics.ticks_count, i, cols);
 
         print_next(out.metrics.am_bsn.buy.money/WAN, i, cols);
-        print_next(out.am_metrics.deal_total_bsn.buy.money/WAN, i, cols);
+        print_next(deal_summary_total_am.bsn.buy.money/WAN, i, cols);
 
         print_next(out.metrics.am_bsn.sale.money/WAN, i, cols);
-        print_next(out.am_metrics.deal_total_bsn.sale.money/WAN, i, cols);
+        print_next(deal_summary_total_am.bsn.buy.money/WAN, i, cols);
 
         print_next(out.metrics.pm_bsn.buy.money/WAN, i, cols);
-        print_next((out.metrics.deal_total_bsn.buy.money - out.am_metrics.deal_total_bsn.buy.money)/WAN, i, cols);
+        print_next((deal_summary_total.bsn.buy.money - deal_summary_total_am.bsn.buy.money)/WAN, i, cols);
 
         print_next(out.metrics.pm_bsn.sale.money/WAN, i, cols);
-        print_next((out.metrics.deal_total_bsn.sale.money - out.am_metrics.deal_total_bsn.sale.money)/WAN, i, cols);
+        print_next((deal_summary_total.bsn.buy.money - deal_summary_total_am.bsn.buy.money)/WAN, i, cols);
         std::cout << std::endl;
         
         should_exist = true;
@@ -548,11 +565,6 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
 
         sub_record_stream_point(out.middle_metrics.header, out.middle_metrics.start_point);
         sub_record_stream_point(out.middle_metrics.header, out.middle_metrics.end_point);
-
-        deal_classfy(out.metrics);
-        deal_classfy(out.am_metrics);
-        deal_classfy(out.middle_metrics);
-
 
         process_out(out, prev_out);
 
@@ -842,7 +854,6 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
         auto& m = all_metrics[i];
         const auto& t = tick_times_seq[i]; 
         
-        deal_classfy(m);
         print_tseq_price(t, m);
     }
 

@@ -146,56 +146,6 @@ void update_stream(StreamRecord& stream, const TickRecord& record, const TickRec
     return;
 }
 
-void deal_classfy(DailyMetrics& metrics) {
-
-    auto fill_bsn = [&](deal_bsn& dest, const bsn_action_group& src) {
-        dest.buy.money = sum_money(src.buy);
-        dest.sale.money = sum_money(src.sale);
-        dest.neutral.money = sum_money(src.neutral);
-
-        dest.buy.volume = sum_volume(src.buy);
-        dest.sale.volume = sum_volume(src.sale);
-        dest.neutral.volume = sum_volume(src.neutral);
-
-        dest.buy.tick_count = sum_tick_count(src.buy);
-        dest.sale.tick_count = sum_tick_count(src.sale);
-        dest.neutral.tick_count = sum_tick_count(src.neutral);
-    };
-
-    fill_bsn(metrics.deal_super_bsn, metrics.header.super);
-    fill_bsn(metrics.deal_big_bsn, metrics.header.big);
-    fill_bsn(metrics.deal_middle_bsn, metrics.header.middle);
-    fill_bsn(metrics.deal_small_bsn, metrics.header.small);
-
-    sum_bsn_buy(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
-    sum_bsn_sale(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
-    sum_bsn_neutral(metrics.deal_super_bsn, metrics.deal_big_bsn, metrics.deal_middle_bsn, metrics.deal_small_bsn, metrics.deal_total_bsn);
-
-  
-    auto fill_price = [](deal_price& dest, const bsn_action_group& src) {
-        dest.up.money   = src.buy.up.money   + src.sale.up.money   + src.neutral.up.money;
-        dest.down.money = src.buy.down.money + src.sale.down.money + src.neutral.down.money;
-        dest.keep.money = src.buy.keep.money + src.sale.keep.money + src.neutral.keep.money;
-
-        dest.up.volume   = src.buy.up.volume   + src.sale.up.volume   + src.neutral.up.volume;
-        dest.down.volume = src.buy.down.volume + src.sale.down.volume + src.neutral.down.volume;
-        dest.keep.volume = src.buy.keep.volume + src.sale.keep.volume + src.neutral.keep.volume;
-
-        dest.up.tick_count   = src.buy.up.tick_count   + src.sale.up.tick_count   + src.neutral.up.tick_count;
-        dest.down.tick_count = src.buy.down.tick_count + src.sale.down.tick_count + src.neutral.down.tick_count;
-        dest.keep.tick_count = src.buy.keep.tick_count + src.sale.keep.tick_count + src.neutral.keep.tick_count;
-    };
-
-    fill_price(metrics.deal_super_price,  metrics.header.super);
-    fill_price(metrics.deal_big_price,    metrics.header.big);
-    fill_price(metrics.deal_middle_price, metrics.header.middle);
-    fill_price(metrics.deal_small_price,  metrics.header.small);
-
-    sum_price_up(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
-    sum_price_down(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
-    sum_price_keep(metrics.deal_super_price, metrics.deal_big_price, metrics.deal_middle_price, metrics.deal_small_price, metrics.deal_total_price);
-}
-
 void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
    
     accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
