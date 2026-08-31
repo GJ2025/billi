@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "common.h"
 #include "tick_types.h"
+#include "show.h"
 
 enum class RecordType {
     FIRST,       
@@ -42,8 +43,8 @@ struct trade {
 
 
 inline trade operator+(trade lhs, const trade& rhs) {
-    lhs += rhs; // 利用已有的 += 运算符
-    return lhs; // 返回相加后的副本
+    lhs += rhs; 
+    return lhs; 
 }
 
 inline trade operator-(trade lhs, const trade& rhs) {
@@ -106,16 +107,13 @@ inline void accumulate_group(const bsn_action_group& group,
     n_keep += group.neutral.keep;
 }
 
-// 辅助函数：将所有的买、卖、平盘以及各种价格变动（down, up, keep）统一汇总到 total 中
 inline void calculate_total(trade& total,
                      const trade& b_down, const trade& b_up, const trade& b_keep,
                      const trade& s_down, const trade& s_up, const trade& s_keep,
                      const trade& n_down, const trade& n_up, const trade& n_keep) 
 {
-    // 1. 先清空 total（也可以直接用 total = {}; 初始化）
     total = {}; 
 
-    // 2. 利用重载的 += 依次累加 9 个 trade 对象
     total += b_down;
     total += b_up;
     total += b_keep;
@@ -175,14 +173,12 @@ struct DailyMetrics {
     deal_price deal_total_price; 
 };
 
-// 定义子条件结构体：包含条件结果与描述说明
+
 struct SubCondition {
-    bool satisfied;         // 子条件是否满足
-    std::string description; // 子条件说明
+    bool satisfied;         
+    std::string description; 
 };
 
-
-// 定义一个结构体来存放所有分类的 trade 统计
 struct TradeCategoryStats {
     trade buy_down{};
     trade buy_up{};
@@ -227,7 +223,7 @@ struct VectorStats {
 
     int price_down_day_adjacent = 0;
     int price_up_day_adjacent = 0;
-    // int price_day_adjacent = 0;
+    
     std::vector<int> price_day_adjacent;
 
     int volume_shrink_firm = 0;
@@ -238,10 +234,6 @@ struct VectorStats {
 
     TradeCategoryStats a0;
     TradeCategoryStats a1;
-
-    // double all_will_netin_pct = 0.0;
-    // double all_netin_pct = 0.0;
-
 };
 
 
@@ -278,294 +270,6 @@ struct signal_info {
     std::string trigger_reason;
 };
 
-struct Col {
-    std::string name;
-    int width;
-    bool visible = true;
-};
-
-inline const std::vector<Col> will_price_table_cols = {
-    {"Date", 11}, 
-    {"Buy-Dn", 12, false}, 
-    {"Buy-Kp", 12, false},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12}, 
-    {"Sale-Kp", 12, false}, 
-    {"Sale-Up", 12, false}, 
-    {"Neutral-Dn", 12, false},
-    {"Neutral-Kp", 12, false},  
-    {"Neutral-Up", 12, false},
-    {"Buy", 12}, 
-    {"Sale", 12},
-    {"Neutral", 12},    
-    {"Up", 12}, 
-    {"Dn", 12},
-    {"Kp", 12}, 
-    {"WILL-Net", 10}, 
-    {"PRICE-Net", 12},     
-    {"Money", 12},  
-    {"Volume", 5},
-    {"Pre", 5},     
-    {"StartCh", 9}, 
-    {"Pct_925", 9},
-    {"Pct_Pre", 9},   
-    {"Close", 5}
-};
-
-inline const std::vector<Col> will_price_ratio_table_cols = {
-    {"Date", 11}, 
-    {"Buy-Dn", 12, false}, 
-    {"Buy-Kp", 12, false},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12}, 
-    {"Sale-Kp", 12, false}, 
-    {"Sale-Up", 12, false}, 
-    {"Neutral-Dn", 12, false},
-    {"Neutral-Kp", 12, false},  
-    {"Neutral-Up", 12, false},
-    {"Buy", 12}, 
-    {"Sale", 12},
-    {"Neutral", 12},    
-    {"Up", 12}, 
-    {"Dn", 12},
-    {"Kp", 12}, 
-    {"WILL-Net", 10}, 
-    {"PRICE-Net", 12},     
-    {"Money", 12},  
-    {"Volume", 5},
-    {"Pre", 5},     
-    {"StartCh", 9}, 
-    {"Pct_925", 9},
-    {"Pct_Pre", 9},   
-    {"Close", 5}
-};
-
-inline const std::vector<Col> quiet_buying_table_cols = {
-    {"Date", 11}, 
-    {"Buy-Dn", 12, true}, 
-    {"Buy-Kp", 12, true},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12,true},
-    {"Sale-Dn-t", 12,false}, 
-    {"Sale-Kp", 12, true}, 
-    {"Sale-Up", 12,true}, 
-    {"Neutral-Dn", 12, false},
-    {"Neutral-Kp", 12, false},  
-    {"Neutral-Up", 12, false},
-    {"Keep", 7},
-    {"Neutral", 7},
-    {"NeuUp", 7},
-    {"KeepBuy", 12},
-    {"Pre", 5},     
-    {"StartCh", 9}, 
-    {"Pct_925", 9},
-    {"Pct_Pre", 9},
-    {"Total_m", 9, false},
-    {"Total_v", 9}, 
-    {"WILL-Net", 10}, 
-    {"PRICE-Net", 12},    
-    {"Close", 5}
-};
-
-inline const std::vector<Col> signal_table_cols = {
-    {"File", 40,true},
-    {"WNetIn", 12, true}, 
-    {"PNetIn", 12, true},
-    {"WNET-P", 9},
-    {"PNET-P", 9},
-    {"Strip-WNetIn", 12, true}, 
-    {"Strip-PNetIn", 12, true}, 
-    {"shrink_grow", 12},
-    {"pday", 4},
-    {"Pct0", 5},
-    {"Pct1", 5},
-    {"REASON", 12}
-};
-
-static const std::vector<Col> will_table_cols = {
-    {"Date", 11}, 
-    {"Super-Buy", 12, false}, 
-    {"Super-Sale", 10, false}, 
-    
-    {"Big-Buy", 12, false},  
-    {"Big-Sale", 12, false},   
-   
-    {"Mid-Buy", 12, false},    
-    {"Mid-Sale", 12, false},   
-    
-
-
-    {"Small-Buy", 9, false},  
-    {"Small-Sale", 10, false}, 
-    
-    {"Super-NET", 12},
-    {"Big-NET", 12},    
-    {"Mid-NET", 12},
-    {"Small-NET", 12},
-    {"Tot-NET", 12},
-
-    {"Tot-Buy", 12},    
-    {"Tot-Sale", 12},
-    {"Tot-Neutral", 12}, 
-
-    {"Money", 12},     
-    {"Volume", 12},
-    {"Pre", 5},        
-    {"StartCh", 9},    
-    {"Pct_925", 9}, 
-    {"Close", 5}
-};
-
-static const std::vector<Col> price_table_cols = {
-    {"Date", 11},
-
-    {"Super-Up", 9, false}, 
-    {"Super-Dn", 9, false}, 
-    
-
-    {"Big-Up", 9, false},  
-    {"Big-Dn", 9, false},   
-    
-    {"Mid-Up", 9, false},  
-    {"Mid-Dn", 9, false}, 
-    
-
-    {"Small-Up", 9, false}, 
-    {"Small-Dn", 9, false}, 
-    
-
-    {"Super-NET", 12},
-    {"Big-NET", 9},
-    {"Mid-NET", 9},
-    {"Small-NET", 9},
-    {"Tot-NET", 12},
-
-    {"Tot-Up", 12},  
-    {"Tot-Dn", 12},
-    {"Tot-KEEP", 12},
-
-    {"KEEP/ALL", 8},
-
-    {"Money", 12},   
-    {"Volume", 12},
-    {"Pre", 5},      
-    {"StartCh", 9},  
-    {"Pct_925", 9}, 
-    {"Close", 5}
-};
-
-
-static const std::vector<Col> tseq_price_table_cols = {
-    {"Date", 11},
-
-    {"Super-Up", 9, false}, 
-    {"Super-Dn", 9, false}, 
-    
-
-    {"Big-Up", 9, false},  
-    {"Big-Dn", 9, false},   
-    
-    {"Mid-Up", 9, false},  
-    {"Mid-Dn", 9, false}, 
-    
-
-    {"Small-Up", 9, false}, 
-    {"Small-Dn", 9, false}, 
-    
-
-    {"Super-NET", 12},
-    {"Big-NET", 9},
-    {"Mid-NET", 9},
-    {"Small-NET", 9},
-    {"Tot-NET", 12},
-
-    {"Tot-Up", 12},  
-    {"Tot-Dn", 12},
-    {"Tot-KEEP", 12},
-
-    {"KEEP/ALL", 8},
-
-    {"Money", 12},   
-    {"Volume", 12},
-    // {"Pre", 5},      
-    // {"StartCh", 9},  
-    // {"PctCh", 9}, 
-    {"Close", 5}
-};
-
-// 专为 print_merge 准备的配置
-static const std::vector<Col> merge_table_cols = {
-    {"Date", 11},
-    {"TotBuy(BSN)", 12}, 
-    {"TotSale(BSN)", 12}, 
-    {"TotNeu(BSN)", 12},
-    {"TotUp(PRC)", 12},  
-    {"TotDn(PRC)", 12},   
-    {"TotKp(PRC)", 12},
-    {"BSN-Net", 16},     
-    {"PRC-Net", 16},
-    {"Money", 12},       
-    {"Volume", 12},
-    {"Pre", 5},          
-    {"StartCh", 9},       
-    {"PctCh_925", 9}, 
-    {"Close", 5}
-};
-
-static const std::vector<Col> data_all_table_cols = {
-    {"Date", 11}, 
-    {"Ticks", 5}, 
-    {"AM-volume(W)", 12, false},
-    {"AM-Money(W)", 11, false}, 
-    {"AM-Money%", 11}, 
-    {"Volume/Tick", 11}, 
-
-    {"AM-NET", 11, false}, 
-    {"PM-NET", 11, false},
-    {"AM-P-NET", 11, false}, 
-    {"PM-P-NET", 11, false}, 
-
-    {"WNET", 8},
-    {"PNET", 8},
-
-    {"WillP", 8},
-    {"PRICEP", 8},
-    {"Distribute_M", 24, false},
-    {"Distribute_V", 24},
-    {"Money", 11},
-    {"Volume", 9}, 
-    
-    {"NET/Money", 9, false},
-    // {"NetPer%", 9,false}, 
-    // {"HistNetIn(W)", 11, false}, 
-
-    {"AvgPrice", 9, true},
-    {"1st", 8}, 
-    {"StartCh%", 8}, 
-    {"AvgPct%", 8, false},
-    {"AM-Close", 8, false}, 
-    {"AM-Pct%", 8, false},
-    {"BaseAvg%", 8, false},  
-    {"Pct_925", 9},
-    {"Pct_pre", 9}, 
-    {"Close", 7},
-
-    {"Divergence", 20}
-};
-
-
-static const std::vector<Col> test_table_cols = {
-    {"Date", 11}, 
-    {"Ticks", 5, false}, 
-    {"AM-inflow", 13},
-    {"AM-Buy", 13},
-    {"AM-outflow", 13}, 
-    {"AM-Sale", 13}, 
-    {"PM-inflow", 13},
-    {"PM-Buy", 13},
-    {"PM-outflow", 13}, 
-    {"PM-Sale", 13},
-};
 
 inline double total_money(const deal_bsn& deal) {
     return deal.buy.money + deal.sale.money + deal.neutral.money;
@@ -722,11 +426,6 @@ inline double metrics_bsn_net(const DailyMetrics& metrics){
 }
 
 inline double metrics_price_net(const bsn_action_group& total){
-    // double all_price_netin = metrics.deal_total_price.up.money - metrics.deal_total_price.down.money;
-    // return all_price_netin;
-
-    // trade up = metrics.header.total.sale.up + metrics.header.total.buy.up + metrics.header.total.neutral.up;
-    // trade down = metrics.header.total.sale.down + metrics.header.total.buy.down +  metrics.header.total.neutral.down;
     
     trade up =  total.buy.up + total.sale.up + total.neutral.up;
     trade down = total.sale.down +total.buy.down +  total.neutral.down;
@@ -892,7 +591,6 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     print_next(deal_summary.price.keep.money / WAN, i, cols);
 
     print_next_pos((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
-    // print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
 
     print_next_pos((metrics_price_net(bsn_group)) / WAN, i, cols);
 
@@ -905,7 +603,6 @@ inline void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics&
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);
 
-    // print_next(out.pm_closing_price, i, cols);
     print_next(out.metrics.closing_price, i, cols);
 
     std::cout << std::endl;
@@ -945,7 +642,6 @@ inline void print_slim_price_ratio(const DayOutputMetrics& out,const DayOutputMe
     print_next(deal_summary.price.keep.money / total_money, i, cols);
 
     print_next_pos((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) /  deal_summary.total.money, i, cols);
-    // print_next_pos((price.up.money - price.down.money) / WAN, i, cols);
 
     print_next_pos((metrics_price_net(bsn_group)) / deal_summary.total.money, i, cols);
 
@@ -958,7 +654,6 @@ inline void print_slim_price_ratio(const DayOutputMetrics& out,const DayOutputMe
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);
 
-    // print_next(out.pm_closing_price, i, cols);
     print_next(out.metrics.closing_price, i, cols);
 
     std::cout << std::endl;
@@ -995,8 +690,6 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
 
     accumulate_group(h.total,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
-
-
     calculate_total(total, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
 
 
@@ -1005,30 +698,18 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    // 打印日期
     print_next(out.date_str, i, cols);
 
-    // 3. 修正后的 Buy 系列打印（分别对应 down, keep, up）
     print_next(pct_base(buy_down.money, total.money), i, cols);
     print_next(pct_base(buy_keep.money, total.money), i, cols);
     print_next(pct_base(buy_up.money,   total.money), i, cols);
 
-    // std::cout << "[DEBUG] "
-    //       << "buy_up.money: " << buy_up.money << ", "
-    //       << "buy_keep.money: " << buy_keep.money << ", "
-    //       << "buy_down.money: " << buy_down.money << ", "
-    //       << "total.money: " << total.money << std::endl;
-
-    // 4. 修正后的 Sale 系列打印（分别对应 down, keep, up）
     print_next(pct_base(sale_down.money, total.money), i, cols);
     print_next(pct_base((double)sale_down.tick_count, total.tick_count), i, cols);
-
-    // std::cout << sale_down.money << ":dd" << total.tick_count << std::endl;
 
     print_next(pct_base(sale_keep.money, total.money), i, cols);
     print_next(pct_base(sale_up.money,   total.money), i, cols);
 
-    // 5. 修正后的 Neutral 系列打印（分别对应 down, keep, up）
     print_next(pct_base(neutral_down.money, total.money), i, cols);
     print_next(pct_base(neutral_keep.money, total.money), i, cols);
     print_next(pct_base(neutral_up.money,   total.money), i, cols);
@@ -1038,7 +719,6 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
     print_next_pos(pct_base(neutral_up.money - neutral_down.money,   total.money), i, cols);
     print_next_pos(pct_base(buy_keep.money - sale_keep.money ,   total.money), i, cols);
     
-    // 其他基础指标打印
     print_next(prev_out.metrics.closing_price, i, cols);
 
     print_next_pos(out.start_change, i, cols);
@@ -1103,8 +783,6 @@ inline void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev
     print_next(deal_summary_total.bsn.sale.money / WAN, i, cols);
     print_next(deal_summary_total.bsn.neutral.money / WAN, i, cols);
 
-
-    // 其余统计项
     print_next((deal_summary_total.total.money) / WAN, i, cols);
     print_next((deal_summary_total.total.volume) / WAN, i, cols);
     print_next(prev_out.metrics.closing_price, i, cols);
@@ -1151,14 +829,6 @@ inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& pre
 
     print_next(deal_summary_small.price.up.money / WAN, i, cols);
     print_next(deal_summary_small.price.down.money / WAN, i, cols);
-
-
-    // print_next_pos((metrics.deal_super_price.up.money - metrics.deal_super_price.down.money) / WAN, i, cols);
-    // print_next_pos((metrics.deal_big_price.up.money - metrics.deal_big_price.down.money) / WAN, i, cols);
-    // print_next_pos((metrics.deal_middle_price.up.money - metrics.deal_middle_price.down.money) / WAN, i, cols);
-    // print_next_pos((metrics.deal_small_price.up.money - metrics.deal_small_price.down.money) / WAN, i, cols);
-    // print_next_pos((metrics.deal_total_price.up.money - metrics.deal_total_price.down.money) / WAN, i, cols);
-
 
     print_next_pos((metrics_price_net(out.metrics.header.super)) / WAN, i, cols);
     print_next_pos((metrics_price_net(out.metrics.header.big)) / WAN, i, cols);
@@ -1237,9 +907,7 @@ inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
 
     print_next(all_money/WAN , i, cols);
     print_next((deal_summary_total.total.volume)/WAN, i, cols);
-    // print_next(prev_out.metrics.closing_price, i, cols);
-    // print_next_pos(out.start_change, i, cols);
-    // print_next_pos(out.pct_change, i, cols);
+
     print_next(metrics.closing_price, i, cols);
     std::cout << std::endl;
 
@@ -1275,9 +943,6 @@ inline void print_signal(const std::string& file, const VectorStats& v_stats, Su
 
     std::string price_adjacent_up_days = format_with_sign(v_stats.price_day_adjacent[0]) + ":" +
                      format_with_sign(v_stats.price_day_adjacent[1]);
-
-
-
 
     print_next(price_adjacent_up_days, i, cols);
 
@@ -1319,8 +984,6 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     total_volume = metrics_total_volume(out.metrics);
 
     avg_price = total_money/total_volume;
-
-    // std::cout <<"avg data in print all DATA: " <<avg_price << " = " << total_money << " / " << total_volume << std::endl;
 
     std::cout << std::left << std::fixed << std::setprecision(1);
 
@@ -1403,9 +1066,6 @@ int metrics_price_check_pre_max(const std::vector<DayOutputMetrics>& out_vector)
 int metrics_up_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_down_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector);
-
-
-
 
 int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
