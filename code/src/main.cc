@@ -17,10 +17,9 @@
 #include <filesystem>
 #include "common.h"
 #include "tick_types.h"
-#include "collect_stream.h"
-#include "tick_print.h"
 #include "process_files.h"
 #include "time_seq.h"
+#include "show.h"
 
 namespace fs = std::filesystem;
 

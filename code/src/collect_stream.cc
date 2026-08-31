@@ -5,8 +5,6 @@
 #include "tick_types.h"
 #include "collect_stream.h"
 
-
-
 bool record_change(const TickRecord this_record, const TickRecord pre_record) {
     
     if (this_record.bs_type != pre_record.bs_type){
