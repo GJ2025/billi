@@ -159,18 +159,6 @@ struct DailyMetrics {
     record_stream header;
     record_stream start_point;
     record_stream end_point;
-
-    deal_bsn deal_super_bsn;
-    deal_bsn deal_big_bsn;
-    deal_bsn deal_middle_bsn;
-    deal_bsn deal_small_bsn;
-    deal_bsn deal_total_bsn;
-
-    deal_price deal_super_price;
-    deal_price deal_big_price;
-    deal_price deal_middle_price;
-    deal_price deal_small_price;
-    deal_price deal_total_price; 
 };
 
 
