@@ -144,34 +144,14 @@ void update_stream(StreamRecord& stream, const TickRecord& record, const TickRec
     return;
 }
 
-void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats) {
-   
-    accumulate_group(h.super,  stats.buy_down, stats.buy_up, stats.buy_keep, 
-                              stats.sale_down, stats.sale_up, stats.sale_keep, 
-                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
-
-    accumulate_group(h.big,    stats.buy_down, stats.buy_up, stats.buy_keep, 
-                              stats.sale_down, stats.sale_up, stats.sale_keep, 
-                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
-
-    accumulate_group(h.middle, stats.buy_down, stats.buy_up, stats.buy_keep, 
-                              stats.sale_down, stats.sale_up, stats.sale_keep, 
-                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
-
-    accumulate_group(h.small,  stats.buy_down, stats.buy_up, stats.buy_keep, 
-                              stats.sale_down, stats.sale_up, stats.sale_keep, 
-                              stats.neutral_down, stats.neutral_up, stats.neutral_keep);
-
-
-    calculate_total(stats.total, stats.buy_down, stats.buy_up, stats.buy_keep, 
-                                 stats.sale_down, stats.sale_up, stats.sale_keep, 
-                                 stats.neutral_down, stats.neutral_up, stats.neutral_keep);
-}
-
 
 void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
 
-    calculate_trade_stats(out.metrics.header, stats);
+    bsn_action_group dump;
+    deal_summary summary;
+    const bsn_action_group& bs = out.metrics.header.total;
+
+    get_slim_base(out.metrics, RecordScale::TOTAL, dump, summary);
 
     stats.all_will_netin = metrics_bsn_net(out.metrics);
     stats.all_price_netin = metrics_price_net(out.metrics.header.total);
@@ -180,10 +160,10 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     stats.strip_price_netin = metrics_price_net(out.middle_metrics.header.total);
 
 
-    stats.buyup_pct = pct_base(stats.buy_up.money,   stats.total.money);
-    stats.buydown_pct = pct_base(stats.buy_down.money,   stats.total.money);
+    stats.buyup_pct = pct_base(bs.buy.up.money,   summary.total.money);
+    stats.buydown_pct = pct_base(bs.buy.down.money,   summary.total.money);
 
-    stats.saleup_pct = pct_base(stats.sale_up.money,   stats.total.money);
+    stats.saleup_pct = pct_base(bs.sale.up.money,   summary.total.money);
 
     stats.pct_change_base_925 = out.pct_change_base_925;
     stats.pct_change_base_pre = out.pct_change_base_pre;

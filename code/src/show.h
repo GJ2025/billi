@@ -125,66 +125,46 @@ inline void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutpu
 
     std::vector<Col> cols = quiet_buying_table_cols;
 
-    // 定义 9 个方向的 trade 变量
-    trade buy_down{};
-    trade buy_up{};
-    trade buy_keep{};
-
-    trade sale_down{};
-    trade sale_up{};
-    trade sale_keep{};
-
-    trade neutral_down{};
-    trade neutral_up{};
-    trade neutral_keep{};
-
-    trade total{};
-    trade neutral_all{};
-    trade keep_all{};
-
     double all_will_netin = metrics_bsn_net(out.metrics);
     double all_price_netin = metrics_price_net(out.metrics.header.total);
-    
-    const auto& h = out.metrics.header;
 
+    bsn_action_group dump;
+    deal_summary summary;
+    get_slim_base(out.metrics, RecordScale::TOTAL, dump, summary);
 
-    accumulate_group(h.total,  buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
-    calculate_total(total, buy_down, buy_up, buy_keep, sale_down, sale_up, sale_keep, neutral_down, neutral_up, neutral_keep);
+    const bsn_action_group& bs = out.metrics.header.total;
 
-
-    neutral_all = neutral_down + neutral_up + neutral_keep;
-    keep_all = buy_keep + sale_keep + neutral_keep;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(out.date_str, i, cols);
 
-    print_next(pct_base(buy_down.money, total.money), i, cols);
-    print_next(pct_base(buy_keep.money, total.money), i, cols);
-    print_next(pct_base(buy_up.money,   total.money), i, cols);
+    print_next(pct_base(bs.buy.down.money, summary.total.money), i, cols);
+    print_next(pct_base(bs.buy.keep.money, summary.total.money), i, cols);
+    print_next(pct_base(bs.buy.up.money,   summary.total.money), i, cols);
 
-    print_next(pct_base(sale_down.money, total.money), i, cols);
-    print_next(pct_base((double)sale_down.tick_count, total.tick_count), i, cols);
+    print_next(pct_base(bs.sale.down.money, summary.total.money), i, cols);
+    print_next(pct_base((double)bs.sale.down.tick_count, summary.total.tick_count), i, cols);
 
-    print_next(pct_base(sale_keep.money, total.money), i, cols);
-    print_next(pct_base(sale_up.money,   total.money), i, cols);
+    print_next(pct_base(bs.sale.keep.money, summary.total.money), i, cols);
+    print_next(pct_base(bs.sale.up.money,   summary.total.money), i, cols);
 
-    print_next(pct_base(neutral_down.money, total.money), i, cols);
-    print_next(pct_base(neutral_keep.money, total.money), i, cols);
-    print_next(pct_base(neutral_up.money,   total.money), i, cols);
+    print_next(pct_base(bs.neutral.down.money, summary.total.money), i, cols);
+    print_next(pct_base(bs.neutral.keep.money, summary.total.money), i, cols);
+    print_next(pct_base(bs.neutral.up.money,   summary.total.money), i, cols);
 
-    print_next(pct_base(keep_all.money,   total.money), i, cols);
-    print_next(pct_base(neutral_all.money,   total.money), i, cols);
-    print_next_pos(pct_base(neutral_up.money - neutral_down.money,   total.money), i, cols);
-    print_next_pos(pct_base(buy_keep.money - sale_keep.money ,   total.money), i, cols);
+    print_next(pct_base(summary.price.keep.money,   summary.total.money), i, cols);
+    print_next(pct_base(summary.bsn.neutral.money,   summary.total.money), i, cols);
+    print_next_pos(pct_base(bs.neutral.up.money - bs.neutral.down.money,   summary.total.money), i, cols);
+    print_next_pos(pct_base(bs.buy.keep.money - bs.sale.keep.money ,   summary.total.money), i, cols);
     
     print_next(prev_out.metrics.closing_price, i, cols);
 
     print_next_pos(out.start_change, i, cols);
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);
-    print_next(total.money/WAN, i, cols);
-    print_next(total.volume/WAN, i, cols);
+    print_next(summary.total.money/WAN, i, cols);
+    print_next(summary.total.volume/WAN, i, cols);
 
     print_next_pos(all_will_netin/WAN, i, cols);
     print_next_pos(all_price_netin/WAN, i, cols);
@@ -255,7 +235,6 @@ inline void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev
 inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     
-
     bsn_action_group dump;
     deal_summary deal_summary_super;
     deal_summary deal_summary_big;
@@ -416,7 +395,6 @@ inline void print_signal(const std::string& file, const VectorStats& v_stats, Su
 
 }
 
-
 inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const std::string& divergence_str) {
     int i = 0;
     size_t total_volume = 0;
@@ -506,7 +484,6 @@ inline void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& 
     return;
 }
 
-
 void print_table_header() {
     std::cout << std::left << std::setw(12) << "Date" << " | "
               << std::right 
@@ -519,7 +496,6 @@ void print_table_header() {
               << std::setw(12) << "Chg924"    << " | "
               << std::setw(12) << "PctChg" 
               << std::endl;
-    // 打印分割线，让视觉效果更专业
     std::cout << std::string(88, '-') << std::endl;
 }
 
@@ -546,7 +522,7 @@ void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_
 }
 
 void print_all() {
-    // 总长度再次扩展 14 字符以兼容新的占比列
+   
     std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
     std::cout << "----------------" << std::endl; 
     std::cout << std::left  << std::setw(11) << "Date" << " | "
@@ -554,7 +530,7 @@ void print_all() {
               << std::setw(9)  << "Vol" << " | "               
               << std::setw(9)  << "AM_Vol" << " | "
               << std::setw(11) << "AM_Turnover" << " | "  
-              << std::setw(11) << "AM_Turn%" << " | " // 新增表头：上午成交额占比
+              << std::setw(11) << "AM_Turn%" << " | " 
               << std::setw(10) << "Vol/Ticks" << " | "         
               << std::setw(11) << "Turnover" << " | "
               << std::setw(8)  << "AM_Close" << " | "  
@@ -632,9 +608,6 @@ void print_headers(const ProgramOptions& opts) {
     }
 }
 
-
-
-
 void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
         if (opts.show_head){
             print_header_info(out, prev_out);
@@ -690,10 +663,7 @@ void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const 
 
         if (opts.show_total_ratio){
             print_slim_price_ratio(out, prev_out, RecordScale::TOTAL, will_price_ratio_table_cols);
-            // print_quiet_buying_price(out, prev_out);
         } 
 }
-
-
 
 #endif // SHOW_H

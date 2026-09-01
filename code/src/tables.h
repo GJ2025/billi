@@ -213,25 +213,6 @@ static const std::vector<Col> tseq_price_table_cols = {
     {"Close", 5}
 };
 
-// 专为 print_merge 准备的配置
-static const std::vector<Col> merge_table_cols = {
-    {"Date", 11},
-    {"TotBuy(BSN)", 12}, 
-    {"TotSale(BSN)", 12}, 
-    {"TotNeu(BSN)", 12},
-    {"TotUp(PRC)", 12},  
-    {"TotDn(PRC)", 12},   
-    {"TotKp(PRC)", 12},
-    {"BSN-Net", 16},     
-    {"PRC-Net", 16},
-    {"Money", 12},       
-    {"Volume", 12},
-    {"Pre", 5},          
-    {"StartCh", 9},       
-    {"PctCh_925", 9}, 
-    {"Close", 5}
-};
-
 static const std::vector<Col> data_all_table_cols = {
     {"Date", 11}, 
     {"Ticks", 5}, 
@@ -284,9 +265,6 @@ static const std::vector<Col> test_table_cols = {
     {"PM-outflow", 13}, 
     {"PM-Sale", 13},
 };
-
-
-
 
 
 #endif // TABLES_H

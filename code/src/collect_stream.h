@@ -86,27 +86,6 @@ struct record_stream {
     bsn_action_group total;
 };
 
-inline void accumulate_group(const bsn_action_group& group,
-                             trade& b_down, trade& b_up, trade& b_keep,
-                             trade& s_down, trade& s_up, trade& s_keep,
-                             trade& n_down, trade& n_up, trade& n_keep) 
-{
-    // 1. buy
-    b_down += group.buy.down;
-    b_up   += group.buy.up;
-    b_keep += group.buy.keep;
-
-    // 2. sale
-    s_down += group.sale.down;
-    s_up   += group.sale.up;
-    s_keep += group.sale.keep;
-
-    // 3. neutral
-    n_down += group.neutral.down;
-    n_up   += group.neutral.up;
-    n_keep += group.neutral.keep;
-}
-
 inline void calculate_total(trade& total,
                      const trade& b_down, const trade& b_up, const trade& b_keep,
                      const trade& s_down, const trade& s_up, const trade& s_keep,
@@ -541,7 +520,6 @@ extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);
 extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);
-void calculate_trade_stats(const record_stream& h, TradeCategoryStats& stats);
 void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats); 
 
 int metrics_up_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector);
