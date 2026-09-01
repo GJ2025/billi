@@ -147,19 +147,6 @@ struct SubCondition {
 };
 
 struct TradeCategoryStats {
-    trade buy_down{};
-    trade buy_up{};
-    trade buy_keep{};
-
-    trade sale_down{};
-    trade sale_up{};
-    trade sale_keep{};
-
-    trade neutral_down{};
-    trade neutral_up{};
-    trade neutral_keep{};
-
-    trade total{};
 
     double all_will_netin = 0.0;
     double all_price_netin = 0.0;
