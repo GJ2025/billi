@@ -202,10 +202,6 @@ void update_metrics_by_record(DailyMetrics& metrics, const TickRecord& record){
 
     metrics.avg_price = metrics.all_money / metrics.all_volume;
 
-    // if (last_record(record)){
-    //     std::cout << "update_metrics_by_record   "<< metrics.avg_price << "=" << metrics.all_money << "/" << metrics.all_volume << std::endl;
-    // }
-
     return;
 }
 
@@ -214,7 +210,6 @@ void read_tick_records(const std::string& filename, std::vector<TickRecord>& rec
     std::string line;
     records.clear(); 
 
-    // 略过前两行表头
     std::getline(infile, line); 
     std::getline(infile, line);
 
@@ -780,22 +775,6 @@ void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_
             a0.pct_change_base_pre > 0 && all_netin == false,
             "up_out_all" 
         }        
-        // {
-        //     all_netin && ((a0.buydown_pct == 0 &&  a0.saleup_pct > a1.saleup_pct && a0.pct_change_base_pre > 1.0)),
-        //     "will_down"
-        // },
-        // {
-        //     base_condition && shrink_firm >= 3,
-        //     "shrink_firm3" 
-        // },
-        // {
-        //     shrink_loose >= 10,
-        //     "shrink_loose6" 
-        // },
-        // {
-        //     super_buy_down == 0 && super_sale_up == 0 && this_day_stats.total.volume * 4 < prev_day_stats.total.volume * 3,
-        //     "controlled" 
-        // },
     };
 
 
