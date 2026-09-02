@@ -193,11 +193,9 @@ void update_metrics_by_record(DailyMetrics& metrics, const TickRecord& record){
         } 
     }
 
-    am_trade.money = total_money(metrics.am_bsn);
-    am_trade.volume = total_volume(metrics.am_bsn);
+    this_bsn_add(metrics.am_bsn, am_trade);
 
-    pm_trade.money = total_money(metrics.pm_bsn);
-    pm_trade.volume = total_volume(metrics.pm_bsn);
+    this_bsn_add(metrics.pm_bsn, pm_trade);
 
     metrics.all_money = am_trade.money + pm_trade.money;
     metrics.all_volume = am_trade.volume + pm_trade.volume;

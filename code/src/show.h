@@ -3,6 +3,39 @@
 
 #include "collect_stream.h"
 
+template<typename T>
+inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
+    if (index < (int)cols.size() && cols[index].visible) {
+        std::cout << std::setw(cols[index].width) << val << " | ";
+    }
+
+    index++;
+}
+
+template<typename T>
+inline void print_next_pos(const T& val, int& index, const std::vector<Col>& cols) {
+    if (index < (int)cols.size() && cols[index].visible) {
+        std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
+    }
+    index++;
+}
+
+inline void print_decorative_line(int total_width, const std::string& left_title, const std::string& right_title) {
+    int line_len = total_width - 3;
+    
+    int left_len = static_cast<int>(left_title.length());
+    int right_len = static_cast<int>(right_title.length());
+    
+    int mid_space = line_len - left_len - right_len - 4; 
+    if (mid_space < 2) mid_space = 2;
+
+    std::cout << "[ " << left_title << " ]" 
+              << std::string(mid_space, '-') 
+              << "[ " << right_title << " ]" 
+              << std::endl;
+}
+
+
 inline void print__headers(const std::string& title, const std::vector<Col>& cols) {
     std::cout << std::left;
     int total_width = 0;

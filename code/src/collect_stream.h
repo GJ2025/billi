@@ -64,6 +64,12 @@ struct deal_price {
     trade keep;
 };
 
+struct bsn_action_group {
+    deal_price buy;
+    deal_price sale;
+    deal_price neutral; 
+};
+
 struct deal_summary {
     deal_bsn bsn; 
     deal_price price ;
@@ -71,11 +77,17 @@ struct deal_summary {
     trade type_total;
 };
 
+struct bs_info{
+    bsn_action_group info;
+    deal_summary summary;
+};
 
-struct bsn_action_group {
-    deal_price buy;
-    deal_price sale;
-    deal_price neutral; 
+struct range_info{
+    bs_info super;
+    bs_info big;
+    bs_info middle;
+    bs_info small;
+    bs_info total;
 };
 
 struct record_stream {
@@ -85,26 +97,6 @@ struct record_stream {
     bsn_action_group small;
     bsn_action_group total;
 };
-
-inline void calculate_total(trade& total,
-                     const trade& b_down, const trade& b_up, const trade& b_keep,
-                     const trade& s_down, const trade& s_up, const trade& s_keep,
-                     const trade& n_down, const trade& n_up, const trade& n_keep) 
-{
-    total = {}; 
-
-    total += b_down;
-    total += b_up;
-    total += b_keep;
-
-    total += s_down;
-    total += s_up;
-    total += s_keep;
-
-    total += n_down;
-    total += n_up;
-    total += n_keep;
-}
 
 struct StreamRecord {
     std::vector<TickRecord> records;
@@ -224,15 +216,6 @@ struct signal_info {
     std::string trigger_reason;
 };
 
-
-inline double total_money(const deal_bsn& deal) {
-    return deal.buy.money + deal.sale.money + deal.neutral.money;
-}
-
-inline size_t total_volume(const deal_bsn& deal) {
-    return deal.buy.volume + deal.sale.volume + deal.neutral.volume;
-}
-
 struct deal_probability_distribution {
     double super = 0.0;
     double big = 0.0;
@@ -245,6 +228,31 @@ struct DailyDistributions {
     deal_probability_distribution vol_dist;
     deal_probability_distribution money_dist;
 };
+
+
+inline void calculate_total(trade& total,
+                     const trade& b_down, const trade& b_up, const trade& b_keep,
+                     const trade& s_down, const trade& s_up, const trade& s_keep,
+                     const trade& n_down, const trade& n_up, const trade& n_keep) 
+{
+    total = {}; 
+
+    total += b_down;
+    total += b_up;
+    total += b_keep;
+
+    total += s_down;
+    total += s_up;
+    total += s_keep;
+
+    total += n_down;
+    total += n_up;
+    total += n_keep;
+}
+
+inline void this_bsn_add(const deal_bsn& deal, trade& this_trade) {
+    this_trade =  deal.buy +  deal.sale + deal.neutral;
+}
 
 inline void get_slim_base(const DailyMetrics& metrics, RecordScale type,  bsn_action_group& h, deal_summary &deal_summary){
     
@@ -277,39 +285,13 @@ inline void get_slim_base(const DailyMetrics& metrics, RecordScale type,  bsn_ac
     return;
 }
 
-template <typename RetType>
-using MetricFunc = RetType(*)(const deal_bsn&);
+inline void  deal_volume_pro_distri(const range_info& rang_info, deal_probability_distribution& abc) {
 
-template <typename RetType>
-inline deal_probability_distribution deal_pro_distri(const DailyMetrics& metrics, MetricFunc<RetType> get_value) {
-
-    bsn_action_group dump;
-    deal_summary deal_summary_super;
-    deal_summary deal_summary_big;
-    deal_summary deal_summary_middle;
-    deal_summary deal_summary_small;
-    deal_summary deal_summary_total;
-
-    get_slim_base(metrics, RecordScale::SUPER, dump, deal_summary_super);
-    get_slim_base(metrics, RecordScale::BIG, dump, deal_summary_big);
-    get_slim_base(metrics, RecordScale::MIDDLE, dump, deal_summary_middle);
-    get_slim_base(metrics, RecordScale::SMALL, dump, deal_summary_small);
-    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-
-
-
-    double super_v  = static_cast<double>(get_value(deal_summary_super.bsn));
-    double big_v    = static_cast<double>(get_value(deal_summary_big.bsn));
-    double middle_v = static_cast<double>(get_value(deal_summary_middle.bsn));
-    double small_v  = static_cast<double>(get_value(deal_summary_small.bsn));
-    double total_v  = static_cast<double>(get_value(deal_summary_total.bsn));
-
-    deal_probability_distribution abc;
-    if (total_v > 0) {
-        abc.super   = super_v / total_v;
-        abc.big     = big_v / total_v;
-        abc.middle  = middle_v / total_v;
-        abc.small   = small_v / total_v;
+    if (rang_info.super.summary.total.volume > 0) {
+        abc.super   = (double)rang_info.super.summary.type_total.volume / rang_info.total.summary.total.volume;
+        abc.big     = (double)rang_info.big.summary.type_total.volume / rang_info.total.summary.total.volume;
+        abc.middle  = (double)rang_info.middle.summary.type_total.volume / rang_info.total.summary.total.volume;
+        abc.small   = (double)rang_info.small.summary.type_total.volume / rang_info.total.summary.total.volume;
     }
 
     std::ostringstream oss;
@@ -320,7 +302,27 @@ inline deal_probability_distribution deal_pro_distri(const DailyMetrics& metrics
         "  " << (abc.small * 100) ;
     abc.description = oss.str();
 
-    return abc;
+    return;
+}
+
+inline void  deal_money_pro_distri(const range_info& rang_info, deal_probability_distribution& abc) {
+
+    if (rang_info.super.summary.total.money > 0) {
+        abc.super   = (double)rang_info.super.summary.type_total.money / rang_info.total.summary.total.money;
+        abc.big     = (double)rang_info.big.summary.type_total.money / rang_info.total.summary.total.money;
+        abc.middle  = (double)rang_info.middle.summary.type_total.money / rang_info.total.summary.total.money;
+        abc.small   = (double)rang_info.small.summary.type_total.money / rang_info.total.summary.total.money;
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(1);
+    oss <<  (abc.super * 100) <<
+        "  " << (abc.big * 100) <<
+        "  " << (abc.middle * 100) << 
+        "  " << (abc.small * 100) ;
+    abc.description = oss.str();
+
+    return;
 }
 
 inline double get_first_record_net(const DailyMetrics& metrics){
@@ -342,10 +344,25 @@ inline double get_first_record_net(const DailyMetrics& metrics){
 
 }
 
+inline void get_range_info(range_info& rang_info, const DailyMetrics& metrics) {
+
+    get_slim_base(metrics, RecordScale::SUPER, rang_info.super.info, rang_info.super.summary);
+    get_slim_base(metrics, RecordScale::BIG,  rang_info.big.info, rang_info.big.summary);
+    get_slim_base(metrics, RecordScale::MIDDLE,  rang_info.middle.info, rang_info.middle.summary);
+    get_slim_base(metrics, RecordScale::SMALL,  rang_info.small.info, rang_info.small.summary);
+    get_slim_base(metrics, RecordScale::TOTAL,  rang_info.total.info, rang_info.total.summary);
+
+
+}
+
 inline void get_daily_distributions(const DailyMetrics& metrics, DailyDistributions& result) {
 
-    result.vol_dist   = deal_pro_distri(metrics, total_volume);
-    result.money_dist = deal_pro_distri(metrics, total_money);
+    range_info rang_info;
+
+    get_range_info(rang_info, metrics);
+
+    deal_volume_pro_distri(rang_info, result.vol_dist);
+    deal_money_pro_distri(rang_info, result.money_dist);
     return ;
 }
 
@@ -390,25 +407,6 @@ inline double metrics_price_net(const bsn_action_group& total){
     return net_in.money;
 } 
 
-
-template<typename T>
-inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
-    if (index < (int)cols.size() && cols[index].visible) {
-        std::cout << std::setw(cols[index].width) << val << " | ";
-    }
-
-    index++;
-}
-
-template<typename T>
-inline void print_next_pos(const T& val, int& index, const std::vector<Col>& cols) {
-    if (index < (int)cols.size() && cols[index].visible) {
-        std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
-    }
-    index++;
-}
-
-
 inline void set_metrics_record(DailyMetrics& metrics, TickRecord record, RecordType t){
 
     if (t == RecordType::FIRST){
@@ -421,82 +419,6 @@ inline void set_metrics_record(DailyMetrics& metrics, TickRecord record, RecordT
 
 inline bool last_record(TickRecord this_record) { return this_record.time == "15:00"; }
 inline bool first_record(TickRecord this_record) { return this_record.time == "09:25"; }
-
-inline std::string format_inflow(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) 
-       << value;
-    return ss.str();
-}
-
-inline std::string format_percent_value(double value) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2)
-        << value
-        << "%";
-    return ss.str();
-}
-
-inline double sum_money(const deal_price& price) { 
-    return price.up.money + price.down.money + price.keep.money; 
-}
-
-
-inline size_t sum_volume(const deal_price& price) { 
-    return price.up.volume + price.down.volume + price.keep.volume; 
-}
-
-inline size_t sum_tick_count(const deal_price& price) { 
-    return price.up.tick_count + price.down.tick_count + price.keep.tick_count; 
-}
-
-inline void add_trade(trade& target, const trade& s, const trade& b, const trade& m, const trade& sm) {
-    target.money += (s.money + b.money + m.money + sm.money);
-    target.volume += (s.volume + b.volume + m.volume + sm.volume);
-    target.tick_count += (s.tick_count + b.tick_count + m.tick_count + sm.tick_count);
-}
-
-inline void sum_bsn_buy(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
-    add_trade(total.buy, s.buy, b.buy, m.buy, sm.buy);
-}
-
-inline void sum_bsn_sale(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
-    add_trade(total.sale, s.sale, b.sale, m.sale, sm.sale);
-}
-
-inline void sum_bsn_neutral(deal_bsn& s, deal_bsn& b, deal_bsn& m, deal_bsn& sm, deal_bsn& total) {
-    add_trade(total.neutral, s.neutral, b.neutral, m.neutral, sm.neutral);
-}
-
-
-inline void sum_price_up(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
-    add_trade(total.up, s.up, b.up, m.up, sm.up);
-}
-
-inline void sum_price_down(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
-    add_trade(total.down, s.down, b.down, m.down, sm.down);
-}
-
-inline void sum_price_keep(deal_price& s, deal_price& b, deal_price& m, deal_price& sm, deal_price& total) {
-    add_trade(total.keep, s.keep, b.keep, m.keep, sm.keep);
-}
-
-
-inline void print_decorative_line(int total_width, const std::string& left_title, const std::string& right_title) {
-    int line_len = total_width - 3;
-    
-    int left_len = static_cast<int>(left_title.length());
-    int right_len = static_cast<int>(right_title.length());
-    
-    int mid_space = line_len - left_len - right_len - 4; 
-    if (mid_space < 2) mid_space = 2;
-
-    std::cout << "[ " << left_title << " ]" 
-              << std::string(mid_space, '-') 
-              << "[ " << right_title << " ]" 
-              << std::endl;
-}
-
 
 
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
