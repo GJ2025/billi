@@ -61,7 +61,7 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
     } 
 }
 
-void update_metrics_header(record_stream& header, StreamRecord& stream) {
+void update_metrics_header(tickTime what, record_stream& header, StreamRecord& stream) {
     double total_money = 0.0;
     size_t total_volume = 0;
     
@@ -80,6 +80,8 @@ void update_metrics_header(record_stream& header, StreamRecord& stream) {
     
     collect_bs_action(*group, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
     collect_bs_action(header.total, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
+
+    header.what = what;
 
     stream.records.clear();
 }

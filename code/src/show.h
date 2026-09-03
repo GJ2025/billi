@@ -323,11 +323,11 @@ inline void print_price(const DayOutputMetrics& out, const DayOutputMetrics& pre
 
 }
 
-inline void print_tseq_price(const tickTime& t, DailyMetrics& metrics) {
+inline void print_tseq_price(DailyMetrics& metrics) {
     int i = 0;
 
     const std::vector<Col>& cols = tseq_price_table_cols;
-    std::string tshow = format_tick_times(t);
+    std::string tshow = format_tick_times(metrics.header.what);
 
     bsn_action_group dump;
     deal_summary deal_summary_super;

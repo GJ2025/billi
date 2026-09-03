@@ -234,22 +234,28 @@ void read_tick_records(const std::string& filename, std::vector<TickRecord>& rec
     infile.close();
 }
 
-void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics, DailyMetrics& am_metrics, double prev_closing_price) {
+void parse_tick_records(std::vector<TickRecord>& records, 
+                        double prev_closing_price, 
+                        DailyMetrics& metrics,  
+                        std::vector<tickTime>& tick_times, 
+                        std::vector<DailyMetrics>& all_metrics) {
 
     TickRecord pre_record;
     StreamRecord stream;
+    size_t tick_idx = 0;
 
 
     for (const auto& record : records) {
         process_first_record(metrics, stream, record, prev_closing_price);
 
         if (pre_record.full() && record_change(record, pre_record)) {
-            update_metrics_header(metrics.header, stream);
+            update_metrics_header(record.t, metrics.header, stream);
         }
 
-        if (pre_record.full() && is_am_end(record.t, pre_record.t)) {
-            update_metrics_header(metrics.header, stream);
-            am_metrics = metrics;
+        if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) > 0) {
+            update_metrics_header(record.t, metrics.header, stream);
+            all_metrics.push_back(metrics);
+            tick_idx++; 
         }
 
         if (pre_record.full()){
@@ -264,63 +270,19 @@ void parse_tick_records(std::vector<TickRecord>& records, DailyMetrics& metrics,
     }
 }
 
-void parse_tick_file_by_tseq(std::ifstream& infile, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times) {
-    std::string line;
-    TickRecord pre_record;
-    StreamRecord stream;
+void parse_tick_file_by_tseq(std::string filename, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times, DailyMetrics& metrics) {
 
-    size_t tick_idx = 0;
-    DailyMetrics current_metrics;
+    std::vector<TickRecord> records;
+    read_tick_records(filename, records);
 
-    std::getline(infile, line); 
-    std::getline(infile, line);
-    while (std::getline(infile, line)) {
-        if (line.empty()){
-            continue;
-        } 
-
-        std::stringstream ss(line);
-        TickRecord record;
-
-        if (ss >> record) {
-            
-            if (!record_should_process(record)){
-                continue;
-            }
-
-            process_first_record(current_metrics, stream, record, record.price);
-
-            if (pre_record.full() && record_change(record, pre_record)) {
-                update_metrics_header(current_metrics.header, stream);
-            }
-
-            if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) >= 0) {
-                all_metrics.push_back(current_metrics);
-                tick_idx++; 
-            }
-
-            if (pre_record.full()){
-                update_stream(stream, record, pre_record);
-            }
-
-            update_metrics_by_record(current_metrics, record);
-
-            process_last_record(current_metrics, stream, record, pre_record.price);
-
-        }else{
-                std::cout << "failed=========== " << record.time << std::endl;
-                exit(0);
-        }
-
-        pre_record = record;
-    }
-    infile.close();
+    parse_tick_records(records, 0, metrics, tick_times, all_metrics);
 }
 
 void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_price){
     if (last_record(record)) {
 
-        update_metrics_header(metrics.header, stream);
+
+        update_metrics_header(record.t, metrics.header, stream);
         set_metrics_record(metrics, record, RecordType::LAST);
         metrics.this_1457_pirce = pre_price;
 
@@ -363,16 +325,21 @@ bool record_should_process(TickRecord& record){
 
 }
 
-bool process_single_file(const std::string& filename, DayOutputMetrics& out, DayOutputMetrics& pre_out) {
+bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price) {
 
     std::vector<TickRecord> records;
+    std::vector<tickTime> tick_times;
+    std::vector<DailyMetrics> all_metrics;
+
+    tickTime am_current = {11, 30};
+
+    tick_times.push_back(am_current);
 
     DailyMetrics metrics;
-    DailyMetrics am_metrics;
 
     read_tick_records(filename, records);
 
-    parse_tick_records(records, metrics, am_metrics, pre_out.metrics.closing_price);
+    parse_tick_records(records, prev_closing_price, metrics, tick_times, all_metrics);
 
     if (metrics.ticks_count == 0) {
         return false;
@@ -382,7 +349,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, Day
     out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 
     out.metrics = metrics;
-    out.am_metrics = am_metrics;
+    out.am_metrics = all_metrics[0];
 
     return true;
 }
@@ -543,7 +510,7 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
 
         DayOutputMetrics out;
 
-        if (!process_single_file(file, out, prev_out)) {
+        if (!process_single_file(file, out, prev_out.metrics.closing_price)) {
              std::cout << file << ":" << __LINE__ << std::endl;
             continue;
         }
@@ -816,22 +783,23 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
 
     std::vector<tickTime> tick_times_seq;
     std::vector<DailyMetrics> all_metrics;
+    DailyMetrics metrics;
     
     tick_times_seq = min_vector(opts.tseq);
     std::reverse(tick_times_seq.begin(), tick_times_seq.end());
     show_time_vector(tick_times_seq);
     
-    std::ifstream infile(files_to_process[0]);
-    parse_tick_file_by_tseq(infile, all_metrics, tick_times_seq);
+    parse_tick_file_by_tseq(files_to_process[0], all_metrics, tick_times_seq, metrics);
 
     print__headers("PRICE ", tseq_price_table_cols);
 
-    for (size_t i = 0; i < all_metrics.size() && i < tick_times_seq.size(); ++i) {
+    for (size_t i = 0; i < all_metrics.size() ; ++i) {
         auto& m = all_metrics[i];
-        const auto& t = tick_times_seq[i]; 
         
-        print_tseq_price(t, m);
+        print_tseq_price(m);
     }
+
+    print_tseq_price(metrics);
 
     print__headers("PRICE ", tseq_price_table_cols);
 }

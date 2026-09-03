@@ -91,6 +91,7 @@ struct range_info{
 };
 
 struct record_stream {
+    tickTime what;
     bsn_action_group super;
     bsn_action_group big;
     bsn_action_group middle;
@@ -424,7 +425,7 @@ inline bool first_record(TickRecord this_record) { return this_record.time == "0
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
 void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
 
-extern void update_metrics_header(record_stream& header, StreamRecord& stream);
+extern void update_metrics_header(tickTime what, record_stream& header, StreamRecord& stream);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);

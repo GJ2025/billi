@@ -60,7 +60,7 @@ std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t 
 
     int total_minutes = time_to_minutes(current);
 
-    result.push_back(current);
+    // result.push_back(current);
 
     while (total_minutes > 0) {
         total_minutes -= interval_minutes;
