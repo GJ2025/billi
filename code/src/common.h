@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <span>
 
+namespace fs = std::filesystem;
+
 #define WAN 10000
 #define BAI 100
 
@@ -122,6 +124,11 @@ inline std::string format_with_sign(int val) {
         return "+" + std::to_string(val);
     }
     return std::to_string(val); // 负数或 0 保持原样
+}
+
+inline std::string extract_date_from_filename(const std::string& filename) {
+    std::string pure_name = fs::path(filename).filename().string();
+    return (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
 }
 
 #endif // COMMON_H

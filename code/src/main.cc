@@ -322,7 +322,7 @@ bool record_should_process(TickRecord& record){
 
 }
 
-bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price) {
+bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price, bool checktime) {
 
     std::vector<TickRecord> records;
     std::vector<tickTime> tick_times;
@@ -342,11 +342,19 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
         return false;
     }
     
-    std::string pure_name = fs::path(filename).filename().string();
-    out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
+    // std::string pure_name = fs::path(filename).filename().string();
+    // out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
+
+    out.date_str = extract_date_from_filename(filename);
 
     out.metrics = metrics;
-    out.am_metrics = all_metrics[0];
+    if (checktime){
+        if (all_metrics.size() > 0){
+            out.am_metrics = all_metrics[0];        
+        }
+    }else{
+        out.am_metrics = all_metrics[0];
+    }
 
     return true;
 }
@@ -488,7 +496,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     return 0;
 }
 
-void process_files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
+void process_files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool checktime) {
     out_vector.clear(); // 确保传入的 vector 是干净的
 
     DayOutputMetrics prev_out;  
@@ -507,7 +515,7 @@ void process_files_to_metrics(const std::vector<std::string>& files_to_process, 
 
         DayOutputMetrics out;
 
-        if (!process_single_file(file, out, prev_out.metrics.closing_price)) {
+        if (!process_single_file(file, out, prev_out.metrics.closing_price, checktime)) {
              std::cout << file << ":" << __LINE__ << std::endl;
             continue;
         }
@@ -805,15 +813,43 @@ int init_and_get_files_wrapper(const ProgramOptions& opts, std::vector<std::stri
     return initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
 }
 
+bool check_and_print_date_mismatches(const std::vector<std::string>& files, 
+                                       const std::vector<DayOutputMetrics>& out_vector) {
+    size_t check_size = std::min(files.size(), out_vector.size());
+    bool has_mismatch = false;
+    
+    for (size_t i = 0; i < check_size; ++i) {
+        std::string file_date = extract_date_from_filename(files[i]);
+        if (file_date != out_vector[i].date_str) {
+            if (!has_mismatch) {
+                std::cout << "Date mismatch detected!" << std::endl;
+                has_mismatch = true;
+            }
+            std::cout << "Index " << i 
+                      << " | File: " << files[i] 
+                      << " | File Date: " << file_date 
+                      << " | Out Date: " << out_vector[i].date_str << std::endl;
+        }
+    }
+
+    if (files.size() != out_vector.size()) {
+        std::cout << "Container size mismatch! Files size: " << files.size() 
+                  << ", Out vector size: " << out_vector.size() << std::endl;
+        has_mismatch = true;
+    }
+    
+    return has_mismatch;
+}
+
 void select_stock(const std::string& data_dir_path, size_t show_limit) {
     std::vector<std::string> files_to_process;
     std::vector<DayOutputMetrics> out_vector;
 
     initialize_and_get_files(data_dir_path, show_limit, files_to_process);
-    process_files_to_metrics(files_to_process, out_vector); 
+    process_files_to_metrics(files_to_process, out_vector, false); 
 
-    if (files_to_process.size() !=  out_vector.size() ){
-        std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl; 
+    if (check_and_print_date_mismatches(files_to_process, out_vector)){
+        std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
         return;
     }
 
@@ -825,7 +861,7 @@ void select_stock(const std::string& data_dir_path, size_t show_limit) {
 
     get_signal_from_metrics(size, files_to_process, out_vector);
 
-
+    return;
 }
 
 void process_subdirectories(const std::string& data_dir_path, size_t show_limit) {
@@ -879,7 +915,7 @@ int main(int argc, char* argv[]) {
 
     }else{
         initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
-        process_files_to_metrics(files_to_process, out_vector);
+        process_files_to_metrics(files_to_process, out_vector, true);
         show_metrics_by_opts(opts, out_vector);
     }
 
