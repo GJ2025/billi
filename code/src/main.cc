@@ -24,8 +24,8 @@
 namespace fs = std::filesystem;
 
 bool record_should_process(TickRecord& record);
-void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_price);
-void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_closing_price);
+void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
+void process_first_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_closing_price);
 
 bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
@@ -241,30 +241,28 @@ void parse_tick_records(std::vector<TickRecord>& records,
                         std::vector<DailyMetrics>& all_metrics) {
 
     TickRecord pre_record;
-    StreamRecord stream;
+    Burst_st burst;
     size_t tick_idx = 0;
 
-
     for (const auto& record : records) {
-        process_first_record(metrics, stream, record, prev_closing_price);
+        process_first_record(metrics, burst, record, prev_closing_price);
 
         if (pre_record.full() && record_change(record, pre_record)) {
-            update_metrics_header(record.t, metrics.header, stream);
+            update_metrics_stream(record.t, metrics.header, burst);
         }
 
         if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) > 0) {
-            update_metrics_header(record.t, metrics.header, stream);
             all_metrics.push_back(metrics);
             tick_idx++; 
         }
 
         if (pre_record.full()){
-            update_stream(stream, record, pre_record);
+            update_burst(burst, record, pre_record);
         }
 
         update_metrics_by_record(metrics, record);
 
-        process_last_record(metrics, stream, record, pre_record.price);
+        process_last_record(metrics, burst, record, pre_record.price);
 
         pre_record = record;
     }
@@ -278,11 +276,10 @@ void parse_tick_file_by_tseq(std::string filename, std::vector<DailyMetrics>& al
     parse_tick_records(records, 0, metrics, tick_times, all_metrics);
 }
 
-void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_price){
+void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price){
     if (last_record(record)) {
 
-
-        update_metrics_header(record.t, metrics.header, stream);
+        update_metrics_stream(record.t, metrics.header, burst);
         set_metrics_record(metrics, record, RecordType::LAST);
         metrics.this_1457_pirce = pre_price;
 
@@ -292,7 +289,7 @@ void process_last_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord
     }
 }
 
-void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecord record, double pre_closing_price){
+void process_first_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_closing_price){
     if (first_record(record)) {
         set_metrics_record(metrics, record, RecordType::FIRST);
 
@@ -300,7 +297,7 @@ void process_first_record(DailyMetrics& metrics, StreamRecord& stream, TickRecor
             pre_closing_price = record.price;
         }
 
-        stream_new(stream, record, pre_closing_price);
+        burst_new(burst, record, pre_closing_price);
         metrics.pre_closing_price = pre_closing_price;
 
         get_record_stream_point(metrics.start_point,  record, pre_closing_price);

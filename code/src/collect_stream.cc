@@ -22,18 +22,15 @@ bool record_change(const TickRecord this_record, const TickRecord pre_record) {
     return true;
 }
 
-
-
-void stream_new(StreamRecord& stream, const TickRecord record, double pre_price) {
-    stream.records.clear();
-    stream.records.push_back(record);
-    stream.gap = record.price - pre_price;
+void burst_new(Burst_st& burst, const TickRecord record, double pre_price) {
+    burst.records.clear();
+    burst.records.push_back(record);
+    burst.gap = record.price - pre_price;
 }
 
-void stream_add_record(StreamRecord& stream, const TickRecord record) {
-    stream.records.push_back(record);
+void burst_add_record(Burst_st& burst, const TickRecord record) {
+    burst.records.push_back(record);
 }
-
 
 void collect_price_action(deal_price& rp, double trade, size_t volume, double gap, size_t tick_count) {
     if (gap < 0.0){
@@ -61,15 +58,15 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
     } 
 }
 
-void update_metrics_header(tickTime what, record_stream& header, StreamRecord& stream) {
+void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst) {
     double total_money = 0.0;
     size_t total_volume = 0;
     
-    if (stream.records.empty()) {
+    if (burst.records.empty()) {
         return;
     }
 
-    for (const auto& r : stream.records){
+    for (const auto& r : burst.records){
         total_money += (r.volume * r.price * 100.0);
         total_volume += r.volume * 100;
     } 
@@ -78,12 +75,12 @@ void update_metrics_header(tickTime what, record_stream& header, StreamRecord& s
                              (total_money > 30 * WAN) ? &header.big :
                              (total_money > 5 * WAN)  ? &header.middle : &header.small;
     
-    collect_bs_action(*group, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
-    collect_bs_action(header.total, stream.records[0].bs_type, total_money, total_volume, stream.gap, stream.records.size());
+    collect_bs_action(*group, burst.records[0].bs_type, total_money, total_volume, burst.gap, burst.records.size());
+    collect_bs_action(header.total, burst.records[0].bs_type, total_money, total_volume, burst.gap, burst.records.size());
 
-    header.what = what;
+    header.time = time;
 
-    stream.records.clear();
+    burst.records.clear();
 }
 
 void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price) {
@@ -133,14 +130,14 @@ void sub_record_stream_point(record_stream& this_point, record_stream& that_poin
 }
 
 
-void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record) {
-    if (stream.records.empty() || record_change(record, pre_record)) {
+void update_burst(Burst_st& burst, const TickRecord& record, const TickRecord& pre_record) {
+    if (burst.records.empty() || record_change(record, pre_record)) {
 
-        stream_new(stream, record, pre_record.price);
+        burst_new(burst, record, pre_record.price);
 
     }else{
 
-        stream_add_record(stream, record);
+        burst_add_record(burst, record);
     }
 
     return;

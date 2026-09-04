@@ -91,7 +91,7 @@ struct range_info{
 };
 
 struct record_stream {
-    tickTime what;
+    tickTime time;
     bsn_action_group super;
     bsn_action_group big;
     bsn_action_group middle;
@@ -99,7 +99,7 @@ struct record_stream {
     bsn_action_group total;
 };
 
-struct StreamRecord {
+struct Burst_st {
     std::vector<TickRecord> records;
     double gap = 0.0;
 };
@@ -423,11 +423,11 @@ inline bool first_record(TickRecord this_record) { return this_record.time == "0
 
 
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
-void update_stream(StreamRecord& stream, const TickRecord& record, const TickRecord& pre_record);
+extern void burst_new(Burst_st& burst, TickRecord record, double pre_price);
+extern void update_burst(Burst_st& burst, const TickRecord& record, const TickRecord& pre_record);
 
-extern void update_metrics_header(tickTime what, record_stream& header, StreamRecord& stream);
+extern void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
-extern void stream_new(StreamRecord& stream, TickRecord record, double pre_price);
 extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);
 extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);
 void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats); 

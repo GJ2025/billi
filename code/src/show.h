@@ -327,7 +327,7 @@ inline void print_tseq_price(DailyMetrics& metrics) {
     int i = 0;
 
     const std::vector<Col>& cols = tseq_price_table_cols;
-    std::string tshow = format_tick_times(metrics.header.what);
+    std::string tshow = format_tick_times(metrics.header.time);
 
     bsn_action_group dump;
     deal_summary deal_summary_super;
