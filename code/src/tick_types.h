@@ -59,6 +59,17 @@ struct ProgramOptions {
     size_t show_limit = 10000;
     std::string lvmeng_dir_path;
     std::string data_dir_path;
+
+    bool check_file() const {
+        if (data_dir_path.empty()) {
+            return true;
+        }
+        return false;
+    }
+
+    bool check_Dir() const {
+        return !check_file();
+    }
 };
 
 
