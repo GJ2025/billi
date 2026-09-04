@@ -58,7 +58,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
                 parse_tseq_opt(argc - optind, argv + optind, opts);
                 optind = argc;
                 opts.show_t = true;
-                opts.show_limit = 1;
+                opts.show_limit = 2;
                 break;
             }
             default:

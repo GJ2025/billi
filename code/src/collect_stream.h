@@ -134,6 +134,12 @@ struct DailyMetrics {
 };
 
 
+struct DailyMetrics_range_st {
+    std::vector<tickTime> tick_times;
+    std::vector<DailyMetrics> all_metrics;
+    DailyMetrics metrics;
+};
+
 struct SubCondition {
     bool satisfied;         
     std::string description; 

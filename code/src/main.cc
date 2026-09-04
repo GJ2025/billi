@@ -21,6 +21,7 @@
 #include "process_files.h"
 #include "time_seq.h"
 #include "show.h"
+#include "collect_stream.h"
 
 namespace fs = std::filesystem;
 
@@ -269,12 +270,16 @@ void parse_tick_records(std::vector<TickRecord>& records,
     }
 }
 
-void parse_tick_file_by_tseq(std::string filename, std::vector<DailyMetrics>& all_metrics, std::vector<tickTime>& tick_times, DailyMetrics& metrics) {
+void parse_tick_file_by_tseq(std::string filename, 
+                            double prev_closing_price, 
+                            DailyMetrics& metrics, 
+                            std::vector<tickTime>& tick_times, 
+                            std::vector<DailyMetrics>& all_metrics) {
 
     std::vector<TickRecord> records;
     read_tick_records(filename, records);
 
-    parse_tick_records(records, 0, metrics, tick_times, all_metrics);
+    parse_tick_records(records, prev_closing_price, metrics, tick_times, all_metrics);
 }
 
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price){
@@ -326,20 +331,23 @@ bool record_should_process(TickRecord& record){
 bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price, bool checktime) {
 
     std::vector<TickRecord> records;
-    std::vector<tickTime> tick_times;
-    std::vector<DailyMetrics> all_metrics;
+    // std::vector<tickTime> tick_times;
+    // std::vector<DailyMetrics> all_metrics;
+    // DailyMetrics metrics;
+
+    DailyMetrics_range_st range;
 
     tickTime am_current = {11, 30};
 
-    tick_times.push_back(am_current);
+    range.tick_times.push_back(am_current);
 
-    DailyMetrics metrics;
+
 
     read_tick_records(filename, records);
 
-    parse_tick_records(records, prev_closing_price, metrics, tick_times, all_metrics);
+    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics);
 
-    if (metrics.ticks_count == 0) {
+    if (range.metrics.ticks_count == 0) {
         return false;
     }
     
@@ -348,13 +356,13 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
 
     out.date_str = extract_date_from_filename(filename);
 
-    out.metrics = metrics;
+    out.metrics = range.metrics;
     if (checktime){
-        if (all_metrics.size() > 0){
-            out.am_metrics = all_metrics[0];        
+        if (range.all_metrics.size() > 0){
+            out.am_metrics = range.all_metrics[0];        
         }
     }else{
-        out.am_metrics = all_metrics[0];
+        out.am_metrics = range.all_metrics[0];
     }
 
     return true;
@@ -719,25 +727,24 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
         return;
     }
 
-    std::vector<tickTime> tick_times_seq;
-    std::vector<DailyMetrics> all_metrics;
-    DailyMetrics metrics;
+    DailyMetrics_range_st range;
+    DailyMetrics_range_st range_dump;
     
-    tick_times_seq = min_vector(opts.tseq);
-    std::reverse(tick_times_seq.begin(), tick_times_seq.end());
-    show_time_vector(tick_times_seq);
+    range.tick_times = min_vector(opts.tseq);
+    std::reverse(range.tick_times.begin(), range.tick_times.end());
+    show_time_vector(range.tick_times);
     
-    parse_tick_file_by_tseq(files_to_process[0], all_metrics, tick_times_seq, metrics);
+    parse_tick_file_by_tseq(files_to_process[0], 0, range_dump.metrics, range_dump.tick_times, range_dump.all_metrics);
+    parse_tick_file_by_tseq(files_to_process[1], range_dump.metrics.closing_price, range.metrics, range.tick_times, range.all_metrics);
 
     print__headers("PRICE ", tseq_price_table_cols);
 
-    for (size_t i = 0; i < all_metrics.size() ; ++i) {
-        auto& m = all_metrics[i];
-        
-        print_tseq_price(m);
+    for (size_t i = 0; i < range.all_metrics.size() ; ++i) {
+                
+        print_tseq_price(range.all_metrics[i]);
     }
 
-    print_tseq_price(metrics);
+    print_tseq_price(range.metrics);
 
     print__headers("PRICE ", tseq_price_table_cols);
 }
