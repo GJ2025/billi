@@ -207,20 +207,10 @@ struct DayOutputMetrics {
 
 };
 
-struct signal_info {
-    double all_will_netin = 0.0;
-    double all_price_netin = 0.0;
 
-    double will_netin_change = 0.0;
-    double price_netin_change = 0.0;
-    size_t shrink_firm;
-    size_t grow_firm;
-    size_t shrink_loose;
-    size_t grow_loose;
-    int price_day;
-    std::string display_file;
-    DayOutputMetrics out;
-    std::string trigger_reason;
+struct file2out_st{
+    std::vector<std::string> files_to_process;
+    std::vector<DayOutputMetrics> out_vector;
 };
 
 struct deal_probability_distribution {

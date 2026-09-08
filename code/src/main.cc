@@ -719,6 +719,7 @@ void select_stock(const std::string& data_dir_path, std::vector<std::string>& fi
     return;
 }
 
+
 void process_subdirectories(const std::string& data_dir_path, size_t show_limit) {
 
     if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
@@ -732,8 +733,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
         if (entry.is_directory()) {
             std::string dir_name = entry.path().filename().string();
 
-            if (dir_name.find("show") != std::string::npos || 
-                dir_name.find("tseq_show") != std::string::npos) {
+            if (should_skip_directory(dir_name)) {
                 continue;
             }
 
@@ -753,8 +753,10 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
 
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
-    std::vector<std::string> files_to_process;
-    std::vector<DayOutputMetrics> out_vector;
+    file2out_st file2out;
+    std::vector<std::string> files;
+    
+    files_list(FILE_BUFF, 0, files);
 
     if (parse_opt(argc, argv, opts) != 0){
         return 1;
@@ -765,15 +767,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    files_list(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
+    files_list(opts.lvmeng_dir_path, opts.show_limit, file2out.files_to_process);
     if (opts.tseq.cnt != 0){
 
-        handle_tseq_mode(opts, files_to_process);
+        handle_tseq_mode(opts, file2out.files_to_process);
 
     }else{
 
-        files_to_metrics(files_to_process, out_vector, true);
-        show_metrics_by_opts(opts, out_vector);
+        files_to_metrics(file2out.files_to_process, file2out.out_vector, true);
+        show_metrics_by_opts(opts, file2out.out_vector);
     }
 
     

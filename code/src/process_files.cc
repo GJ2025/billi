@@ -57,14 +57,14 @@ int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::
         return -1; 
     }
 
-    if (files_to_process.size() > show_limit){
+    if (show_limit && files_to_process.size() > show_limit){
         files_to_process.erase(
             files_to_process.begin(), 
             files_to_process.end() - show_limit
         );
+    
+        files_to_process.shrink_to_fit();
     }
-
-    files_to_process.shrink_to_fit();
 
     return 0;
 }
