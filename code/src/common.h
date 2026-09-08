@@ -4,6 +4,9 @@
 #include <iostream>
 #include <filesystem>
 #include <span>
+#include <vector>
+#include <string>
+
 
 namespace fs = std::filesystem;
 
@@ -14,6 +17,8 @@ struct tickTime {
     int hour = 0;
     int minute = 0;
 };
+
+extern std::vector<std::string> buffered_files;
 
 
 inline double pct(double target, double base){

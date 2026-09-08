@@ -25,6 +25,7 @@
 #include "sig.h"
 
 #define PRICE_THRESHOLD 0.05
+std::vector<std::string> buffered_files;
 
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
@@ -750,13 +751,12 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
     print__headers("QUIET", signal_table_cols);
 }
 
-
 int main(int argc, char* argv[]) {
     ProgramOptions opts;
     file2out_st file2out;
-    std::vector<std::string> files;
     
-    files_list(FILE_BUFF, 0, files);
+    
+    files_list(FILE_BUFF, 0, buffered_files);
 
     if (parse_opt(argc, argv, opts) != 0){
         return 1;
