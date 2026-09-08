@@ -22,8 +22,9 @@
 #include "time_seq.h"
 #include "show.h"
 #include "collect_stream.h"
+#include "sig.h"
 
-namespace fs = std::filesystem;
+#define PRICE_THRESHOLD 0.05
 
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
@@ -33,7 +34,6 @@ bool is_loading_data(const std::string& str) {
     if (str.empty()) return false;
     return std::isdigit(static_cast<unsigned char>(str[0]));
 }
-
 
 std::string extract_company_id(const std::string& filename) {
     std::string pure_name = fs::path(filename).stem().string(); 
@@ -73,9 +73,6 @@ std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMe
 
     double will_net_money = deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
     double price_net_money = deal_summary_total.price.up.money - deal_summary_total.price.down.money;
-
-    // double avg_change = out.metrics.avg_price - prev_out.metrics.avg_price;
-    #define PRICE_THRESHOLD 0.05
 
     std::vector<std::string> signals;
 
@@ -331,29 +328,19 @@ bool record_should_process(TickRecord& record){
 bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price, bool checktime) {
 
     std::vector<TickRecord> records;
-    // std::vector<tickTime> tick_times;
-    // std::vector<DailyMetrics> all_metrics;
-    // DailyMetrics metrics;
 
     DailyMetrics_range_st range;
 
     tickTime am_current = {11, 30};
 
     range.tick_times.push_back(am_current);
-
-
-
     read_tick_records(filename, records);
-
     parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics);
 
     if (range.metrics.ticks_count == 0) {
         return false;
     }
     
-    // std::string pure_name = fs::path(filename).filename().string();
-    // out.date_str = (pure_name.length() >= 10) ? pure_name.substr(0, 10) : pure_name;
-
     out.date_str = extract_date_from_filename(filename);
 
     out.metrics = range.metrics;
@@ -435,10 +422,8 @@ void make_test(DayOutputMetrics& out){
     return;
 }
 
-
-
-void process_files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool checktime) {
-    out_vector.clear(); // 确保传入的 vector 是干净的
+void files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool checktime) {
+    out_vector.clear(); 
 
     DayOutputMetrics prev_out;  
     
@@ -633,69 +618,8 @@ int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector) {
     return generic_fixed_base_check(out_vector, pred);
 }
 
-
-void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
-    for (const auto& sc : sub_conditions) {
-        if (sc.satisfied) {
-            print_signal(file, v_stats, sc);
-        }
-    }
-}
-
-
-void get_signal_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
-    if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
-        return;
-    }
-
-    VectorStats v_stats;
-
-    const auto& file = files_to_process[0]; 
-
-    metry_vector_summary(out_vector, v_stats);
-
-    TradeCategoryStats& a0 = v_stats.a0;
-    TradeCategoryStats& a1 = v_stats.a1;
-
-    bool all_netin = (a0.all_will_netin > 0 || a0.all_price_netin > 0);
-    bool middle_netin = (a0.strip_will_netin > 0 || a0.strip_price_netin > 0);
-
-
-    std::vector<SubCondition> sub_conditions = {
-        {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_down_day_adjacent > 3,
-            "will_up"
-        },
-        {
-            all_netin && a0.pct_change_base_pre < 0.1,
-            "abnormal_all"
-        },
-        {
-            middle_netin && a0.pct_change_base_925 < 0.1,
-            "abnormal_middle"
-        },
-        {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0  
-            && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 
-            && v_stats.price_day_adjacent[0] >= -1 && v_stats.price_day_adjacent[0] <= 3,
-            "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
-        },
-        {
-            a0.pct_change_base_925 > 0 && middle_netin == false,
-            "up_out_m" 
-        },
-        {
-            a0.pct_change_base_pre > 0 && all_netin == false,
-            "up_out_all" 
-        }        
-    };
-
-
-    check_sub_conditions(file, v_stats, sub_conditions);
-}
-
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
-    // 移除 const，确保成员指针允许被用于赋值操作
+    
     bool ProgramOptions::* const flags[] = {
         &ProgramOptions::show_head,
         &ProgramOptions::show_all,
@@ -794,13 +718,12 @@ void select_stock(const std::string& data_dir_path, std::vector<std::string>& fi
     std::reverse(out_vector.begin(), out_vector.end());
     std::reverse(files_to_process.begin(), files_to_process.end());
 
-    get_signal_from_metrics(out_vector.size(), files_to_process, out_vector);
+    signals_from_metrics(out_vector.size(), files_to_process, out_vector);
 
     return;
 }
 
 void process_subdirectories(const std::string& data_dir_path, size_t show_limit) {
-    namespace fs = std::filesystem;
 
     if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
         std::cerr << "Invalid directory path: " << data_dir_path << std::endl;
@@ -822,7 +745,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
             std::vector<DayOutputMetrics> out_vector;
 
             initialize_and_get_files(entry.path().string(), show_limit, files_to_process);
-            process_files_to_metrics(files_to_process, out_vector, false); 
+            files_to_metrics(files_to_process, out_vector, false); 
 
             select_stock(entry.path().string(), files_to_process, out_vector);
         }
@@ -853,7 +776,7 @@ int main(int argc, char* argv[]) {
 
     }else{
 
-        process_files_to_metrics(files_to_process, out_vector, true);
+        files_to_metrics(files_to_process, out_vector, true);
         show_metrics_by_opts(opts, out_vector);
     }
 
