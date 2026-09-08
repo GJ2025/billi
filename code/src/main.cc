@@ -673,10 +673,6 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
     print__headers("PRICE ", tseq_price_table_cols);
 }
 
-int init_and_get_files_wrapper(const ProgramOptions& opts, std::vector<std::string>& files_to_process) {
-    return initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
-}
-
 bool check_and_print_date_mismatches(const std::vector<std::string>& files, 
                                        const std::vector<DayOutputMetrics>& out_vector) {
     size_t check_size = std::min(files.size(), out_vector.size());
@@ -744,7 +740,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
             std::vector<std::string> files_to_process;
             std::vector<DayOutputMetrics> out_vector;
 
-            initialize_and_get_files(entry.path().string(), show_limit, files_to_process);
+            files_list(entry.path().string(), show_limit, files_to_process);
             files_to_metrics(files_to_process, out_vector, false); 
 
             select_stock(entry.path().string(), files_to_process, out_vector);
@@ -769,7 +765,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    initialize_and_get_files(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
+    files_list(opts.lvmeng_dir_path, opts.show_limit, files_to_process);
     if (opts.tseq.cnt != 0){
 
         handle_tseq_mode(opts, files_to_process);

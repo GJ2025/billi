@@ -35,7 +35,7 @@ void run_preprocessing(const std::string& dir_path) {
     }
 }
 
-int initialize_and_get_files(const std::string& dir_path, size_t show_limit, std::vector<std::string>& files_to_process) {
+int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::string>& files_to_process) {
 
     run_preprocessing(dir_path);
 
