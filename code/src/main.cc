@@ -26,6 +26,7 @@
 
 #define PRICE_THRESHOLD 0.05
 std::vector<std::string> buffered_files;
+std::unordered_map<std::string, std::string> code_path_map;
 
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
@@ -328,10 +329,9 @@ bool record_should_process(TickRecord& record){
 
 bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price, bool checktime) {
 
+    (void)checktime;
     std::vector<TickRecord> records;
-
     DailyMetrics_range_st range;
-
     tickTime am_current = {11, 30};
 
     range.tick_times.push_back(am_current);
@@ -345,12 +345,17 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
     out.date_str = extract_date_from_filename(filename);
 
     out.metrics = range.metrics;
-    if (checktime){
-        if (range.all_metrics.size() > 0){
-            out.am_metrics = range.all_metrics[0];        
-        }
-    }else{
-        out.am_metrics = range.all_metrics[0];
+    // if (checktime){
+    //     if (range.all_metrics.size() > 0){
+    //         out.am_metrics = range.all_metrics[0];        
+    //     }
+    // }else{
+    //     out.am_metrics = range.all_metrics[0];
+    // }
+
+
+    if (range.all_metrics.size() > 0){
+        out.am_metrics = range.all_metrics[0];        
     }
 
     return true;
@@ -757,6 +762,8 @@ int main(int argc, char* argv[]) {
     
     
     files_list(FILE_BUFF, 0, buffered_files);
+    dir_map_code("/home/guoj/data", code_path_map);
+    process_files_IN_ALL(buffered_files, code_path_map);
 
     if (parse_opt(argc, argv, opts) != 0){
         return 1;
@@ -764,6 +771,10 @@ int main(int argc, char* argv[]) {
 
      if (opts.check_Dir()){
         process_subdirectories(opts.data_dir_path, opts.show_limit);
+        return 0;
+    }
+
+    if (opts.lvmeng_dir_path.size()==0){
         return 0;
     }
 

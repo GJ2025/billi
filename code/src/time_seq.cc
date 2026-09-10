@@ -6,10 +6,7 @@
 #include <string>
 #include "time_seq.h"
 
-// struct tickTime {
-//     int hour = 0;
-//     int minute = 0;
-// };
+tickTime current;
 
 tickTime get_current_tick_time() {
     auto now = std::chrono::system_clock::now();

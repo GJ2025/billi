@@ -18,10 +18,12 @@ struct SeqTime{
 
 tickTime get_current_tick_time();
 std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t cnt = 0, int interval_minutes = 30);
+extern tickTime current;
+
 
 inline std::vector<tickTime> min_vector(SeqTime tseq){
 
-    tickTime current;
+    
 
     if (tseq.start_hour == 0 && tseq.start_min ==0 ){
         current = get_current_tick_time();
