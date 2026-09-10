@@ -24,6 +24,7 @@ struct ProgramOptions {
     bool show_middle_ratio = false;
     bool show_small_ratio = false;
     bool show_total_ratio = false;
+    bool show_sz = false;
     bool show_t= false;
     SeqTime tseq;
     size_t show_limit = 10000;

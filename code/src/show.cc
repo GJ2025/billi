@@ -381,6 +381,29 @@ void print_tseq_price(DailyMetrics& metrics) {
 
 }
 
+void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics) {
+    int i = 0;
+
+    const std::vector<Col>& cols = tseq_volume_table_cols;
+
+    print_next(date, i, cols);
+
+    for (const auto& metrics : all_metrics) {
+        bsn_action_group dump;
+        deal_summary deal_summary_total;
+        get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+        print_next((deal_summary_total.total.volume)/WAN/WAN, i, cols);
+    }
+
+        bsn_action_group dump;
+        deal_summary deal_summary_total;
+        get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+        print_next((deal_summary_total.total.volume)/WAN/WAN, i, cols);
+
+    std::cout << std::endl;
+
+}
+
 void print_signal(const std::string& file, const VectorStats& v_stats, SubCondition sc) {
     int i = 0;
 

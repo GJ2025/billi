@@ -16,6 +16,10 @@ struct SeqTime{
     int intervel =0;
 };
 
+
+extern tickTime sz_t[] ;
+extern size_t get_sz_t_size();
+
 tickTime get_current_tick_time();
 std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t cnt = 0, int interval_minutes = 30);
 extern tickTime current;
@@ -34,6 +38,21 @@ inline std::vector<tickTime> min_vector(SeqTime tseq){
 
 
     return generate_today_tick_times(current, tseq.cnt, tseq.intervel);
+}
+
+inline std::vector<tickTime> sz_time_vector(){
+
+    
+    std::vector<tickTime> result;
+
+
+    size_t i = 0;
+    for (i = 0; i < get_sz_t_size(); i++){
+        result.push_back(sz_t[i]);
+    }
+
+    return result;
+
 }
 
 

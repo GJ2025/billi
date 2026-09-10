@@ -38,5 +38,6 @@ void print_all() ;
 
 void print_headers(const ProgramOptions& opts);
 void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence) ;
+void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics);
 
 #endif // SHOW_H

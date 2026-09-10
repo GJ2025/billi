@@ -327,9 +327,8 @@ bool record_should_process(TickRecord& record){
 
 }
 
-bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price, bool checktime) {
+bool process_single_file(const std::string& filename, DayOutputMetrics& out, double prev_closing_price) {
 
-    (void)checktime;
     std::vector<TickRecord> records;
     DailyMetrics_range_st range;
     tickTime am_current = {11, 30};
@@ -345,13 +344,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
     out.date_str = extract_date_from_filename(filename);
 
     out.metrics = range.metrics;
-    // if (checktime){
-    //     if (range.all_metrics.size() > 0){
-    //         out.am_metrics = range.all_metrics[0];        
-    //     }
-    // }else{
-    //     out.am_metrics = range.all_metrics[0];
-    // }
+
 
 
     if (range.all_metrics.size() > 0){
@@ -428,7 +421,7 @@ void make_test(DayOutputMetrics& out){
     return;
 }
 
-void files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool checktime) {
+void files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
     out_vector.clear(); 
 
     DayOutputMetrics prev_out;  
@@ -447,7 +440,7 @@ void files_to_metrics(const std::vector<std::string>& files_to_process, std::vec
 
         DayOutputMetrics out;
 
-        if (!process_single_file(file, out, prev_out.metrics.closing_price, checktime)) {
+        if (!process_single_file(file, out, prev_out.metrics.closing_price)) {
              std::cout << file << ":" << __LINE__ << std::endl;
             continue;
         }
@@ -469,6 +462,34 @@ void files_to_metrics(const std::vector<std::string>& files_to_process, std::vec
         prev_out = out;
 
     }
+}
+
+
+void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
+    
+    if (files_to_process.empty()) {
+        return;
+    }
+
+    std::string target_company_id = extract_company_id(files_to_process[0]);
+
+    print__headers("PRICE ", tseq_volume_table_cols);
+
+    for (const auto& file : files_to_process) {
+        if (!check_company_id_match(file, target_company_id)) {
+            std::cout << file << ":" << target_company_id << std::endl;
+            continue;
+        }
+
+        
+        DailyMetrics_range_st range;
+        range.tick_times = sz_time_vector();
+
+        parse_tick_file_by_tseq(file, 0, range.metrics, range.tick_times, range.all_metrics);
+        print_tseq_sz(extract_date_from_filename(file), range.metrics, range.all_metrics);
+    }
+
+    print__headers("PRICE ", tseq_volume_table_cols);
 }
 
 void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetrics>& out_vector) {
@@ -747,7 +768,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
             std::vector<DayOutputMetrics> out_vector;
 
             files_list(entry.path().string(), show_limit, files_to_process);
-            files_to_metrics(files_to_process, out_vector, false); 
+            files_to_metrics(files_to_process, out_vector); 
 
             select_stock(entry.path().string(), files_to_process, out_vector);
         }
@@ -779,13 +800,17 @@ int main(int argc, char* argv[]) {
     }
 
     files_list(opts.lvmeng_dir_path, opts.show_limit, file2out.files_to_process);
-    if (opts.tseq.cnt != 0){
+    if (opts.show_sz){
+
+        traverse_files_for_sz(file2out.files_to_process);
+
+    }else if (opts.tseq.cnt != 0){
 
         handle_tseq_mode(opts, file2out.files_to_process);
 
     }else{
 
-        files_to_metrics(file2out.files_to_process, file2out.out_vector, true);
+        files_to_metrics(file2out.files_to_process, file2out.out_vector);
         show_metrics_by_opts(opts, file2out.out_vector);
     }
 

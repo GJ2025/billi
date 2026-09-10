@@ -19,6 +19,17 @@ struct tickTime {
     int minute = 0;
 };
 
+inline std::string format_tick_time(const tickTime& t) {
+    char buf[16];
+    // 如果需要带冒号的格式（如 "09:35"）
+    std::snprintf(buf, sizeof(buf), "%02d:%02d", t.hour, t.minute);
+    
+    // 如果需要纯数字无冒号拼接（如 "0935"），请改成：
+    // std::snprintf(buf, sizeof(buf), "%02d%02d", t.hour, t.minute);
+    
+    return std::string(buf);
+}
+
 extern std::vector<std::string> buffered_files;
 
 

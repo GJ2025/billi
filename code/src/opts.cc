@@ -21,7 +21,7 @@ int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "hd:parwsqBSmnTRbl:MtD:")) != -1) {
+    while ((opt = getopt(argc, argv, "Ahd:parwsqBSmnTRbl:MtD:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.lvmeng_dir_path = optarg; break;
@@ -37,6 +37,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 's': opts.show_super = true; break;
             case 'b': opts.show_big = true; break;
             case 'q': opts.show_total_ratio = true; break;
+            case 'A': opts.show_sz = true; break;
             case 'M': {
                 opts.show_middle = true; 
                 break;

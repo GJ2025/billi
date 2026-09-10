@@ -8,6 +8,23 @@
 
 tickTime current;
 
+tickTime sz_t[] = {
+    {9, 35},
+    {9, 59},
+    {10, 29},
+    {10, 59},
+    {11, 28},
+    {13, 29},
+    {13, 59},
+    {14, 29},
+    {14, 57},
+    {15, 0},
+};
+
+size_t get_sz_t_size() {
+    return sizeof(sz_t) / sizeof(sz_t[0]);
+}
+
 tickTime get_current_tick_time() {
     auto now = std::chrono::system_clock::now();
     time_t tt = std::chrono::system_clock::to_time_t(now);
