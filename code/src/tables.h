@@ -216,16 +216,16 @@ static const std::vector<Col> tseq_price_table_cols = {
 static const std::vector<Col> tseq_volume_table_cols = {
     {"Date", 11},
 
-    {format_tick_time(sz_t[0]), 6},
-    {format_tick_time(sz_t[1]), 6},
-    {format_tick_time(sz_t[2]), 6},
-    {format_tick_time(sz_t[3]), 6},
-    {format_tick_time(sz_t[4]), 6},
-    {format_tick_time(sz_t[5]), 6},
-    {format_tick_time(sz_t[6]), 6}, 
-    {format_tick_time(sz_t[7]), 6},
-    {format_tick_time(sz_t[8]), 6},
-    {format_tick_time(sz_t[9]), 6}, 
+    {format_tick_time(sz_t[0]), 8},
+    {format_tick_time(sz_t[1]), 8},
+    {format_tick_time(sz_t[2]), 8},
+    {format_tick_time(sz_t[3]), 8},
+    {format_tick_time(sz_t[4]), 8},
+    {format_tick_time(sz_t[5]), 8},
+    {format_tick_time(sz_t[6]), 8}, 
+    {format_tick_time(sz_t[7]), 8},
+    {format_tick_time(sz_t[8]), 8},
+    {format_tick_time(sz_t[9]), 8}, 
 
 };
 

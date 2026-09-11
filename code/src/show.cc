@@ -392,13 +392,13 @@ void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<D
         bsn_action_group dump;
         deal_summary deal_summary_total;
         get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-        print_next((deal_summary_total.total.volume)/WAN/WAN, i, cols);
+        print_next((deal_summary_total.total.volume)/WAN, i, cols);
     }
 
         bsn_action_group dump;
         deal_summary deal_summary_total;
         get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-        print_next((deal_summary_total.total.volume)/WAN/WAN, i, cols);
+        print_next((deal_summary_total.total.volume)/WAN, i, cols);
 
     std::cout << std::endl;
 

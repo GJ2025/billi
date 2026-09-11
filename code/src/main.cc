@@ -254,6 +254,9 @@ void parse_tick_records(std::vector<TickRecord>& records,
 
         if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) > 0) {
             all_metrics.push_back(metrics);
+
+            // std::cout << record.t.hour << ":" << record.t.minute << std::endl;
+
             tick_idx++; 
         }
 
@@ -484,9 +487,10 @@ void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
         
         DailyMetrics_range_st range;
         range.tick_times = sz_time_vector();
+        const std::string date  = extract_date_from_filename(file);
 
         parse_tick_file_by_tseq(file, 0, range.metrics, range.tick_times, range.all_metrics);
-        print_tseq_sz(extract_date_from_filename(file), range.metrics, range.all_metrics);
+        print_tseq_sz(date, range.metrics, range.all_metrics);
     }
 
     print__headers("PRICE ", tseq_volume_table_cols);
