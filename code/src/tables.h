@@ -92,14 +92,14 @@ inline const std::vector<Col> quiet_buying_table_cols = {
 
 inline const std::vector<Col> signal_table_cols = {
     {"File", 40,true},
-    {"WNetIn", 12, true}, 
-    {"PNetIn", 12, true},
-    {"WNET-P", 9},
-    {"PNET-P", 9},
-    {"Strip-WNetIn", 12, true}, 
-    {"Strip-PNetIn", 12, true}, 
-    {"shrink_grow", 12},
-    {"pday", 4},
+    {"WNetIn", 9, true}, 
+    {"PNetIn", 9, true},
+    {"WNET-P", 6},
+    {"PNET-P", 6},
+    {"Strip-W", 9, true}, 
+    {"Strip-P", 9, true}, 
+    {"pvolume", 12},
+    {"pday", 12},
     {"Pct0", 5},
     {"Pct1", 5},
     {"REASON", 12}

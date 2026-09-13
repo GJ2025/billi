@@ -358,36 +358,7 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     return;
 }
 
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
 
-    stats.price_down_day_pre_max = metrics_down_check_price_pre_max(out_vector);
-    stats.price_up_day_pre_max = metrics_up_check_price_pre_max(out_vector);
-    stats.price_day_pre_max = metrics_price_check_pre_max(out_vector);
-
-    stats.price_down_day_adjacent = metrics_down_check_price_adjacent(out_vector);
-    stats.price_up_day_adjacent = metrics_up_check_price_adjacent(out_vector);
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(out_vector));
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,1)));
-
-
-    stats.volume_shrink_firm = metrics_shrink_firm(out_vector);
-    stats.volume_grow_firm = metrics_grow_firm(out_vector);
-    stats.volume_shrink_loose = metrics_shrink_loose(out_vector);
-    stats.volume_grow_loose = metrics_grow_loose(out_vector);
-
-
-    metry_summary(out_vector[0], stats.a0);
-    metry_summary(out_vector[1], stats.a1);
-
-    stats.a0.all_will_netin_pct = (stats.a0.all_will_netin - stats.a1.all_will_netin) / std::abs(stats.a1.all_will_netin);
-    stats.a0.all_price_netin_pct = (stats.a0.all_price_netin - stats.a1.all_price_netin) / std::abs(stats.a1.all_price_netin);
-
-
-    stats.a0.strip_will_netin_pct = (stats.a0.strip_will_netin - stats.a1.strip_will_netin) / std::abs(stats.a1.strip_will_netin);
-    stats.a0.strip_price_netin_pct = (stats.a0.strip_price_netin - stats.a1.strip_price_netin) / std::abs(stats.a1.strip_price_netin);
-
-    return;
-}
 
 
 

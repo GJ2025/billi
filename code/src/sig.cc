@@ -22,6 +22,7 @@
 #include "time_seq.h"
 #include "show.h"
 #include "collect_stream.h"
+#include "statics.h"
 
 void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
     for (const auto& sc : sub_conditions) {
@@ -51,7 +52,7 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
 
     std::vector<SubCondition> sub_conditions = {
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_down_day_adjacent > 3,
+            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_day_adjacent[0] < -3,
             "will_up"
         },
         {

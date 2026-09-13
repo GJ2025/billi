@@ -168,16 +168,9 @@ struct TradeCategoryStats {
 
 };
 
-struct VectorStats {
-    int price_down_day_pre_max = 0;
-    int price_up_day_pre_max = 0;
-    int price_day_pre_max = 0;
-
-
-    int price_down_day_adjacent = 0;
-    int price_up_day_adjacent = 0;
-    
+struct VectorStats {    
     std::vector<int> price_day_adjacent;
+    std::vector<int> volume_day_adjacent;
 
     int volume_shrink_firm = 0;
     int volume_grow_firm = 0;
@@ -241,19 +234,8 @@ extern void get_record_stream_point(record_stream& this_point, TickRecord r, dou
 extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);
 void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats); 
 
-int metrics_up_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_down_check_price_pre_max(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_price_check_pre_max(const std::vector<DayOutputMetrics>& out_vector);
 
-int metrics_up_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_down_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector);
 
-int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector);
-int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector);
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats);
 void get_slim_base(const DailyMetrics& metrics, RecordScale type,  bsn_action_group& h, deal_summary &deal_summary);
 void this_bsn_add(const deal_bsn& deal, trade& this_trade);
 void set_metrics_record(DailyMetrics& metrics, TickRecord record, RecordType t);

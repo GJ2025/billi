@@ -395,10 +395,10 @@ void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<D
         print_next((deal_summary_total.total.volume)/WAN, i, cols);
     }
 
-        bsn_action_group dump;
-        deal_summary deal_summary_total;
-        get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-        print_next((deal_summary_total.total.volume)/WAN, i, cols);
+    bsn_action_group dump;
+    deal_summary deal_summary_total;
+    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
+    print_next((deal_summary_total.total.volume)/WAN, i, cols);
 
     std::cout << std::endl;
 
@@ -422,21 +422,18 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
     print_next_pos(v_stats.a0.strip_will_netin/WAN, i, cols);
     print_next_pos(v_stats.a0.strip_price_netin/WAN, i, cols);
 
+    std::string volume_adjacent_up_days = format_with_sign(v_stats.volume_day_adjacent[0]) 
+                                            + ":" + format_with_sign(v_stats.volume_day_adjacent[1])
+                                            + ":" + format_with_sign(v_stats.volume_day_adjacent[2])
+                                            + ":" + format_with_sign(v_stats.volume_day_adjacent[3]);
 
-    std::string volume_shrink_or_grow = std::to_string(v_stats.volume_shrink_firm) + "-" +
-                     std::to_string(v_stats.volume_shrink_loose) + "-" +
-                     std::to_string(v_stats.volume_grow_firm) + "-" +
-                     std::to_string(v_stats.volume_grow_loose);
+    std::string price_adjacent_up_days = format_with_sign(v_stats.price_day_adjacent[0]) 
+                                            + ":" +  format_with_sign(v_stats.price_day_adjacent[1])
+                                            + ":" +  format_with_sign(v_stats.price_day_adjacent[2])
+                                            + ":" +  format_with_sign(v_stats.price_day_adjacent[3]);
 
-
-    print_next(volume_shrink_or_grow, i, cols);
-
-
-    std::string price_adjacent_up_days = format_with_sign(v_stats.price_day_adjacent[0]) + ":" +
-                     format_with_sign(v_stats.price_day_adjacent[1]);
-
+    print_next(volume_adjacent_up_days, i, cols);                 
     print_next(price_adjacent_up_days, i, cols);
-
 
     print_next_pos(v_stats.a0.pct_change_base_925, i, cols);
     print_next_pos(v_stats.a0.pct_change_base_pre, i, cols);
