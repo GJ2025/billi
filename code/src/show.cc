@@ -445,10 +445,59 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
 
 }
 
-void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const std::string& divergence_str) {
+std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+    (void)prev_out;
+
+    bsn_action_group dump;
+    deal_summary deal_summary_total;
+    get_slim_base(out.metrics, RecordScale::TOTAL, dump, deal_summary_total);
+
+    double will_net_money = deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
+    double price_net_money = deal_summary_total.price.up.money - deal_summary_total.price.down.money;
+
+    std::vector<std::string> signals;
+
+    if (out.pct_change_base_pre > 0 && will_net_money < 0) {
+        signals.push_back("[UP_OUT]");
+    }
+    
+    if (out.pct_change_base_pre > 0 && price_net_money < 0) {
+        signals.push_back("[UP_POUT]");
+    } 
+    
+    if (out.pct_change_base_pre < 0 && will_net_money > 0) {
+        signals.push_back("[DN_IN]");
+    }
+
+    if (out.pct_change_base_pre < 0 && price_net_money > 0) {
+        signals.push_back("[DN_PIN]");
+    }
+
+
+    if (signals.empty()) {
+        return "      -      ";
+    }
+
+    std::string result;
+    for (size_t i = 0; i < signals.size(); ++i) {
+        result += signals[i];
+        if (i < signals.size() - 1) result += " ";
+    }
+    return result;
+}
+
+std::string get_and_print_signals(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
+
+    std::string divergence_str = get_divergence_string(out, prev_out); 
+    return divergence_str;
+}
+
+void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     int i = 0;
     size_t total_volume = 0;
     double avg_price = 0.0;
+
+    const std::string divergengce = get_and_print_signals(out, prev_out);
 
     const std::vector<Col>& cols = data_all_table_cols;
 
@@ -527,7 +576,7 @@ void print_all_data(const DayOutputMetrics& out, const DayOutputMetrics& prev_ou
     print_next_pos(out.pct_change_base_pre, i, cols);
     print_next(out.metrics.closing_price, i, cols);
 
-    print_next(divergence_str, i, cols);
+    print_next(divergengce, i, cols);
 
     std::cout << std::endl;
 
@@ -658,13 +707,13 @@ void print_headers(const ProgramOptions& opts) {
     }
 }
 
-void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out, std::string divergence)  {
+void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out)  {
         if (opts.show_head){
             print_header_info(out, prev_out);
         }  
 
         if (opts.show_all){
-            print_all_data(out, prev_out, divergence);
+            print_all_data(out, prev_out);
         }
 
         if (opts.show_will){

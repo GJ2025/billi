@@ -67,56 +67,9 @@ bool check_company_id_match(const std::string& file_path, const std::string& tar
 }
 
 
-std::string get_divergence_string(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
-    (void)prev_out;
-
-    bsn_action_group dump;
-    deal_summary deal_summary_total;
-    get_slim_base(out.metrics, RecordScale::TOTAL, dump, deal_summary_total);
-
-    double will_net_money = deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
-    double price_net_money = deal_summary_total.price.up.money - deal_summary_total.price.down.money;
-
-    std::vector<std::string> signals;
-
-    if (out.pct_change_base_pre > 0 && will_net_money < 0) {
-        signals.push_back("[UP_OUT]");
-    }
-    
-    if (out.pct_change_base_pre > 0 && price_net_money < 0) {
-        signals.push_back("[UP_POUT]");
-    } 
-    
-    if (out.pct_change_base_pre < 0 && will_net_money > 0) {
-        signals.push_back("[DN_IN]");
-    }
-
-    if (out.pct_change_base_pre < 0 && price_net_money > 0) {
-        signals.push_back("[DN_PIN]");
-    }
-
-
-    if (signals.empty()) {
-        return "      -      ";
-    }
-
-    std::string result;
-    for (size_t i = 0; i < signals.size(); ++i) {
-        result += signals[i];
-        if (i < signals.size() - 1) result += " ";
-    }
-    return result;
-}
-
 bool is_filled_tick(const DayOutputMetrics& out){
     bool had_one = (out.metrics.ticks_count > 0 && out.metrics.closing_price > 0.0);
     return had_one;
-}
-
-std::string get_and_print_signals(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
-
-    std::string divergence_str = get_divergence_string(out, prev_out); 
-    return divergence_str;
 }
 
 void update_head_tick_data(HeadTickData& head_data, const TickRecord& record) {
@@ -346,10 +299,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
     }
     
     out.date_str = extract_date_from_filename(filename);
-
     out.metrics = range.metrics;
-
-
 
     if (range.all_metrics.size() > 0){
         out.am_metrics = range.all_metrics[0];        
@@ -416,11 +366,9 @@ void make_test(DayOutputMetrics& out){
         print__headers("TEST", test_table_cols);
     }
 
-
     if (should_exist){
         exit(0);
     }
-
 
     return;
 }
@@ -435,7 +383,6 @@ void files_to_metrics(const std::vector<std::string>& files_to_process, std::vec
     }
 
     std::string target_company_id = extract_company_id(files_to_process[0]);
-
     for (const auto& file : files_to_process) {
         if (!check_company_id_match(file, target_company_id)) {
             std::cout << file << ":" << target_company_id << std::endl;
@@ -462,10 +409,10 @@ void files_to_metrics(const std::vector<std::string>& files_to_process, std::vec
         process_out(out, prev_out);
 
         out_vector.push_back(out);
-
         prev_out = out;
-
     }
+
+    return;
 }
 
 void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
@@ -506,7 +453,7 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
 
         divergengce = get_and_print_signals(out, prev_out);
 
-        print_bodys(opts, out, prev_out, divergengce);
+        print_bodys(opts, out, prev_out);
 
         if (out.metrics.ticks_count > 0) {
             prev_out = out;
@@ -604,14 +551,10 @@ bool check_and_print_date_mismatches(const std::vector<std::string>& files,
 }
 
 void select_stock(const std::string& data_dir_path, std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
-
-
-
     if (check_and_print_date_mismatches(files_to_process, out_vector)){
         std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
         return;
     }
-
     
     std::reverse(out_vector.begin(), out_vector.end());
     std::reverse(files_to_process.begin(), files_to_process.end());
