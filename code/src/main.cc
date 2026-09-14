@@ -463,7 +463,71 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
     std::cout << "\r\n" << std::endl;
 }
 
+void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics, DailyMetrics& pre_m) {
 
+
+    DailyMetrics pre_metrics = pre_m;
+    DailyMetrics dump_metrics;
+    std::string tshow = format_tick_times(metrics.header.time);  
+
+
+    for (size_t i = 0; i < all_metrics.size() ; ++i) {
+        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, all_metrics[i], pre_metrics);
+
+        pre_metrics = all_metrics[i];
+
+        if (all_metrics[i].ticks_count > 0) {
+            pre_metrics = all_metrics[i];
+        }
+                
+        // print_tseq_price(all_metrics[i]);
+    }
+
+    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, metrics, pre_metrics);
+
+    print_headers(opts);
+
+    // for (const auto& out : out_vector) {
+
+    //     print_bodys(opts, out.date_str, out.am_metrics, out.metrics, pre_metrics);
+
+    //     if (out.metrics.ticks_count > 0) {
+    //         pre_metrics = out.metrics;
+    //     }
+    // }
+
+    // print_headers(opts);
+
+    std::cout << "\r\n" << std::endl;
+}
+
+void show_oneday_metrics_by_opts(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics, DailyMetrics& pre_metrics) {
+    
+    bool ProgramOptions::* const flags[] = {
+        &ProgramOptions::show_head,
+        &ProgramOptions::show_all,
+        &ProgramOptions::show_will,
+        &ProgramOptions::show_price,
+        &ProgramOptions::show_super,
+        &ProgramOptions::show_super_ratio,
+        &ProgramOptions::show_big,
+        &ProgramOptions::show_big_ratio,
+        &ProgramOptions::show_middle,
+        &ProgramOptions::show_middle_ratio,
+        &ProgramOptions::show_small,
+        &ProgramOptions::show_small_ratio,
+        &ProgramOptions::show_total,
+        &ProgramOptions::show_total_ratio,
+    };
+
+    for (auto flag_ptr : flags) {
+        if (opts.*flag_ptr) {
+            ProgramOptions this_opts{};
+            this_opts.*flag_ptr = true; 
+            print_tseq(this_opts, metrics, all_metrics, pre_metrics);
+        }
+    }
+}
 
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
     
@@ -503,21 +567,23 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
     
     range.tick_times = min_vector(opts.tseq);
     std::reverse(range.tick_times.begin(), range.tick_times.end());
-    show_time_vector(range.tick_times);
+    // show_time_vector(range.tick_times);
     
     parse_tick_file_by_tseq(files_to_process[0], 0, range_dump.metrics, range_dump.tick_times, range_dump.all_metrics);
     parse_tick_file_by_tseq(files_to_process[1], range_dump.metrics.closing_price, range.metrics, range.tick_times, range.all_metrics);
 
-    print__headers("PRICE ", tseq_price_table_cols);
+    show_oneday_metrics_by_opts(opts, range.metrics, range.all_metrics, range_dump.metrics);
 
-    for (size_t i = 0; i < range.all_metrics.size() ; ++i) {
+    // print__headers("PRICE ", tseq_price_table_cols);
+
+    // for (size_t i = 0; i < range.all_metrics.size() ; ++i) {
                 
-        print_tseq_price(range.all_metrics[i]);
-    }
+    //     print_tseq_price(range.all_metrics[i]);
+    // }
 
-    print_tseq_price(range.metrics);
+    // print_tseq_price(range.metrics);
 
-    print__headers("PRICE ", tseq_price_table_cols);
+    // print__headers("PRICE ", tseq_price_table_cols);
 }
 
 bool check_and_print_date_mismatches(const std::vector<std::string>& files, 

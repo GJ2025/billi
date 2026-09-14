@@ -1,27 +1,10 @@
 #include "opts.h"
 
-int parse_tseq_opt(int argc, char* argv[], ProgramOptions& opts) {
-    // 直接遍历 -t 之后的参数
-    for (int i = 0; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg == "-N" && i + 1 < argc) {
-            opts.tseq.cnt = std::stoi(argv[++i]);
-        } else if (arg == "-I" && i + 1 < argc) {
-            opts.tseq.intervel = std::stoi(argv[++i]);
-        } else if (arg == "-H" && i + 1 < argc) {
-            opts.tseq.start_hour = std::stoi(argv[++i]);
-        } else if (arg == "-M" && i + 1 < argc) {
-            opts.tseq.start_min = std::stoi(argv[++i]);
-        } else if (arg == "-d" && i + 1 < argc) {
-            opts.lvmeng_dir_path = argv[++i];
-        }
-    }
-    return 0;
-}
 
+//  ./bin/parse_tick -t -N 90   -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "AhparwsqBSmnTRbMtl:D:d:")) != -1) {
+    while ((opt = getopt(argc, argv, "AhparwsqBSmnTRbMtl:D:d:N:I:F:")) != -1) {
         switch (opt) {
             case 'h': opts.show_head = true; break;
             case 'd': opts.lvmeng_dir_path = optarg; break;
@@ -38,30 +21,20 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 'b': opts.show_big = true; break;
             case 'q': opts.show_total_ratio = true; break;
             case 'A': opts.show_sz = true; break;
-            case 'M': {
-                opts.show_middle = true; 
-                break;
-            }
-            case 'S': {
-                opts.show_small = true; 
-                break;
-            }
-            case 'T': {
-                opts.show_total = true; 
-                break;
-            }
-            case 'l': 
-                {
-                    opts.show_limit = std::stoi(optarg);
-                    break;
-                }
+            case 'M': opts.show_middle = true; break;
+            case 'S': opts.show_small = true;  break;
+            case 'T': opts.show_total = true; break;
+            case 'l': opts.show_limit = std::stoi(optarg); break;
+            case 'N': opts.tseq.cnt = std::stoi(optarg); break;
+            case 'I': opts.tseq.intervel = std::stoi(optarg); break;
+            case 'H': opts.tseq.start_hour = std::stoi(optarg); break;
+            case 'F': opts.tseq.start_min = std::stoi(optarg); break;
             case 't': {
-                parse_tseq_opt(argc - optind, argv + optind, opts);
-                optind = argc;
                 opts.show_t = true;
                 opts.show_limit = 2;
                 break;
             }
+ 
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
                 return 1;
