@@ -48,17 +48,17 @@ void print__headers(const std::string& title, const std::vector<Col>& cols) {
     print_decorative_line(total_width, title, title);
 }
 
-void print_slim_price(const DayOutputMetrics& out,const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
+void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
 
     int i = 0;
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
-    get_slim_base(out.metrics, t, bsn_group, deal_summary);
+    get_slim_base(metrics, t, bsn_group, deal_summary);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    print_next(out.date_str, i, cols);
+    print_next(date_str, i, cols);
     print_next(bsn_group.buy.down.money / WAN, i, cols);
     print_next(bsn_group.buy.keep.money / WAN, i, cols);
     print_next(bsn_group.buy.up.money / WAN, i, cols);
@@ -88,28 +88,28 @@ void print_slim_price(const DayOutputMetrics& out,const DailyMetrics& pre_metric
     
     print_next(pre_metrics.closing_price, i, cols);
 
-    print_next_pos(out.start_change, i, cols);
-    print_next_pos(out.pct_change_base_925, i, cols);
-    print_next_pos(out.pct_change_base_pre, i, cols);
+    print_next_pos(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
+    print_next_pos(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next_pos(pct(metrics.closing_price, pre_metrics.closing_price), i, cols);
 
-    print_next(out.metrics.closing_price, i, cols);
+    print_next(metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
 
-void print_slim_price_ratio(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
+void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
 
     int i = 0;
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
-    get_slim_base(out.metrics, t, bsn_group, deal_summary);
+    get_slim_base(metrics, t, bsn_group, deal_summary);
     double total_money = deal_summary.type_total.money;
 
 
     std::cout << std::left << std::fixed << std::setprecision(3);
 
-    print_next(out.date_str, i, cols);
+    print_next(date_str, i, cols);
     print_next(bsn_group.buy.down.money / total_money, i, cols);
     print_next(bsn_group.buy.keep.money / total_money, i, cols);
     print_next(bsn_group.buy.up.money / total_money, i, cols);
@@ -139,11 +139,12 @@ void print_slim_price_ratio(const DayOutputMetrics& out, const DailyMetrics& pre
     
     print_next(pre_metrics.closing_price, i, cols);
 
-    print_next_pos(out.start_change, i, cols);
-    print_next_pos(out.pct_change_base_925, i, cols);
-    print_next_pos(out.pct_change_base_pre, i, cols);
+    print_next_pos(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
 
-    print_next(out.metrics.closing_price, i, cols);
+    print_next_pos(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next_pos(pct(metrics.closing_price, pre_metrics.closing_price), i, cols);
+
+    print_next(metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
@@ -204,7 +205,7 @@ void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetric
     std::cout << std::endl;
 }
 
-void print_will(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols) {
+void print_will(const std::string& date_str, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
 
     bsn_action_group dump;
@@ -227,7 +228,7 @@ void print_will(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, co
     double jing_total = deal_summary_total.bsn.buy.money - deal_summary_total.bsn.sale.money;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
-    print_next(out.date_str, i, cols);
+    print_next(date_str, i, cols);
 
     print_next(deal_summary_super.bsn.buy.money / WAN, i, cols);
     print_next(deal_summary_super.bsn.sale.money / WAN, i, cols);
@@ -255,14 +256,16 @@ void print_will(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, co
     print_next((deal_summary_total.total.money) / WAN, i, cols);
     print_next((deal_summary_total.total.volume) / WAN, i, cols);
     print_next(pre_metrics.closing_price, i, cols);
-    print_next_pos(out.start_change, i, cols);
-    print_next_pos(out.pct_change_base_925, i, cols);
+
+    print_next_pos(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
+    print_next_pos(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+
     print_next(metrics.closing_price, i, cols);
 
     std::cout << std::endl;
 }
 
-void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols) {
+void print_price(const std::string& date_str, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
     
     bsn_action_group dump;
@@ -281,7 +284,7 @@ void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, 
     double all_money = deal_summary_total.total.money;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
-    print_next(out.date_str, i, cols);
+    print_next(date_str, i, cols);
 
     print_next(deal_summary_super.price.up.money / WAN, i, cols);
     print_next(deal_summary_super.price.down.money / WAN, i, cols);
@@ -298,11 +301,11 @@ void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, 
     print_next(deal_summary_small.price.up.money / WAN, i, cols);
     print_next(deal_summary_small.price.down.money / WAN, i, cols);
 
-    print_next_pos((metrics_price_net(out.metrics.header.super)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(out.metrics.header.big)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(out.metrics.header.middle)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(out.metrics.header.small)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(out.metrics.header.total)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.super)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.big)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.middle)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.small)) / WAN, i, cols);
+    print_next_pos((metrics_price_net(metrics.header.total)) / WAN, i, cols);
 
     print_next(deal_summary_total.price.up.money / WAN, i, cols);
     print_next(deal_summary_total.price.down.money / WAN, i, cols);
@@ -312,10 +315,16 @@ void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, 
 
     print_next(all_money/WAN , i, cols);
     print_next((deal_summary_total.total.volume)/WAN, i, cols);
-    print_next(prev_out.metrics.closing_price, i, cols);
-    print_next_pos(out.start_change, i, cols);
-    print_next_pos(out.pct_change_base_925, i, cols);
-    print_next(out.metrics.closing_price, i, cols);
+    print_next(pre_metrics.closing_price, i, cols);
+
+
+
+
+    print_next_pos(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
+    print_next_pos(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next(metrics.closing_price, i, cols);
+
+
     std::cout << std::endl;
 
 }
@@ -708,59 +717,56 @@ void print_headers(const ProgramOptions& opts) {
 }
 
 void print_bodys(const ProgramOptions& opts, const DayOutputMetrics& out, const DayOutputMetrics& prev_out)  {
-        if (opts.show_head){
-            print_header_info(out, prev_out);
-        }  
 
         if (opts.show_all){
             print_all_data(out, prev_out);
         }
 
         if (opts.show_will){
-            print_will(out, prev_out.metrics, out.metrics, will_table_cols);
+            print_will(out.date_str, prev_out.metrics, out.metrics, will_table_cols);
         }  
 
         if (opts.show_price){
-            print_price(out, prev_out, out.metrics, price_table_cols);
+            print_price(out.date_str, prev_out.metrics, out.metrics, price_table_cols);
         } 
 
         if (opts.show_super){
-            print_slim_price(out, prev_out.metrics, RecordScale::SUPER, will_price_table_cols);
+            print_slim_price(out.date_str, out.metrics, prev_out.metrics, RecordScale::SUPER, will_price_table_cols);
         }
 
         if (opts.show_super_ratio){
-            print_slim_price_ratio(out, prev_out.metrics, RecordScale::SUPER, will_price_ratio_table_cols);
+            print_slim_price_ratio(out.date_str, out.metrics, prev_out.metrics, RecordScale::SUPER, will_price_ratio_table_cols);
         } 
 
         if (opts.show_big){
-            print_slim_price(out, prev_out.metrics, RecordScale::BIG, will_price_table_cols);
+            print_slim_price(out.date_str, out.metrics, prev_out.metrics, RecordScale::BIG, will_price_table_cols);
         }
         
         if (opts.show_big_ratio){
-            print_slim_price_ratio(out, prev_out.metrics, RecordScale::BIG, will_price_ratio_table_cols);
+            print_slim_price_ratio(out.date_str, out.metrics, prev_out.metrics, RecordScale::BIG, will_price_ratio_table_cols);
         } 
 
         if (opts.show_middle){
-            print_slim_price(out, prev_out.metrics, RecordScale::MIDDLE, will_price_table_cols);
+            print_slim_price(out.date_str, out.metrics, prev_out.metrics, RecordScale::MIDDLE, will_price_table_cols);
         }
         
         if (opts.show_middle_ratio){
-            print_slim_price_ratio(out, prev_out.metrics, RecordScale::MIDDLE, will_price_ratio_table_cols);
+            print_slim_price_ratio(out.date_str, out.metrics, prev_out.metrics, RecordScale::MIDDLE, will_price_ratio_table_cols);
         } 
 
         if (opts.show_small){
-            print_slim_price(out, prev_out.metrics, RecordScale::SMALL, will_price_table_cols);
+            print_slim_price(out.date_str, out.metrics, prev_out.metrics, RecordScale::SMALL, will_price_table_cols);
         }
         
         if (opts.show_small_ratio){
-            print_slim_price_ratio(out, prev_out.metrics, RecordScale::SMALL, will_price_ratio_table_cols);
+            print_slim_price_ratio(out.date_str, out.metrics, prev_out.metrics, RecordScale::SMALL, will_price_ratio_table_cols);
         } 
 
         if (opts.show_total){
-            print_slim_price(out, prev_out.metrics, RecordScale::TOTAL, will_price_table_cols);
+            print_slim_price(out.date_str, out.metrics, prev_out.metrics, RecordScale::TOTAL, will_price_table_cols);
         } 
 
         if (opts.show_total_ratio){
-            print_slim_price_ratio(out, prev_out.metrics, RecordScale::TOTAL, will_price_ratio_table_cols);
+            print_slim_price_ratio(out.date_str, out.metrics, prev_out.metrics, RecordScale::TOTAL, will_price_ratio_table_cols);
         } 
 }
