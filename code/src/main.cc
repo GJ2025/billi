@@ -503,22 +503,22 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
 
 void show_oneday_metrics_by_opts(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics, DailyMetrics& pre_metrics) {
     
-    bool ProgramOptions::* const flags[] = {
-        &ProgramOptions::show_head,
-        &ProgramOptions::show_all,
-        &ProgramOptions::show_will,
-        &ProgramOptions::show_price,
-        &ProgramOptions::show_super,
-        &ProgramOptions::show_super_ratio,
-        &ProgramOptions::show_big,
-        &ProgramOptions::show_big_ratio,
-        &ProgramOptions::show_middle,
-        &ProgramOptions::show_middle_ratio,
-        &ProgramOptions::show_small,
-        &ProgramOptions::show_small_ratio,
-        &ProgramOptions::show_total,
-        &ProgramOptions::show_total_ratio,
-    };
+    // bool ProgramOptions::* const flags[] = {
+    //     &ProgramOptions::show_head,
+    //     &ProgramOptions::show_all,
+    //     &ProgramOptions::show_will,
+    //     &ProgramOptions::show_price,
+    //     &ProgramOptions::show_super,
+    //     &ProgramOptions::show_super_ratio,
+    //     &ProgramOptions::show_big,
+    //     &ProgramOptions::show_big_ratio,
+    //     &ProgramOptions::show_middle,
+    //     &ProgramOptions::show_middle_ratio,
+    //     &ProgramOptions::show_small,
+    //     &ProgramOptions::show_small_ratio,
+    //     &ProgramOptions::show_total,
+    //     &ProgramOptions::show_total_ratio,
+    // };
 
     for (auto flag_ptr : flags) {
         if (opts.*flag_ptr) {
@@ -531,22 +531,22 @@ void show_oneday_metrics_by_opts(const ProgramOptions& opts,  DailyMetrics& metr
 
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
     
-    bool ProgramOptions::* const flags[] = {
-        &ProgramOptions::show_head,
-        &ProgramOptions::show_all,
-        &ProgramOptions::show_will,
-        &ProgramOptions::show_price,
-        &ProgramOptions::show_super,
-        &ProgramOptions::show_super_ratio,
-        &ProgramOptions::show_big,
-        &ProgramOptions::show_big_ratio,
-        &ProgramOptions::show_middle,
-        &ProgramOptions::show_middle_ratio,
-        &ProgramOptions::show_small,
-        &ProgramOptions::show_small_ratio,
-        &ProgramOptions::show_total,
-        &ProgramOptions::show_total_ratio,
-    };
+    // bool ProgramOptions::* const flags[] = {
+    //     &ProgramOptions::show_head,
+    //     &ProgramOptions::show_all,
+    //     &ProgramOptions::show_will,
+    //     &ProgramOptions::show_price,
+    //     &ProgramOptions::show_super,
+    //     &ProgramOptions::show_super_ratio,
+    //     &ProgramOptions::show_big,
+    //     &ProgramOptions::show_big_ratio,
+    //     &ProgramOptions::show_middle,
+    //     &ProgramOptions::show_middle_ratio,
+    //     &ProgramOptions::show_small,
+    //     &ProgramOptions::show_small_ratio,
+    //     &ProgramOptions::show_total,
+    //     &ProgramOptions::show_total_ratio,
+    // };
 
     for (auto flag_ptr : flags) {
         if (opts.*flag_ptr) {

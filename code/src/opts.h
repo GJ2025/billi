@@ -45,4 +45,6 @@ struct ProgramOptions {
 
 int parse_opt(int argc, char* argv[], ProgramOptions& opts);
 
+extern bool ProgramOptions::* const flags[14];
+
 #endif // OPTS_H

@@ -1,5 +1,22 @@
 #include "opts.h"
 
+bool ProgramOptions::* const flags[] = {
+    &ProgramOptions::show_head,
+    &ProgramOptions::show_all,
+    &ProgramOptions::show_will,
+    &ProgramOptions::show_price,
+    &ProgramOptions::show_super,
+    &ProgramOptions::show_super_ratio,
+    &ProgramOptions::show_big,
+    &ProgramOptions::show_big_ratio,
+    &ProgramOptions::show_middle,
+    &ProgramOptions::show_middle_ratio,
+    &ProgramOptions::show_small,
+    &ProgramOptions::show_small_ratio,
+    &ProgramOptions::show_total,
+    &ProgramOptions::show_total_ratio,
+};
+
 
 //  ./bin/parse_tick -t -N 90   -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
