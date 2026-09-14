@@ -444,14 +444,12 @@ void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
 }
 
 void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetrics>& out_vector) {
-    std::string divergengce;
+
     DayOutputMetrics prev_out;  
 
     print_headers(opts);
 
     for (const auto& out : out_vector) {
-
-        divergengce = get_and_print_signals(out, prev_out);
 
         print_bodys(opts, out, prev_out);
 

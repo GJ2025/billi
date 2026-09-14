@@ -14,15 +14,15 @@ void print_decorative_line(int total_width, const std::string& left_title, const
 
 void print__headers(const std::string& title, const std::vector<Col>& cols) ;
 
-void print_slim_price(const DayOutputMetrics& out,const DayOutputMetrics& prev_out, RecordScale t, const std::vector<Col>& cols);
+void print_slim_price(const DayOutputMetrics& out,const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols);
 
-void print_slim_price_ratio(const DayOutputMetrics& out,const DayOutputMetrics& prev_out, RecordScale t, const std::vector<Col>& cols);
+void print_slim_price_ratio(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols);
 
 
 
 void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) ;
 
-void print_will(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols);
+void print_will(const DayOutputMetrics& out, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols);
 
 void print_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out, const DailyMetrics& metrics, const std::vector<Col>& cols);
 
