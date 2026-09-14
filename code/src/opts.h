@@ -9,11 +9,9 @@
 #include "time_seq.h"
 
 struct ProgramOptions {
-    bool show_head = false;
     bool show_price = false;
     bool show_all = false;
     bool show_will = false;
-    bool show_income_ratio = false;
     bool show_super = false;
     bool show_big = false;
     bool show_middle = false;

@@ -660,9 +660,6 @@ void print_all() {
 }
 
 void print_headers(const ProgramOptions& opts) {
-    if (opts.show_head){
-        print_table_header();
-    } 
 
     if (opts.show_all){
         print__headers("ALL", data_all_table_cols);

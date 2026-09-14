@@ -1,7 +1,7 @@
+#include <string.h>
 #include "opts.h"
 
 bool ProgramOptions::* const flags[] = {
-    &ProgramOptions::show_head,
     &ProgramOptions::show_all,
     &ProgramOptions::show_will,
     &ProgramOptions::show_price,
@@ -18,42 +18,52 @@ bool ProgramOptions::* const flags[] = {
 };
 
 
-//  ./bin/parse_tick -t -N 90   -I 5 -d  $d/chuanheng -a > $s/a.txt
+//  ./bin/parse_tick -t -N 90 -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "AhparwsqBSmnTRbMtl:D:d:N:I:F:")) != -1) {
+    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:H:M:r:R:")) != -1) {
         switch (opt) {
-            case 'h': opts.show_head = true; break;
+            case 'a': opts.show_all = true; break;
+            case 'A': opts.show_sz = true; break;
+
             case 'd': opts.lvmeng_dir_path = optarg; break;
             case 'D': opts.data_dir_path = optarg; break;
-            case 'r': opts.show_income_ratio = true; break;
-            case 'a': opts.show_all = true; break;
+
             case 'w': opts.show_will = true; break;
             case 'p': opts.show_price = true; break;
-            case 'R': opts.show_super_ratio = true; break;
-            case 'B': opts.show_big_ratio = true; break;
-            case 'm': opts.show_middle_ratio = true; break;
-            case 'n': opts.show_small_ratio = true; break;
-            case 's': opts.show_super = true; break;
-            case 'b': opts.show_big = true; break;
-            case 'q': opts.show_total_ratio = true; break;
-            case 'A': opts.show_sz = true; break;
-            case 'M': opts.show_middle = true; break;
-            case 'S': opts.show_small = true;  break;
-            case 'T': opts.show_total = true; break;
+
             case 'l': opts.show_limit = std::stoi(optarg); break;
+
             case 'N': opts.tseq.cnt = std::stoi(optarg); break;
             case 'I': opts.tseq.intervel = std::stoi(optarg); break;
             case 'H': opts.tseq.start_hour = std::stoi(optarg); break;
-            case 'F': opts.tseq.start_min = std::stoi(optarg); break;
+            case 'M': opts.tseq.start_min = std::stoi(optarg); break;
             case 't': {
                 opts.show_t = true;
                 opts.show_limit = 2;
                 break;
             }
+            case 'r': {
+                if (strchr(optarg, 's') != NULL) opts.show_super = true;
+                if (strchr(optarg, 'b') != NULL) opts.show_big = true;
+                if (strchr(optarg, 'm') != NULL) opts.show_middle = true;
+                if (strchr(optarg, 'S') != NULL) opts.show_small = true;
+                if (strchr(optarg, 't') != NULL) opts.show_total = true;
+
+                break;
+            }
+            case 'R': {
+                if (strchr(optarg, 's') != NULL) opts.show_super_ratio = true;
+                if (strchr(optarg, 'b') != NULL) opts.show_big_ratio = true;
+                if (strchr(optarg, 'm') != NULL) opts.show_middle_ratio = true;
+                if (strchr(optarg, 'S') != NULL) opts.show_small_ratio = true;
+                if (strchr(optarg, 't') != NULL) opts.show_total_ratio = true;
+
+                break;
+            }
  
             default:
-                std::cerr << "Usage: " << argv[0] << " [-h] [-d path] [-p] [-a] [-r] [-w] [-s] [-m]" << std::endl;
+                std::cerr << "Usage: " << argv[0] << " find in opts.cc" << std::endl;
                 return 1;
         }
     }

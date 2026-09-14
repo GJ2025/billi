@@ -469,6 +469,7 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
     DailyMetrics dump_metrics;
     std::string tshow = format_tick_times(metrics.header.time);  
 
+    print_headers(opts);
 
     for (size_t i = 0; i < all_metrics.size() ; ++i) {
         print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, all_metrics[i], pre_metrics);
