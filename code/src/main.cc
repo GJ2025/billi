@@ -451,7 +451,7 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
 
     for (const auto& out : out_vector) {
 
-        print_bodys(opts, out, prev_out);
+        print_bodys(opts, out.date_str, out.am_metrics, out.metrics, prev_out.metrics);
 
         if (out.metrics.ticks_count > 0) {
             prev_out = out;
