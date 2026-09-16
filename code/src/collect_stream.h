@@ -178,8 +178,7 @@ struct VectorStats {
     int volume_shrink_loose = 0;
     int volume_grow_loose = 0;
 
-    TradeCategoryStats a0;
-    TradeCategoryStats a1;
+    std::vector<TradeCategoryStats> a;
 };
 
 

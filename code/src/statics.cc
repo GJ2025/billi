@@ -133,15 +133,17 @@ void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, Vecto
     stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,3)));
 
 
-    metry_summary(out_vector[0], stats.a0);
-    metry_summary(out_vector[1], stats.a1);
+    stats.a.resize(10);
 
-    stats.a0.all_will_netin_pct = (stats.a0.all_will_netin - stats.a1.all_will_netin) / std::abs(stats.a1.all_will_netin);
-    stats.a0.all_price_netin_pct = (stats.a0.all_price_netin - stats.a1.all_price_netin) / std::abs(stats.a1.all_price_netin);
+    metry_summary(out_vector[0], stats.a[0]);
+    metry_summary(out_vector[1], stats.a[1]);
+
+    stats.a[0].all_will_netin_pct = (stats.a[0].all_will_netin - stats.a[1].all_will_netin) / std::abs(stats.a[1].all_will_netin);
+    stats.a[0].all_price_netin_pct = (stats.a[0].all_price_netin - stats.a[1].all_price_netin) / std::abs(stats.a[1].all_price_netin);
 
 
-    stats.a0.strip_will_netin_pct = (stats.a0.strip_will_netin - stats.a1.strip_will_netin) / std::abs(stats.a1.strip_will_netin);
-    stats.a0.strip_price_netin_pct = (stats.a0.strip_price_netin - stats.a1.strip_price_netin) / std::abs(stats.a1.strip_price_netin);
+    stats.a[0].strip_will_netin_pct = (stats.a[0].strip_will_netin - stats.a[1].strip_will_netin) / std::abs(stats.a[1].strip_will_netin);
+    stats.a[0].strip_price_netin_pct = (stats.a[0].strip_price_netin - stats.a[1].strip_price_netin) / std::abs(stats.a[1].strip_price_netin);
 
     return;
 }

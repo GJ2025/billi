@@ -9,6 +9,14 @@ int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::
 inline bool should_skip_directory(const std::string& dir_name) {
     return dir_name.find("show") != std::string::npos  
            || dir_name.find("tseq_show") != std::string::npos
+        //    || dir_name.find("shangzheng") != std::string::npos
+        //    || dir_name.find("shenzheng") != std::string::npos
+           || dir_name.find("ALL") != std::string::npos;
+}
+
+inline bool dir_check_should_skip_directory(const std::string& dir_name) {
+    return dir_name.find("show") != std::string::npos  
+           || dir_name.find("tseq_show") != std::string::npos
            || dir_name.find("shangzheng") != std::string::npos
            || dir_name.find("shenzheng") != std::string::npos
            || dir_name.find("ALL") != std::string::npos;

@@ -421,15 +421,15 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next(get_display_file(file), i, cols);
-    print_next_pos(v_stats.a0.all_will_netin/WAN, i, cols);
-    print_next_pos(v_stats.a0.all_price_netin/WAN, i, cols);
+    print_next_pos(v_stats.a[0].all_will_netin/WAN, i, cols);
+    print_next_pos(v_stats.a[0].all_price_netin/WAN, i, cols);
 
 
-    print_next_pos(v_stats.a0.all_will_netin_pct, i, cols);
-    print_next_pos(v_stats.a0.all_price_netin_pct, i, cols);
+    print_next_pos(v_stats.a[0].all_will_netin_pct, i, cols);
+    print_next_pos(v_stats.a[0].all_price_netin_pct, i, cols);
 
-    print_next_pos(v_stats.a0.strip_will_netin/WAN, i, cols);
-    print_next_pos(v_stats.a0.strip_price_netin/WAN, i, cols);
+    print_next_pos(v_stats.a[0].strip_will_netin/WAN, i, cols);
+    print_next_pos(v_stats.a[0].strip_price_netin/WAN, i, cols);
 
     std::string volume_adjacent_up_days = format_with_sign(v_stats.volume_day_adjacent[0]) 
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[1])
@@ -444,8 +444,8 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
     print_next(volume_adjacent_up_days, i, cols);                 
     print_next(price_adjacent_up_days, i, cols);
 
-    print_next_pos(v_stats.a0.pct_change_base_925, i, cols);
-    print_next_pos(v_stats.a0.pct_change_base_pre, i, cols);
+    print_next_pos(v_stats.a[0].pct_change_base_925, i, cols);
+    print_next_pos(v_stats.a[0].pct_change_base_pre, i, cols);
 
     print_next(sc.description, i, cols);
     

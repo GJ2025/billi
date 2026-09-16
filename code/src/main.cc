@@ -586,7 +586,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
         if (entry.is_directory()) {
             std::string dir_name = entry.path().filename().string();
 
-            if (should_skip_directory(dir_name)) {
+            if (dir_check_should_skip_directory(dir_name)) {
                 continue;
             }
 
