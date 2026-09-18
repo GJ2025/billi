@@ -1,6 +1,8 @@
 #ifndef TABLES_H
 #define TABLES_H
 
+#include "opts.h"
+
 struct Col {
     std::string name;
     int width;
@@ -9,15 +11,15 @@ struct Col {
 
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12}, 
-    {"Buy-Kp", 12},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12}, 
-    {"Sale-Kp", 12}, 
-    {"Sale-Up", 12}, 
-    {"Neutral-Dn", 12},
-    {"Neutral-Kp", 12},  
-    {"Neutral-Up", 12},
+    {"Buy-Dn", 12, false}, 
+    {"Buy-Kp", 12, false},  
+    {"Buy-Up", 12, false},
+    {"Sale-Dn", 12, false}, 
+    {"Sale-Kp", 12, false}, 
+    {"Sale-Up", 12, false}, 
+    {"Neutral-Dn", 12, false},
+    {"Neutral-Kp", 12, false},  
+    {"Neutral-Up", 12, false},
     {"Buy", 12}, 
     {"Sale", 12},
     {"Neutral", 12},    
@@ -37,15 +39,15 @@ inline const std::vector<Col> will_price_table_cols = {
 
 inline const std::vector<Col> will_price_ratio_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12}, 
-    {"Buy-Kp", 12},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12}, 
-    {"Sale-Kp", 12}, 
-    {"Sale-Up", 12}, 
-    {"Neutral-Dn", 12},
-    {"Neutral-Kp", 12},  
-    {"Neutral-Up", 12},
+    {"Buy-Dn", 12, false}, 
+    {"Buy-Kp", 12, false},  
+    {"Buy-Up", 12, false},
+    {"Sale-Dn", 12, false}, 
+    {"Sale-Kp", 12, false}, 
+    {"Sale-Up", 12, false}, 
+    {"Neutral-Dn", 12, false},
+    {"Neutral-Kp", 12, false},  
+    {"Neutral-Up", 12, false},
     {"Buy", 12}, 
     {"Sale", 12},
     {"Neutral", 12},    
@@ -121,21 +123,21 @@ static const std::vector<Col> will_table_cols = {
     {"Small-Buy", 9, false},  
     {"Small-Sale", 10, false}, 
     
-    {"Super-NET", 12},
-    {"Big-NET", 12},    
-    {"Mid-NET", 12},
-    {"Small-NET", 12},
-    {"Tot-NET", 12},
+    {"Super-NET", 9},
+    {"Big-NET", 9},    
+    {"Mid-NET", 9},
+    {"Small-NET", 9},
+    {"Tot-NET", 9},
 
     {"Tot-Buy", 12},    
     {"Tot-Sale", 12},
     {"Tot-Neutral", 12}, 
 
     {"Money", 12},     
-    {"Volume", 12},
+    {"Volume", 7},
     {"Pre", 5},        
-    {"StartCh", 9},    
-    {"Pct_925", 9}, 
+    {"StartCh", 5},    
+    {"Pct_925", 5}, 
     {"Close", 5}
 };
 
@@ -157,23 +159,23 @@ static const std::vector<Col> price_table_cols = {
     {"Small-Dn", 9, false}, 
     
 
-    {"Super-NET", 12},
+    {"Super-NET", 9},
     {"Big-NET", 9},
     {"Mid-NET", 9},
     {"Small-NET", 9},
-    {"Tot-NET", 12},
+    {"ToNET", 9},
 
     {"Tot-Up", 12},  
     {"Tot-Dn", 12},
     {"Tot-KEEP", 12},
 
-    {"KEEP/ALL", 8},
+    {"K/AL", 4},
 
     {"Money", 12},   
-    {"Volume", 12},
+    {"Volume", 7},
     {"Pre", 5},      
-    {"StartCh", 9},  
-    {"Pct_925", 9}, 
+    {"StartCh", 5},  
+    {"Pct_925", 5}, 
     {"Close", 5}
 };
 
@@ -213,21 +215,20 @@ static const std::vector<Col> tseq_price_table_cols = {
     {"Close", 5}
 };
 
-static const std::vector<Col> tseq_volume_table_cols = {
-    {"Date", 11},
 
-    {format_tick_time(sz_t[0]), 8},
-    {format_tick_time(sz_t[1]), 8},
-    {format_tick_time(sz_t[2]), 8},
-    {format_tick_time(sz_t[3]), 8},
-    {format_tick_time(sz_t[4]), 8},
-    {format_tick_time(sz_t[5]), 8},
-    {format_tick_time(sz_t[6]), 8}, 
-    {format_tick_time(sz_t[7]), 8},
-    {format_tick_time(sz_t[8]), 8},
-    {format_tick_time(sz_t[9]), 8}, 
 
-};
+std::vector<tickTime> generate_sz_tick_times(size_t cnt , int interval_minutes);
+
+inline void init_tick_columns(std::vector<Col>& cols) {
+    cols.clear();
+    cols.push_back({"Date", 11});
+
+    std::vector<tickTime> tick_times = generate_sz_tick_times(opts.tseq.cnt, opts.tseq.intervel);
+
+    for (size_t j = 0; j < tick_times.size(); ++j) {
+        cols.push_back({format_tick_time(tick_times[j]), 8});
+    }
+}
 
 static const std::vector<Col> data_all_table_cols = {
     {"Date", 11}, 
@@ -266,6 +267,45 @@ static const std::vector<Col> data_all_table_cols = {
     {"Close", 7},
 
     {"Divergence", 20}
+};
+
+static const std::vector<Col> tseq_data_all_table_cols = {
+    {"Date", 11}, 
+    {"Ticks", 5, false}, 
+    {"AM-volume(W)", 12, false},
+    {"AM-Money(W)", 11, false}, 
+    {"AM-Money%", 11, false}, 
+    {"V/Tick", 6}, 
+
+    {"AM-NET", 11, false}, 
+    {"PM-NET", 11, false},
+    {"AM-P-NET", 11, false}, 
+    {"PM-P-NET", 11, false}, 
+
+    {"WNET", 8},
+    {"PNET", 8},
+
+    {"WillP", 8},
+    {"PRICEP", 8},
+    {"Distribute_M", 24, false},
+    {"Distribute_V", 24},
+    {"Money", 11},
+    {"Volume", 9}, 
+    
+    {"NET/Money", 9, false},
+
+    {"AvgPrice", 9, true},
+    {"1st", 8}, 
+    {"StartCh%", 8}, 
+    {"AvgPct%", 8, false},
+    {"AM-Close", 8, false}, 
+    {"AM-Pct%", 8, false},
+    {"BaseAvg%", 8, false},  
+    {"Pct_925", 9},
+    {"Pct_pre", 9}, 
+    {"Close", 7},
+
+    {"Divergence", 20, false}
 };
 
 

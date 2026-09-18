@@ -8,23 +8,6 @@
 
 tickTime current;
 
-tickTime sz_t[] = {
-    {9, 35},
-    {9, 59},
-    {10, 29},
-    {10, 59},
-    {11, 28},
-    {13, 29},
-    {13, 59},
-    {14, 29},
-    {14, 57},
-    {15, 0},
-};
-
-size_t get_sz_t_size() {
-    return sizeof(sz_t) / sizeof(sz_t[0]);
-}
-
 tickTime get_current_tick_time() {
     auto now = std::chrono::system_clock::now();
     time_t tt = std::chrono::system_clock::to_time_t(now);
@@ -96,6 +79,34 @@ std::vector<tickTime> generate_today_tick_times(const tickTime& current, size_t 
     }
 
     //  result.push_back(current);
+
+    return result;
+}
+
+std::vector<tickTime> generate_sz_tick_times(size_t cnt , int interval_minutes) {
+    std::vector<tickTime> result;
+    (void)cnt;
+
+    int total_minutes = time_to_minutes({9,30});
+    int end = time_to_minutes({15,30});
+
+    result.push_back({9, 30});
+
+    while (total_minutes < end) {
+        total_minutes += interval_minutes;
+
+        if (should_filter(total_minutes)) {
+            continue; 
+        }
+
+        tickTime t;
+        t.hour = total_minutes / 60;
+        t.minute = total_minutes % 60;
+        
+        result.push_back(t);
+    }
+
+     result.push_back({15, 30});
 
     return result;
 }

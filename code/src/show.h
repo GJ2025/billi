@@ -3,6 +3,11 @@
 #include "opts.h"
 #include "collect_stream.h"
 
+enum class PrintWhat : uint8_t {
+    TSEQ = 1,    // 买入
+    DSEQ = 2
+};
+
 template<typename T>
 void print_next(const T& val, int& index, const std::vector<Col>& cols);
 
@@ -33,20 +38,22 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
 void print_all_data(const std::string& date_str,  
                     const DailyMetrics& am_metrics, 
                     const DailyMetrics& metrics, 
-                    const DailyMetrics& pre_metrics);
+                    const DailyMetrics& pre_metrics,
+                    const std::vector<Col>& cols);
 
 void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out);
 std::string get_and_print_signals(const DayOutputMetrics& out) ;
 
 void print_all() ;
 
-void print_headers(const ProgramOptions& opts);
+void print_headers(const ProgramOptions& opts, PrintWhat what);
 
 void print_bodys(const ProgramOptions& opts,  
                 const std::string& date_str, 
                 const DailyMetrics& am_metrics, 
                 const DailyMetrics& metrics, 
-                const DailyMetrics& pre_metrics);
+                const DailyMetrics& pre_metrics,
+                PrintWhat what);
 
 void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics);
 

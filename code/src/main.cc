@@ -29,6 +29,8 @@
 std::vector<std::string> buffered_files;
 std::unordered_map<std::string, std::string> code_path_map;
 
+ProgramOptions opts;
+
 bool record_should_process(TickRecord& record);
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
 void process_first_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_closing_price);
@@ -421,9 +423,13 @@ void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
         return;
     }
 
+    std::vector<Col> cols;
+
+    init_tick_columns(cols);
+
     std::string target_company_id = extract_company_id(files_to_process[0]);
 
-    print__headers("PRICE ", tseq_volume_table_cols);
+    print__headers("PRICE ", cols);
 
     for (const auto& file : files_to_process) {
         if (!check_company_id_match(file, target_company_id)) {
@@ -433,32 +439,33 @@ void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
 
         
         DailyMetrics_range_st range;
-        range.tick_times = sz_time_vector();
+        range.tick_times = generate_sz_tick_times(opts.tseq.cnt, opts.tseq.intervel);
         const std::string date  = extract_date_from_filename(file);
 
         parse_tick_file_by_tseq(file, 0, range.metrics, range.tick_times, range.all_metrics);
         print_tseq_sz(date, range.metrics, range.all_metrics);
     }
 
-    print__headers("PRICE ", tseq_volume_table_cols);
+    print__headers("PRICE ", cols);
 }
 
 void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetrics>& out_vector) {
 
-    DayOutputMetrics prev_out;  
+    DayOutputMetrics prev_out;
+    PrintWhat what = PrintWhat::DSEQ; 
 
-    print_headers(opts);
+    print_headers(opts, what);
 
     for (const auto& out : out_vector) {
 
-        print_bodys(opts, out.date_str, out.am_metrics, out.metrics, prev_out.metrics);
+        print_bodys(opts, out.date_str, out.am_metrics, out.metrics, prev_out.metrics, what);
 
         if (out.metrics.ticks_count > 0) {
             prev_out = out;
         }
     }
 
-    print_headers(opts);
+    print_headers(opts, what);
 
     std::cout << "\r\n" << std::endl;
 }
@@ -467,12 +474,13 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
 
     DailyMetrics pre_metrics = pre_m;
     DailyMetrics dump_metrics;
-    std::string tshow = format_tick_times(metrics.header.time);  
+    std::string tshow = format_tick_times(metrics.header.time);
+    PrintWhat what = PrintWhat::TSEQ;  
 
-    print_headers(opts);
+    print_headers(opts, what);
 
     for (size_t i = 0; i < all_metrics.size() ; ++i) {
-        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, all_metrics[i], pre_metrics);
+        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, all_metrics[i], pre_metrics, what);
 
         pre_metrics = all_metrics[i];
 
@@ -482,9 +490,9 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
                 
     }
 
-    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, metrics, pre_metrics);
+    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, metrics, pre_metrics, what);
 
-    print_headers(opts);
+    print_headers(opts, what);
 
     std::cout << "\r\n" << std::endl;
 }
@@ -604,7 +612,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
 }
 
 int main(int argc, char* argv[]) {
-    ProgramOptions opts;
+    // ProgramOptions opts;
     file2out_st file2out;
     
     

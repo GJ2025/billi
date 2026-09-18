@@ -393,7 +393,9 @@ void print_tseq_price(DailyMetrics& metrics) {
 void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics) {
     int i = 0;
 
-    const std::vector<Col>& cols = tseq_volume_table_cols;
+    std::vector<Col> cols;
+
+    init_tick_columns(cols);
 
     print_next(date, i, cols);
 
@@ -497,7 +499,8 @@ std::string get_divergence_string(double pct_change_base_pre, const DailyMetrics
 void print_all_data(const std::string& date_str,  
                     const DailyMetrics& am_metrics, 
                     const DailyMetrics& metrics, 
-                    const DailyMetrics& pre_metrics) {
+                    const DailyMetrics& pre_metrics,
+                    const std::vector<Col>& cols) {
     int i = 0;
     size_t total_volume = 0;
     double avg_price = 0.0;
@@ -509,7 +512,6 @@ void print_all_data(const std::string& date_str,
     double pct_change_base_925 = pct(metrics.closing_price, metrics.daily_first_record.price);
 
     const std::string divergengce = get_divergence_string(pct_change_base_pre, metrics);
-    const std::vector<Col>& cols = data_all_table_cols;
 
     double am_money_ratio = 0.0;
     double am_total_money = metrics_total_money(am_metrics);
@@ -552,9 +554,11 @@ void print_all_data(const std::string& date_str,
     print_next_pos(all_price_netin/WAN, i, cols);
 
 
+    std::cout << std::left << std::fixed << std::setprecision(3);
     print_next_pos((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
     print_next_pos((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
 
+    std::cout << std::left << std::fixed << std::setprecision(1);
     DailyDistributions result;
     get_daily_distributions(metrics,  result);
     print_next(result.money_dist.description, i, cols);
@@ -659,11 +663,15 @@ void print_all() {
     std::cout << "----------------" << std::endl;
 }
 
-void print_headers(const ProgramOptions& opts) {
+void print_headers(const ProgramOptions& opts, PrintWhat what) {
 
-    if (opts.show_all){
+    if (opts.show_all && what == PrintWhat::DSEQ){
         print__headers("ALL", data_all_table_cols);
-    } 
+    }
+      
+    if (opts.show_all && what == PrintWhat::TSEQ){
+        print__headers("ALL", tseq_data_all_table_cols);
+    }  
 
     if (opts.show_will){
         print__headers("WILL", will_table_cols);
@@ -718,10 +726,14 @@ void print_bodys(const ProgramOptions& opts,
                 const std::string& date_str, 
                 const DailyMetrics& am_metrics, 
                 const DailyMetrics& metrics, 
-                const DailyMetrics& pre_metrics)  {
+                const DailyMetrics& pre_metrics,  PrintWhat what)  {
 
-        if (opts.show_all){
-            print_all_data(date_str, am_metrics, metrics, pre_metrics);
+        if (opts.show_all && what == PrintWhat::DSEQ){
+            print_all_data(date_str, am_metrics, metrics, pre_metrics, data_all_table_cols);
+        }
+
+        if (opts.show_all && what == PrintWhat::TSEQ){
+            print_all_data(date_str, am_metrics, metrics, pre_metrics, tseq_data_all_table_cols);
         }
 
         if (opts.show_will){
