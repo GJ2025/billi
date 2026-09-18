@@ -145,8 +145,8 @@ void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, Vecto
         stats.a[i].middle_netin = stats.a[i].strip_will_netin > 0 && stats.a[i].strip_price_netin > 0 && stats.a[i].strip_will_netin_pct > 0 && stats.a[i].strip_price_netin_pct > 0;
     }
 
-    for (i = 0; i < 5 ; i++){
-        if (stats.a[i].all_netin && stats.a[i].pct_change_base_pre <= 0){
+    for (i = 1; i < 5 ; i++){
+        if (stats.a[i].all_netin && stats.a[i].pct_change_base_pre <= 0 && stats.a[i-1].pct_change_base_pre <= 1){
             stats.money_in_and_price_up_nt++;
         }
     }

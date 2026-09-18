@@ -44,12 +44,12 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
     metry_vector_summary(out_vector, v_stats);
 
     TradeCategoryStats& a0 = v_stats.a[0];
-    TradeCategoryStats& a1 = v_stats.a[1];
+    // TradeCategoryStats& a1 = v_stats.a[1];
 
     std::vector<SubCondition> sub_conditions = {
         {
             v_stats.money_in_and_price_up_nt >=2 ,
-            "money_in_nt_up"
+            "M_IN_NT_UP"
         },
         {
             a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_day_adjacent[0] < -3,
@@ -59,16 +59,16 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
             a0.all_netin && a0.pct_change_base_pre < 0.1,
             "abnormal_all"
         },
-        {
-            a0.middle_netin && a0.pct_change_base_925 < 0.1,
-            "abnormal_middle"
-        },
-        {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0  
-            && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 
-            && v_stats.price_day_adjacent[0] >= -1 && v_stats.price_day_adjacent[0] <= 3,
-            "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
-        },
+        // {
+        //     a0.middle_netin && a0.pct_change_base_925 < 0.1,
+        //     "abnormal_middle"
+        // },
+        // {
+        //     a0.all_will_netin > 0 && a0.all_price_netin > 0  
+        //     && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 
+        //     && v_stats.price_day_adjacent[0] >= -1 && v_stats.price_day_adjacent[0] <= 3,
+        //     "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
+        // },
         // {
         //     a0.pct_change_base_925 > 0 && middle_netin == false,
         //     "up_out_m" 
