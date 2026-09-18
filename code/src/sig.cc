@@ -48,6 +48,10 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
 
     std::vector<SubCondition> sub_conditions = {
         {
+            v_stats.money_in_and_price_up_nt >=2 ,
+            "money_in_nt_up"
+        },
+        {
             a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_day_adjacent[0] < -3,
             "will_up"
         },
