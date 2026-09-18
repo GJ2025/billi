@@ -129,7 +129,7 @@ inline std::string pct_base_string(double  pct) {
 #include <vector>
 
 template <typename T>
-std::vector<T> get_sub_vector(const std::vector<T>& vec, size_t start_index = 1) {
+std::vector<T> get_sub_vector(const std::vector<T>& vec, size_t start_index = 0) {
     if (start_index >= vec.size()) {
         return {};
     }

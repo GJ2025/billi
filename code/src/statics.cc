@@ -121,29 +121,35 @@ int metrics_volume_check_adjacent(const std::vector<DayOutputMetrics>& out_vecto
 
 void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
 
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(out_vector));
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,1)));
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,2)));
-    stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,3)));
-
-
-    stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(out_vector));
-    stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,1)));
-    stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,2)));
-    stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,3)));
-
-
+    size_t i =0;
     stats.a.resize(10);
 
-    metry_summary(out_vector[0], stats.a[0]);
-    metry_summary(out_vector[1], stats.a[1]);
+    for (i = 0; i < 5; i++){
+        stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,i)));
+        stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,i)));
+    }
 
-    stats.a[0].all_will_netin_pct = (stats.a[0].all_will_netin - stats.a[1].all_will_netin) / std::abs(stats.a[1].all_will_netin);
-    stats.a[0].all_price_netin_pct = (stats.a[0].all_price_netin - stats.a[1].all_price_netin) / std::abs(stats.a[1].all_price_netin);
+    for (i = 0; i < 6; i++){
+        metry_summary(out_vector[i], stats.a[i]);
+    }
+
+    for (i = 0; i < 5; i++){
+        stats.a[i].all_will_netin_pct = (stats.a[i].all_will_netin - stats.a[i+1].all_will_netin) / std::abs(stats.a[i+1].all_will_netin);
+        stats.a[i].all_price_netin_pct = (stats.a[i].all_price_netin - stats.a[i+1].all_price_netin) / std::abs(stats.a[i+1].all_price_netin);
 
 
-    stats.a[0].strip_will_netin_pct = (stats.a[0].strip_will_netin - stats.a[1].strip_will_netin) / std::abs(stats.a[1].strip_will_netin);
-    stats.a[0].strip_price_netin_pct = (stats.a[0].strip_price_netin - stats.a[1].strip_price_netin) / std::abs(stats.a[1].strip_price_netin);
+        stats.a[i].strip_will_netin_pct = (stats.a[i].strip_will_netin - stats.a[i+1].strip_will_netin) / std::abs(stats.a[i+1].strip_will_netin);
+        stats.a[i].strip_price_netin_pct = (stats.a[i].strip_price_netin - stats.a[i+1].strip_price_netin) / std::abs(stats.a[i+1].strip_price_netin);
+
+        stats.a[i].all_netin = stats.a[i].all_will_netin > 0 && stats.a[i].all_price_netin > 0 && stats.a[i].all_will_netin_pct > 0 && stats.a[i].all_price_netin_pct > 0;
+        stats.a[i].middle_netin = stats.a[i].strip_will_netin > 0 && stats.a[i].strip_price_netin > 0 && stats.a[i].strip_will_netin_pct > 0 && stats.a[i].strip_price_netin_pct > 0;
+    }
+
+    for (i = 1; i < 5 ; i++){
+        if (stats.a[i].all_netin && stats.a[i].pct_change_base_pre <= 0){
+            stats.money_in_and_price_up_nt++;
+        }
+    }
 
     return;
 }

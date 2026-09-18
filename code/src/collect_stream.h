@@ -166,6 +166,9 @@ struct TradeCategoryStats {
     double strip_will_netin_pct = 0.0;
     double strip_price_netin_pct = 0.0; 
 
+    bool all_netin = false;
+    bool middle_netin = false;
+
 };
 
 struct VectorStats {    
@@ -179,6 +182,8 @@ struct VectorStats {
     int volume_grow_loose = 0;
 
     std::vector<TradeCategoryStats> a;
+
+    int money_in_and_price_up_nt = 0;
 };
 
 

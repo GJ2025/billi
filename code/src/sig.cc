@@ -46,21 +46,17 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
     TradeCategoryStats& a0 = v_stats.a[0];
     TradeCategoryStats& a1 = v_stats.a[1];
 
-    bool all_netin = (a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 );
-    bool middle_netin = (a0.strip_will_netin > 0 && a0.strip_price_netin > 0 && a0.strip_will_netin_pct > 0 && a0.strip_price_netin_pct > 0) ;
-
-
     std::vector<SubCondition> sub_conditions = {
         {
             a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_day_adjacent[0] < -3,
             "will_up"
         },
         {
-            all_netin && a0.pct_change_base_pre < 0.1,
+            a0.all_netin && a0.pct_change_base_pre < 0.1,
             "abnormal_all"
         },
         {
-            middle_netin && a0.pct_change_base_925 < 0.1,
+            a0.middle_netin && a0.pct_change_base_925 < 0.1,
             "abnormal_middle"
         },
         {

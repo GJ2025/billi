@@ -449,6 +449,8 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
     print_next_pos(v_stats.a[0].pct_change_base_925, i, cols);
     print_next_pos(v_stats.a[0].pct_change_base_pre, i, cols);
 
+    print_next_pos(v_stats.money_in_and_price_up_nt, i, cols);
+
     print_next(sc.description, i, cols);
     
 
