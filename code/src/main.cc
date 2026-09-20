@@ -458,7 +458,7 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
 
     for (const auto& out : out_vector) {
 
-        print_bodys(opts, out.date_str, out.am_metrics, out.metrics, prev_out.metrics, what);
+        print_bodys(opts, out.date_str, out.am_metrics, out.middle_metrics, out.metrics, prev_out.metrics, what);
 
         if (out.metrics.ticks_count > 0) {
             prev_out = out;
@@ -480,7 +480,7 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
     print_headers(opts, what);
 
     for (size_t i = 0; i < all_metrics.size() ; ++i) {
-        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, all_metrics[i], pre_metrics, what);
+        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, dump_metrics, all_metrics[i], pre_metrics, what);
 
         pre_metrics = all_metrics[i];
 
@@ -490,7 +490,7 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
                 
     }
 
-    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, metrics, pre_metrics, what);
+    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, dump_metrics, metrics, pre_metrics, what);
 
     print_headers(opts, what);
 

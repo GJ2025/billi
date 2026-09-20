@@ -84,7 +84,7 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
     print_next_pos((metrics_price_net(bsn_group)) / WAN, i, cols);
 
     print_next(deal_summary.type_total.money / WAN, i, cols);
-    print_next(deal_summary.type_total.volume/ WAN, i, cols);
+    print_next(deal_summary.type_total.volume/ SHOU, i, cols);
     
     print_next(pre_metrics.closing_price, i, cols);
 
@@ -135,7 +135,7 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     print_next_pos((metrics_price_net(bsn_group)) / deal_summary.total.money, i, cols);
 
     print_next(deal_summary.type_total.money / WAN, i, cols);
-    print_next(deal_summary.type_total.volume/ WAN, i, cols);
+    print_next(deal_summary.type_total.volume/ SHOU, i, cols);
     
     print_next(pre_metrics.closing_price, i, cols);
 
@@ -195,7 +195,7 @@ void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetric
     print_next_pos(out.pct_change_base_925, i, cols);
     print_next_pos(out.pct_change_base_pre, i, cols);
     print_next(summary.total.money/WAN, i, cols);
-    print_next(summary.total.volume/WAN, i, cols);
+    print_next(summary.total.volume/SHOU, i, cols);
 
     print_next_pos(all_will_netin/WAN, i, cols);
     print_next_pos(all_price_netin/WAN, i, cols);
@@ -254,7 +254,7 @@ void print_will(const std::string& date_str, const DailyMetrics& pre_metrics, co
     print_next(deal_summary_total.bsn.neutral.money / WAN, i, cols);
 
     print_next((deal_summary_total.total.money) / WAN, i, cols);
-    print_next((deal_summary_total.total.volume) / WAN, i, cols);
+    print_next((deal_summary_total.total.volume) / SHOU, i, cols);
     print_next(pre_metrics.closing_price, i, cols);
 
     print_next_pos(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
@@ -314,7 +314,7 @@ void print_price(const std::string& date_str, const DailyMetrics& pre_metrics, c
 
 
     print_next(all_money/WAN , i, cols);
-    print_next((deal_summary_total.total.volume)/WAN, i, cols);
+    print_next((deal_summary_total.total.volume)/SHOU, i, cols);
     print_next(pre_metrics.closing_price, i, cols);
 
 
@@ -383,7 +383,7 @@ void print_tseq_price(DailyMetrics& metrics) {
 
 
     print_next(all_money/WAN , i, cols);
-    print_next((deal_summary_total.total.volume)/WAN, i, cols);
+    print_next((deal_summary_total.total.volume)/SHOU, i, cols);
 
     print_next(metrics.closing_price, i, cols);
     std::cout << std::endl;
@@ -403,13 +403,13 @@ void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<D
         bsn_action_group dump;
         deal_summary deal_summary_total;
         get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-        print_next((deal_summary_total.total.volume)/WAN, i, cols);
+        print_next((deal_summary_total.total.volume)/SHOU, i, cols);
     }
 
     bsn_action_group dump;
     deal_summary deal_summary_total;
     get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-    print_next((deal_summary_total.total.volume)/WAN, i, cols);
+    print_next((deal_summary_total.total.volume)/SHOU, i, cols);
 
     std::cout << std::endl;
 
@@ -499,7 +499,8 @@ std::string get_divergence_string(double pct_change_base_pre, const DailyMetrics
 }
 
 void print_all_data(const std::string& date_str,  
-                    const DailyMetrics& am_metrics, 
+                    const DailyMetrics& am_metrics,
+                    const DailyMetrics& middle_metrics, 
                     const DailyMetrics& metrics, 
                     const DailyMetrics& pre_metrics,
                     const std::vector<Col>& cols) {
@@ -535,7 +536,7 @@ void print_all_data(const std::string& date_str,
 
     avg_price = total_money/total_volume;
 
-    std::cout << std::left << std::fixed << std::setprecision(1);
+    std::cout << std::left << std::fixed << std::setprecision(0);
 
     print_next(date_str, i, cols);
     print_next(metrics.ticks_count, i, cols);
@@ -560,6 +561,11 @@ void print_all_data(const std::string& date_str,
     print_next_pos((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
     print_next_pos((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
 
+
+    std::cout << std::left << std::fixed << std::setprecision(0);
+    print_next_pos(metrics_bsn_net(middle_metrics)/WAN, i, cols);
+    print_next_pos(metrics_price_net(middle_metrics.header.total)/WAN, i, cols);
+
     std::cout << std::left << std::fixed << std::setprecision(1);
     DailyDistributions result;
     get_daily_distributions(metrics,  result);
@@ -568,12 +574,14 @@ void print_all_data(const std::string& date_str,
 
 
     print_next(total_money/WAN, i, cols);
-    print_next(total_volume/WAN, i, cols);
+    print_next(total_volume/SHOU, i, cols);
 
 
     print_next_pos(all_will_netin/total_money, i, cols);
 
+    std::cout << std::left << std::fixed << std::setprecision(3);
     print_next(avg_price, i, cols);
+    std::cout << std::left << std::fixed << std::setprecision(1);
 
     print_next_pos(get_first_record_net(metrics), i, cols);
 
@@ -726,16 +734,17 @@ void print_headers(const ProgramOptions& opts, PrintWhat what) {
 
 void print_bodys(const ProgramOptions& opts,  
                 const std::string& date_str, 
-                const DailyMetrics& am_metrics, 
+                const DailyMetrics& am_metrics,
+                const DailyMetrics& middle_metrics, 
                 const DailyMetrics& metrics, 
                 const DailyMetrics& pre_metrics,  PrintWhat what)  {
 
         if (opts.show_all && what == PrintWhat::DSEQ){
-            print_all_data(date_str, am_metrics, metrics, pre_metrics, data_all_table_cols);
+            print_all_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, data_all_table_cols);
         }
 
         if (opts.show_all && what == PrintWhat::TSEQ){
-            print_all_data(date_str, am_metrics, metrics, pre_metrics, tseq_data_all_table_cols);
+            print_all_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, tseq_data_all_table_cols);
         }
 
         if (opts.show_will){

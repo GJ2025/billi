@@ -249,6 +249,10 @@ static const std::vector<Col> data_all_table_cols = {
 
     {"WillP", 8},
     {"PRICEP", 8},
+
+    {"Strip-W", 8},
+    {"Strip-P", 8},
+
     {"Distribute_M", 24, false},
     {"Distribute_V", 24},
     {"Money", 11},
@@ -256,16 +260,16 @@ static const std::vector<Col> data_all_table_cols = {
     
     {"NET/Money", 9, false},
 
-    {"AvgPrice", 9, true},
-    {"1st", 8}, 
-    {"StartCh%", 8}, 
-    {"AvgPct%", 8, false},
-    {"AM-Close", 8, false}, 
-    {"AM-Pct%", 8, false},
-    {"BaseAvg%", 8, false},  
-    {"Pct_925", 9},
-    {"Pct_pre", 9}, 
-    {"Close", 7},
+    {"AvgP", 5, true},
+    {"1st", 6}, 
+    {"Star%", 5}, 
+    {"Avg%", 5, false},
+    {"AM-C", 5, false}, 
+    {"AM-P%", 5, false},
+    {"BaAvg%", 5, false},  
+    {"P925", 5},
+    {"Ppre", 5}, 
+    {"Close", 5},
 
     {"Divergence", 20}
 };
@@ -288,6 +292,10 @@ static const std::vector<Col> tseq_data_all_table_cols = {
 
     {"WillP", 8},
     {"PRICEP", 8},
+
+    {"Strip-W", 8, false},
+    {"Strip-P", 8, false},
+
     {"Distribute_M", 24, false},
     {"Distribute_V", 24},
     {"Money", 11},

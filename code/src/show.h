@@ -36,7 +36,8 @@ void print_tseq_price(DailyMetrics& metrics);
 void print_signal(const std::string& file, const VectorStats& v_stats, SubCondition sc);
 
 void print_all_data(const std::string& date_str,  
-                    const DailyMetrics& am_metrics, 
+                    const DailyMetrics& am_metrics,
+                    const DailyMetrics& middle_metrics, 
                     const DailyMetrics& metrics, 
                     const DailyMetrics& pre_metrics,
                     const std::vector<Col>& cols);
@@ -50,7 +51,8 @@ void print_headers(const ProgramOptions& opts, PrintWhat what);
 
 void print_bodys(const ProgramOptions& opts,  
                 const std::string& date_str, 
-                const DailyMetrics& am_metrics, 
+                const DailyMetrics& am_metrics,
+                const DailyMetrics& middle_metrics,  
                 const DailyMetrics& metrics, 
                 const DailyMetrics& pre_metrics,
                 PrintWhat what);
