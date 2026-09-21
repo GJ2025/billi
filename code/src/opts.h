@@ -26,6 +26,7 @@ struct ProgramOptions {
     bool show_t= false;
     SeqTime tseq;
     size_t show_limit = 10000;
+    size_t pre_day = 0;
     std::string lvmeng_dir_path;
     std::string data_dir_path;
 

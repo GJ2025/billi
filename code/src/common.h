@@ -12,6 +12,7 @@
 namespace fs = std::filesystem;
 
 #define WAN 10000
+#define QIAN 1000
 #define SHOU 100
 
 struct tickTime {

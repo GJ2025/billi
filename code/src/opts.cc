@@ -21,13 +21,14 @@ bool ProgramOptions::* const flags[] = {
 //  ./bin/parse_tick -t -N 90 -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:H:M:r:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:H:M:r:R:P:")) != -1) {
         switch (opt) {
             case 'a': opts.show_all = true; break;
             case 'A': opts.show_sz = true; break;
 
             case 'd': opts.lvmeng_dir_path = optarg; break;
             case 'D': opts.data_dir_path = optarg; break;
+            case 'P': opts.pre_day = std::stoi(optarg); break;
 
             case 'w': opts.show_will = true; break;
             case 'p': opts.show_price = true; break;

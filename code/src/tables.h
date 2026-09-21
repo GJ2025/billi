@@ -305,12 +305,12 @@ static const std::vector<Col> tseq_data_all_table_cols = {
 
     {"AvgPrice", 9, true},
     {"1st", 8}, 
-    {"StartCh%", 8}, 
+    {"StartCh%", 8,  false}, 
     {"AvgPct%", 8, false},
     {"AM-Close", 8, false}, 
     {"AM-Pct%", 8, false},
     {"BaseAvg%", 8, false},  
-    {"Pct_925", 9},
+    {"Pct_925", 9, false},
     {"Pct_pre", 9}, 
     {"Close", 7},
 

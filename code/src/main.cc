@@ -581,7 +581,7 @@ void select_stock(const std::string& data_dir_path, std::vector<std::string>& fi
 }
 
 
-void process_subdirectories(const std::string& data_dir_path, size_t show_limit) {
+void process_subdirectories(const std::string& data_dir_path, size_t show_limit, size_t pre_day) {
 
     if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
         std::cerr << "Invalid directory path: " << data_dir_path << std::endl;
@@ -602,6 +602,14 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit)
             std::vector<DayOutputMetrics> out_vector;
 
             files_list(entry.path().string(), show_limit, files_to_process);
+
+            files_to_process.erase(
+                files_to_process.end() - pre_day, 
+                files_to_process.end()
+            );
+
+            files_to_process.shrink_to_fit();
+
             files_to_metrics(files_to_process, out_vector); 
 
             select_stock(entry.path().string(), files_to_process, out_vector);
@@ -625,7 +633,7 @@ int main(int argc, char* argv[]) {
     }
 
      if (opts.check_Dir()){
-        process_subdirectories(opts.data_dir_path, opts.show_limit);
+        process_subdirectories(opts.data_dir_path, opts.show_limit, opts.pre_day);
         return 0;
     }
 
