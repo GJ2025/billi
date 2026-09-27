@@ -6,6 +6,8 @@
 struct Col {
     std::string name;
     int width;
+    int precision = 0;  
+    bool show_pos = false;
     bool visible = true;
 };
 
@@ -232,46 +234,48 @@ inline void init_tick_columns(std::vector<Col>& cols) {
 }
 
 static const std::vector<Col> data_all_table_cols = {
-    {"Date", 11}, 
-    {"Ticks", 5}, 
-    {"AM-volume(W)", 12, false},
-    {"AM-Money(W)", 11, false}, 
-    {"AM-Money%", 11}, 
-    {"Volume/Tick", 11}, 
-
-    {"AM-NET", 11, false}, 
-    {"PM-NET", 11, false},
-    {"AM-P-NET", 11, false}, 
-    {"PM-P-NET", 11, false}, 
-
-    {"WNET", 8},
-    {"PNET", 8},
-
-    {"WillP", 8},
-    {"PRICEP", 8},
-
-    {"Strip-W", 8},
-    {"Strip-P", 8},
-
-    {"Distribute_M", 24, false},
-    {"Distribute_V", 24},
-    {"Money", 11},
-    {"Volume", 9}, 
+    // 成员顺序: { name, width, precision, show_pos, visible }
+    {"Date", 11, 0, false, true},            
+    {"Ticks", 5, 0, false, true},            
+    {"AM-volume(W)", 12, 0, false, false},   
+    {"AM-Money(W)", 11, 0, false, false},    
     
-    {"NET/Money", 9, false},
+    {"AM-M-P", 6, 1, false, true},           
+    {"Vol/Tick", 8, 0, false, true},         
 
-    {"AvgP", 5, true},
-    {"1st", 6}, 
-    {"Star%", 5}, 
-    {"Avg%", 5, false},
-    {"AM-C", 5, false}, 
-    {"AM-P%", 5, false},
-    {"BaAvg%", 5, false},  
-    {"P925", 5},
-    {"Ppre", 5}, 
-    {"Close", 5},
+    {"AM-NET", 11, 0, true, false},          
+    {"PM-NET", 11, 0, true, false},          
+    {"AM-P-NET", 11, 0, true, false},        
+    {"PM-P-NET", 11, 0, true, false},        
 
-    {"Divergence", 20}
+    {"WNET", 8, 0, true, true},              
+    {"PNET", 8, 0, true, true},              
+
+    {"WillP", 8, 2, true, true},             
+    {"PRICEP", 8, 2, true, true},            
+
+    {"Strip-W", 8, 0, true, true},           
+    {"Strip-P", 8, 0, true, true},           
+
+    {"Distribute_M", 24, 0, false, false},   
+    {"Distribute_V", 24, 0, false, true},    
+    {"Money", 11, 0, false, true},           
+    {"Volume", 9, 0, false, true},           
+
+    {"NET/Money", 9, 1, true, false},        
+
+    {"AvgP", 7, 2, false, true},             
+    {"1st", 10, 2, true, true},              
+    {"Star%", 5, 2, true, true},             
+    {"Avg%", 5, 2, true, false},             
+    {"AM-C", 5, 0, false, false},            
+    {"AM-P%", 5, 2, true, false},            
+    {"BaAvg%", 5, 2, true, false},           
+    {"P925", 5, 2, true, true},              
+    {"Ppre", 5, 2, true, true},              
+    {"Close", 5, 2, false, true},            
+
+    {"Divergence", 20, 0, false, true}       
 };
 
 static const std::vector<Col> tseq_data_all_table_cols = {

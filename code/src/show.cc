@@ -2,12 +2,34 @@
 #include "show.h"
 
 template<typename T>
-inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
-    if (index < (int)cols.size() && cols[index].visible) {
-        std::cout << std::setw(cols[index].width) << val << " | ";
-    }
+inline void print_next_new(const T& val, int& index, const std::vector<Col>& cols) {
+    if (index < (int)cols.size()) {
+        const auto& col = cols[index];
+        if (col.visible) {
 
+            std::cout << std::left << std::fixed << std::setprecision(col.precision);
+            
+            if (col.show_pos) {
+                std::cout << std::showpos;
+            }
+            
+            std::cout << std::setw(col.width) << val << " | ";
+            
+            if (col.show_pos) {
+                std::cout << std::noshowpos;
+            }
+        }
+    }
     index++;
+}
+
+template<typename T>
+inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
+                if (index < (int)cols.size() && cols[index].visible) {
+                                std::cout << std::setw(cols[index].width) << val << " | ";
+                }
+
+                index++;
 }
 
 template<typename T>
@@ -520,128 +542,79 @@ void print_all_data(const std::string& date_str,
     double am_total_money = metrics_total_money(am_metrics);
     double am_will_netin = metrics_bsn_net(am_metrics);
     double am_price_netin = metrics_price_net(am_metrics.header.total);
-
     double total_money = metrics_total_money(metrics);
-
     double all_will_netin = metrics_bsn_net(metrics);
     double all_price_netin = metrics_price_net(metrics.header.total);
 
     double prev_all_will_netin = metrics_bsn_net(pre_metrics);
     double prev_all_price_netin = metrics_price_net(pre_metrics.header.total);
 
-    
-
     am_money_ratio = am_total_money/total_money; 
     total_volume = metrics_total_volume(metrics);
-
     avg_price = total_money/total_volume;
 
     std::cout << std::left << std::fixed << std::setprecision(0);
 
-    print_next(date_str, i, cols);
-    print_next(metrics.ticks_count, i, cols);
-    print_next(metrics_total_volume(am_metrics), i, cols);
-    print_next(am_total_money, i, cols);
+    print_next_new(date_str, i, cols);
+    print_next_new(metrics.ticks_count, i, cols);
+    print_next_new(metrics_total_volume(am_metrics), i, cols);
+    print_next_new(am_total_money, i, cols);
     
-    print_next(am_money_ratio * 100, i, cols);
-    print_next(total_volume/metrics.ticks_count, i, cols);
+    print_next_new(am_money_ratio * 100, i, cols);
+    print_next_new(total_volume/metrics.ticks_count, i, cols);
 
-    print_next_pos(am_will_netin/WAN, i, cols);
-    print_next_pos((all_will_netin - am_will_netin)/WAN, i, cols);
-
-
-    print_next_pos(am_price_netin/WAN, i, cols);
-    print_next_pos((all_price_netin - am_price_netin)/WAN, i, cols);
-
-    print_next_pos(all_will_netin/WAN, i, cols);
-    print_next_pos(all_price_netin/WAN, i, cols);
+    print_next_new(am_will_netin/WAN, i, cols);
+    print_next_new((all_will_netin - am_will_netin)/WAN, i, cols);
 
 
-    std::cout << std::left << std::fixed << std::setprecision(3);
-    print_next_pos((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
-    print_next_pos((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
+    print_next_new(am_price_netin/WAN, i, cols);
+    print_next_new((all_price_netin - am_price_netin)/WAN, i, cols);
 
+    print_next_new(all_will_netin/WAN, i, cols);
+    print_next_new(all_price_netin/WAN, i, cols);
 
-    std::cout << std::left << std::fixed << std::setprecision(0);
-    print_next_pos(metrics_bsn_net(middle_metrics)/WAN, i, cols);
-    print_next_pos(metrics_price_net(middle_metrics.header.total)/WAN, i, cols);
+    // std::cout << std::left << std::fixed << std::setprecision(3);
 
-    std::cout << std::left << std::fixed << std::setprecision(1);
+    print_next_new((all_will_netin - prev_all_will_netin)/std::abs(prev_all_will_netin), i, cols);
+    print_next_new((all_price_netin - prev_all_price_netin)/std::abs(prev_all_price_netin), i, cols);
+
+    // std::cout << std::left << std::fixed << std::setprecision(0);
+    print_next_new(metrics_bsn_net(middle_metrics)/WAN, i, cols);
+    print_next_new(metrics_price_net(middle_metrics.header.total)/WAN, i, cols);
+
+    // std::cout << std::left << std::fixed << std::setprecision(1);
     DailyDistributions result;
     get_daily_distributions(metrics,  result);
-    print_next(result.money_dist.description, i, cols);
-    print_next(result.vol_dist.description, i, cols);
+    print_next_new(result.money_dist.description, i, cols);
+    print_next_new(result.vol_dist.description, i, cols);
 
+    print_next_new(total_money/WAN, i, cols);
+    print_next_new(total_volume/SHOU, i, cols);
 
-    print_next(total_money/WAN, i, cols);
-    print_next(total_volume/SHOU, i, cols);
+    print_next_new(all_will_netin/total_money, i, cols);
 
+    // std::cout << std::left << std::fixed << std::setprecision(3);
+    print_next_new(avg_price, i, cols);
 
-    print_next_pos(all_will_netin/total_money, i, cols);
+    // std::cout << std::left << std::fixed << std::setprecision(1);
+    print_next_new(get_first_record_net(metrics), i, cols);
 
-    std::cout << std::left << std::fixed << std::setprecision(3);
-    print_next(avg_price, i, cols);
-    std::cout << std::left << std::fixed << std::setprecision(1);
+    // std::cout << std::left << std::fixed << std::setprecision(2);
+    print_next_new(start_change, i, cols);
+    print_next_new(avg_pct_change, i, cols);
+    print_next_new(am_metrics.closing_price, i, cols);
+    print_next_new(am_pct_change, i, cols);
+    print_next_new((metrics.closing_price - avg_price)/avg_price, i, cols);
 
-    print_next_pos(get_first_record_net(metrics), i, cols);
+    print_next_new(pct_change_base_925, i, cols);
+    print_next_new(pct_change_base_pre, i, cols);
+    print_next_new(metrics.closing_price, i, cols);
 
-    std::cout << std::left << std::fixed << std::setprecision(2);
-
-    print_next_pos(start_change, i, cols);
-    print_next_pos(avg_pct_change, i, cols);
-
-    print_next(am_metrics.closing_price, i, cols);
-
-    print_next_pos(am_pct_change, i, cols);
-    
-    print_next_pos((metrics.closing_price - avg_price)/avg_price, i, cols);
-
-    print_next_pos(pct_change_base_925, i, cols);
-    print_next_pos(pct_change_base_pre, i, cols);
-    print_next(metrics.closing_price, i, cols);
-
-    print_next(divergengce, i, cols);
+    print_next_new(divergengce, i, cols);
 
     std::cout << std::endl;
 
     return;
-}
-
-void print_table_header() {
-    std::cout << std::left << std::setw(12) << "Date" << " | "
-              << std::right 
-              << std::setw(12) << "Pre924" << " | "
-              << std::setw(10) << "924"    << " | "
-              << std::setw(10) << "925"    << " | "
-              << std::setw(12) << "ChgPreDay" << " | "
-              << std::setw(12) << "ChgPre924" << " | "
-               << std::setw(6) << "b/s" << " | "
-              << std::setw(12) << "Chg924"    << " | "
-              << std::setw(12) << "PctChg" 
-              << std::endl;
-    std::cout << std::string(88, '-') << std::endl;
-}
-
-void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out) {
-    double price_change_pct = 0.0;
-    double ratio_change_pre_day = 0.0;
-    if (pre_out.metrics.closing_price != 0.0) {
-        price_change_pct = ((out.metrics.closing_price - pre_out.metrics.closing_price) / pre_out.metrics.closing_price) * 100.0;
-        ratio_change_pre_day = ((out.metrics.head_data.v_925.price - pre_out.metrics.closing_price) / pre_out.metrics.closing_price) * 100.0;
-
-    }
-
-    std::cout << std::left  << std::setw(12) << out.date_str << " | "
-              << std::right << std::fixed << std::setprecision(2)
-              << std::setw(12) << out.metrics.head_data.pre_924.price << " | "
-              << std::setw(10) << out.metrics.head_data.v_924.price   << " | "
-              << std::setw(10) << out.metrics.head_data.v_925.price   << " | "
-              << std::setw(11) << out.metrics.head_data.ratio_change_pre_924 << "% | "
-              << std::setw(11) << ratio_change_pre_day << "% | "
-              << std::setw(6) << out.metrics.head_data.v_925.bs_type << " | "
-              << std::setw(11) << out.metrics.head_data.ratio_change_924 << "% | "
-              << std::setw(11) << price_change_pct << "%"
-              << std::endl;
 }
 
 void print_all() {

@@ -21,7 +21,7 @@ bool ProgramOptions::* const flags[] = {
 //  ./bin/parse_tick -t -N 90 -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:H:M:r:R:P:")) != -1) {
+    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:H:M:r:R:SP:")) != -1) {
         switch (opt) {
             case 'a': opts.show_all = true; break;
             case 'A': opts.show_sz = true; break;
@@ -62,6 +62,8 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
 
                 break;
             }
+
+            case 'S': opts.show_static = true; break;
  
             default:
                 std::cerr << "Usage: " << argv[0] << " find in opts.cc" << std::endl;

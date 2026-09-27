@@ -118,7 +118,7 @@ bool convert_gbk_to_utf8(const std::string& filepath) {
     return true;
 }
 
-int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::string>& files_to_process) {
+int files_list(const std::string& dir_path, size_t end_left_0, size_t end_left_1, std::vector<std::string>& files_to_process) {
 
     // run_preprocessing(dir_path);
 
@@ -141,12 +141,8 @@ int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::
         return -1; 
     }
 
-    if (show_limit && files_to_process.size() > show_limit){
-        files_to_process.erase(
-            files_to_process.begin(), 
-            files_to_process.end() - show_limit
-        );
-    
+    if (end_left_0 && files_to_process.size() > end_left_0){
+        files_to_process.assign(files_to_process.end() - end_left_0, files_to_process.end() - end_left_1);   
         files_to_process.shrink_to_fit();
     }
 
@@ -185,7 +181,7 @@ void dir_map_code(const std::string& data_dir_path, std::unordered_map<std::stri
 
             std::vector<std::string> files_to_process;
 
-            files_list(entry.path().string(), 1, files_to_process);
+            files_list(entry.path().string(), 1, 0, files_to_process);
 
             if (files_to_process.size() != 0){
                 // std::cout << entry.path().string() << "            :             " << extract_stock_code(files_to_process[0]) << std::endl;
@@ -194,10 +190,7 @@ void dir_map_code(const std::string& data_dir_path, std::unordered_map<std::stri
         }
     }
 
-    // std::cout << "\n--- Code Path Map Contents ---" << std::endl;
-    // for (const auto& [code, path] : code_path_map) {
-    //     std::cout << "Code: " << code << " -> Path: " << path << std::endl;
-    // }
+    return;
 
 }
 

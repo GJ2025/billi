@@ -4,7 +4,7 @@
 #define FILE_BUFF "/home/guoj/data/ALL"
 
 void run_preprocessing(const std::string& dir_path);
-int files_list(const std::string& dir_path, size_t show_limit, std::vector<std::string>& files_to_process);
+int files_list(const std::string& dir_path, size_t end_left_0, size_t end_left_1, std::vector<std::string>& files_to_process);
 
 inline bool should_skip_directory(const std::string& dir_name) {
     return dir_name.find("show") != std::string::npos  

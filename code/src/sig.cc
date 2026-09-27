@@ -24,27 +24,33 @@
 #include "collect_stream.h"
 #include "statics.h"
 
-void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
+void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions, bool print_anyway){
+    bool printed = false;
+
     for (const auto& sc : sub_conditions) {
         if (sc.satisfied) {
             print_signal(file, v_stats, sc);
+            printed = true;
         }
     }
+
+    if (printed == false && print_anyway){
+        SubCondition dump;
+        print_signal(file, v_stats, dump);
+    }
+
+    return;
 }
 
-void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector) {
+void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway) {
     if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
         return;
     }
 
     VectorStats v_stats;
-
     const auto& file = files_to_process[0]; 
-
     metry_vector_summary(out_vector, v_stats);
-
     TradeCategoryStats& a0 = v_stats.a[0];
-    // TradeCategoryStats& a1 = v_stats.a[1];
 
     std::vector<SubCondition> sub_conditions = {
         {
@@ -58,27 +64,11 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
         {
             a0.all_netin && a0.pct_change_base_pre < 0.1,
             "abnormal_all"
-        },
-        // {
-        //     a0.middle_netin && a0.pct_change_base_925 < 0.1,
-        //     "abnormal_middle"
-        // },
-        // {
-        //     a0.all_will_netin > 0 && a0.all_price_netin > 0  
-        //     && a0.all_will_netin_pct > 0 && a0.all_price_netin_pct > 0 
-        //     && v_stats.price_day_adjacent[0] >= -1 && v_stats.price_day_adjacent[0] <= 3,
-        //     "SPEEDUP(" + pct_base_string(a0.buyup_pct) + "vs" + pct_base_string(a0.buyup_pct - a1.buyup_pct) + ")" 
-        // },
-        // {
-        //     a0.pct_change_base_925 > 0 && middle_netin == false,
-        //     "up_out_m" 
-        // },
-        // {
-        //     a0.pct_change_base_pre > 0 && all_netin == false,
-        //     "up_out_all" 
-        // }        
+        },       
     };
 
 
-    check_sub_conditions(file, v_stats, sub_conditions);
+    check_sub_conditions(file, v_stats, sub_conditions, print_anyway);
+
+    return;
 }

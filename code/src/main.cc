@@ -566,7 +566,7 @@ bool check_and_print_date_mismatches(const std::vector<std::string>& files,
     return has_mismatch;
 }
 
-void select_stock(const std::string& data_dir_path, std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
+void select_stock(const std::string& data_dir_path, std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool print_any_way) {
     if (check_and_print_date_mismatches(files_to_process, out_vector)){
         std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
         return;
@@ -575,9 +575,19 @@ void select_stock(const std::string& data_dir_path, std::vector<std::string>& fi
     std::reverse(out_vector.begin(), out_vector.end());
     std::reverse(files_to_process.begin(), files_to_process.end());
 
-    signals_from_metrics(out_vector.size(), files_to_process, out_vector);
+    signals_from_metrics(out_vector.size(), files_to_process, out_vector, print_any_way);
 
     return;
+}
+
+void process_single_directory(const std::string& sub_dir_path, size_t show_limit, size_t pre_day, bool print_any_way) {
+    std::vector<std::string> files_to_process;
+    std::vector<DayOutputMetrics> out_vector;
+
+    files_list(sub_dir_path, show_limit, pre_day, files_to_process);
+    files_to_metrics(files_to_process, out_vector); 
+
+    select_stock(sub_dir_path, files_to_process, out_vector, print_any_way);
 }
 
 
@@ -598,21 +608,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit,
                 continue;
             }
 
-            std::vector<std::string> files_to_process;
-            std::vector<DayOutputMetrics> out_vector;
-
-            files_list(entry.path().string(), show_limit, files_to_process);
-
-            files_to_process.erase(
-                files_to_process.end() - pre_day, 
-                files_to_process.end()
-            );
-
-            files_to_process.shrink_to_fit();
-
-            files_to_metrics(files_to_process, out_vector); 
-
-            select_stock(entry.path().string(), files_to_process, out_vector);
+            process_single_directory(entry.path().string(), show_limit, pre_day, false);
         }
     }
 
@@ -620,11 +616,11 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit,
 }
 
 int main(int argc, char* argv[]) {
-    // ProgramOptions opts;
+
     file2out_st file2out;
     
     
-    files_list(FILE_BUFF, 0, buffered_files);
+    files_list(FILE_BUFF, 0, 0, buffered_files);
     dir_map_code("/home/guoj/data", code_path_map);
     process_files_IN_ALL(buffered_files, code_path_map);
 
@@ -641,7 +637,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    files_list(opts.lvmeng_dir_path, opts.show_limit, file2out.files_to_process);
+    if (opts.show_static){
+
+        process_single_directory(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, true);
+        return 0;
+    } 
+
+
+
+    files_list(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, file2out.files_to_process);
     if (opts.show_sz){
 
         traverse_files_for_sz(file2out.files_to_process);
