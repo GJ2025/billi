@@ -9,9 +9,6 @@ enum class PrintWhat : uint8_t {
 };
 
 template<typename T>
-void print_next(const T& val, int& index, const std::vector<Col>& cols);
-
-template<typename T>
 void print_next_pos(const T& val, int& index, const std::vector<Col>& cols);
 void print__headers(const std::string& title, const std::vector<Col>& cols) ;
 void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) ;

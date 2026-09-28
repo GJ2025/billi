@@ -24,15 +24,6 @@ inline void print_next_new(const T& val, int& index, const std::vector<Col>& col
 }
 
 template<typename T>
-inline void print_next(const T& val, int& index, const std::vector<Col>& cols) {
-                if (index < (int)cols.size() && cols[index].visible) {
-                                std::cout << std::setw(cols[index].width) << val << " | ";
-                }
-
-                index++;
-}
-
-template<typename T>
 inline void print_next_pos(const T& val, int& index, const std::vector<Col>& cols) {
     if (index < (int)cols.size() && cols[index].visible) {
         std::cout << std::showpos << std::setw(cols[index].width) << val << " | " << std::noshowpos;
@@ -327,16 +318,16 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    print_next(get_display_file(file), i, cols);
-    print_next_pos(v_stats.a[0].all_will_netin/WAN, i, cols);
-    print_next_pos(v_stats.a[0].all_price_netin/WAN, i, cols);
+    print_next_new(get_display_file(file), i, cols);
+    print_next_new(v_stats.a[0].all_will_netin/WAN, i, cols);
+    print_next_new(v_stats.a[0].all_price_netin/WAN, i, cols);
 
 
-    print_next_pos(v_stats.a[0].all_will_netin_pct, i, cols);
-    print_next_pos(v_stats.a[0].all_price_netin_pct, i, cols);
+    print_next_new(v_stats.a[0].all_will_netin_pct, i, cols);
+    print_next_new(v_stats.a[0].all_price_netin_pct, i, cols);
 
-    print_next_pos(v_stats.a[0].strip_will_netin/WAN, i, cols);
-    print_next_pos(v_stats.a[0].strip_price_netin/WAN, i, cols);
+    print_next_new(v_stats.a[0].strip_will_netin/WAN, i, cols);
+    print_next_new(v_stats.a[0].strip_price_netin/WAN, i, cols);
 
     std::string volume_adjacent_up_days = format_with_sign(v_stats.volume_day_adjacent[0]) 
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[1])
@@ -348,15 +339,15 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
                                             + ":" +  format_with_sign(v_stats.price_day_adjacent[2])
                                             + ":" +  format_with_sign(v_stats.price_day_adjacent[3]);
 
-    print_next(volume_adjacent_up_days, i, cols);                 
-    print_next(price_adjacent_up_days, i, cols);
+    print_next_new(volume_adjacent_up_days, i, cols);                 
+    print_next_new(price_adjacent_up_days, i, cols);
 
-    print_next_pos(v_stats.a[0].pct_change_base_925, i, cols);
-    print_next_pos(v_stats.a[0].pct_change_base_pre, i, cols);
+    print_next_new(v_stats.a[0].pct_change_base_925, i, cols);
+    print_next_new(v_stats.a[0].pct_change_base_pre, i, cols);
 
-    print_next_pos(v_stats.money_in_and_price_up_nt, i, cols);
+    print_next_new(v_stats.money_in_and_price_up_nt, i, cols);
 
-    print_next(sc.description, i, cols);
+    print_next_new(sc.description, i, cols);
     
 
     std::cout << std::endl;

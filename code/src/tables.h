@@ -82,45 +82,18 @@ inline const std::vector<Col> will_price_ratio_table_cols = {
     {"Close", 5}
 };
 
-inline const std::vector<Col> quiet_buying_table_cols = {
-    {"Date", 11}, 
-    {"Buy-Dn", 12, true}, 
-    {"Buy-Kp", 12, true},  
-    {"Buy-Up", 12},
-    {"Sale-Dn", 12,true},
-    {"Sale-Dn-t", 12,false}, 
-    {"Sale-Kp", 12, true}, 
-    {"Sale-Up", 12,true}, 
-    {"Neutral-Dn", 12, false},
-    {"Neutral-Kp", 12, false},  
-    {"Neutral-Up", 12, false},
-    {"Keep", 7},
-    {"Neutral", 7},
-    {"NeuUp", 7},
-    {"KeepBuy", 12},
-    {"Pre", 5},     
-    {"StartCh", 9}, 
-    {"Pct_925", 9},
-    {"Pct_Pre", 9},
-    {"Total_m", 9, false},
-    {"Total_v", 9}, 
-    {"WILL-Net", 10}, 
-    {"PRICE-Net", 12},    
-    {"Close", 5}
-};
-
 inline const std::vector<Col> signal_table_cols = {
     {"File", 40,true},
-    {"WNetIn", 9, true}, 
-    {"PNetIn", 9, true},
-    {"WNET-P", 6},
-    {"PNET-P", 6},
-    {"Strip-W", 9, true}, 
-    {"Strip-P", 9, true}, 
+    {"WNetIn", 9, 0, true, true}, 
+    {"PNetIn", 9, 0, true, true},
+    {"WNET-P", 6, 2, true, true},
+    {"PNET-P", 6, 2, true, true},
+    {"Strip-W", 9, 0, true, true}, 
+    {"Strip-P", 9, 0, true, true}, 
     {"pvolume", 12},
     {"pday", 12},
-    {"Pct0", 5},
-    {"Pct1", 5},
+    {"Pct0", 5, 2, true},
+    {"Pct1", 5, 2, true},
     {"int", 3},
     {"REASON", 12}
 };
