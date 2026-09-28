@@ -295,67 +295,6 @@ void print_price(const std::string& date_str, const DailyMetrics& pre_metrics, c
 
 }
 
-void print_tseq_price(DailyMetrics& metrics) {
-    int i = 0;
-
-    const std::vector<Col>& cols = tseq_price_table_cols;
-    std::string tshow = format_tick_times(metrics.header.time);
-
-    bsn_action_group dump;
-    deal_summary deal_summary_super;
-    deal_summary deal_summary_big;
-    deal_summary deal_summary_middle;
-    deal_summary deal_summary_small;
-    deal_summary deal_summary_total;
-
-    get_slim_base(metrics, RecordScale::SUPER, dump, deal_summary_super);
-    get_slim_base(metrics, RecordScale::BIG, dump, deal_summary_big);
-    get_slim_base(metrics, RecordScale::MIDDLE, dump, deal_summary_middle);
-    get_slim_base(metrics, RecordScale::SMALL, dump, deal_summary_small);
-    get_slim_base(metrics, RecordScale::TOTAL, dump, deal_summary_total);
-
-
-    double all_money = deal_summary_total.total.money;
-
-
-    print_next(tshow, i, cols);
-
-    print_next(deal_summary_super.price.up.money / WAN, i, cols);
-    print_next(deal_summary_super.price.down.money / WAN, i, cols);
-    
-
-    print_next(deal_summary_big.price.up.money / WAN, i, cols);
-    print_next(deal_summary_big.price.down.money / WAN, i, cols);
-
-
-    print_next(deal_summary_middle.price.up.money / WAN, i, cols);
-    print_next(deal_summary_middle.price.down.money / WAN, i, cols);
-    
-
-    print_next(deal_summary_small.price.up.money / WAN, i, cols);
-    print_next(deal_summary_small.price.down.money / WAN, i, cols);
-
-
-    print_next_pos((metrics_price_net(metrics.header.super)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(metrics.header.big)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(metrics.header.middle)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(metrics.header.small)) / WAN, i, cols);
-    print_next_pos((metrics_price_net(metrics.header.total)) / WAN, i, cols);
-
-    print_next(deal_summary_total.price.up.money / WAN, i, cols);
-    print_next(deal_summary_total.price.down.money / WAN, i, cols);
-    print_next(deal_summary_total.price.keep.money / WAN, i, cols);
-    print_next(deal_summary_total.price.keep.money / all_money, i, cols);
-
-
-    print_next(all_money/WAN , i, cols);
-    print_next((deal_summary_total.total.volume)/SHOU, i, cols);
-
-    print_next(metrics.closing_price, i, cols);
-    std::cout << std::endl;
-
-}
-
 void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics) {
     int i = 0;
 

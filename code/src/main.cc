@@ -331,50 +331,6 @@ void process_out(DayOutputMetrics& out, DayOutputMetrics& prev_out){
         return;
 }
 
-void make_test(DayOutputMetrics& out){
-
-    int i = 0;
-    bool should_exist = false;
-    const std::vector<Col>& cols = test_table_cols;
-
-    bsn_action_group dump;
-    deal_summary deal_summary_total_am;
-    get_slim_base(out.am_metrics, RecordScale::TOTAL, dump, deal_summary_total_am);
-
-    deal_summary deal_summary_total;
-    get_slim_base(out.am_metrics, RecordScale::TOTAL, dump, deal_summary_total);
-
-
-    if (out.metrics.am_bsn.buy.money != deal_summary_total_am.bsn.buy.money){
-        print__headers("TEST", test_table_cols);
-        print_next(out.date_str, i, cols);
-        print_next(out.metrics.ticks_count, i, cols);
-
-        print_next(out.metrics.am_bsn.buy.money/WAN, i, cols);
-        print_next(deal_summary_total_am.bsn.buy.money/WAN, i, cols);
-
-        print_next(out.metrics.am_bsn.sale.money/WAN, i, cols);
-        print_next(deal_summary_total_am.bsn.buy.money/WAN, i, cols);
-
-        print_next(out.metrics.pm_bsn.buy.money/WAN, i, cols);
-        print_next((deal_summary_total.bsn.buy.money - deal_summary_total_am.bsn.buy.money)/WAN, i, cols);
-
-        print_next(out.metrics.pm_bsn.sale.money/WAN, i, cols);
-        print_next((deal_summary_total.bsn.buy.money - deal_summary_total_am.bsn.buy.money)/WAN, i, cols);
-        std::cout << std::endl;
-        
-        should_exist = true;
-        
-        print__headers("TEST", test_table_cols);
-    }
-
-    if (should_exist){
-        exit(0);
-    }
-
-    return;
-}
-
 void files_to_metrics(const std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector) {
     out_vector.clear(); 
 
