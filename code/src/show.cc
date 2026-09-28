@@ -171,60 +171,6 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     std::cout << std::endl;
 }
 
-void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
-    int i = 0;
-
-    std::vector<Col> cols = quiet_buying_table_cols;
-
-    double all_will_netin = metrics_bsn_net(out.metrics);
-    double all_price_netin = metrics_price_net(out.metrics.header.total);
-
-    bsn_action_group dump;
-    deal_summary summary;
-    get_slim_base(out.metrics, RecordScale::TOTAL, dump, summary);
-
-    const bsn_action_group& bs = out.metrics.header.total;
-
-
-    std::cout << std::left << std::fixed << std::setprecision(2);
-
-    print_next(out.date_str, i, cols);
-
-    print_next(pct_base(bs.buy.down.money, summary.total.money), i, cols);
-    print_next(pct_base(bs.buy.keep.money, summary.total.money), i, cols);
-    print_next(pct_base(bs.buy.up.money,   summary.total.money), i, cols);
-
-    print_next(pct_base(bs.sale.down.money, summary.total.money), i, cols);
-    print_next(pct_base((double)bs.sale.down.tick_count, summary.total.tick_count), i, cols);
-
-    print_next(pct_base(bs.sale.keep.money, summary.total.money), i, cols);
-    print_next(pct_base(bs.sale.up.money,   summary.total.money), i, cols);
-
-    print_next(pct_base(bs.neutral.down.money, summary.total.money), i, cols);
-    print_next(pct_base(bs.neutral.keep.money, summary.total.money), i, cols);
-    print_next(pct_base(bs.neutral.up.money,   summary.total.money), i, cols);
-
-    print_next(pct_base(summary.price.keep.money,   summary.total.money), i, cols);
-    print_next(pct_base(summary.bsn.neutral.money,   summary.total.money), i, cols);
-    print_next_pos(pct_base(bs.neutral.up.money - bs.neutral.down.money,   summary.total.money), i, cols);
-    print_next_pos(pct_base(bs.buy.keep.money - bs.sale.keep.money ,   summary.total.money), i, cols);
-    
-    print_next(prev_out.metrics.closing_price, i, cols);
-
-    print_next_pos(out.start_change, i, cols);
-    print_next_pos(out.pct_change_base_925, i, cols);
-    print_next_pos(out.pct_change_base_pre, i, cols);
-    print_next(summary.total.money/WAN, i, cols);
-    print_next(summary.total.volume/SHOU, i, cols);
-
-    print_next_pos(all_will_netin/WAN, i, cols);
-    print_next_pos(all_price_netin/WAN, i, cols);
-
-    print_next(out.metrics.closing_price, i, cols);
-
-    std::cout << std::endl;
-}
-
 void print_will(const std::string& date_str, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols) {
     int i = 0;
 
