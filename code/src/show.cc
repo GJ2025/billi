@@ -171,8 +171,6 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     std::cout << std::endl;
 }
 
-
-
 void print_quiet_buying_price(const DayOutputMetrics& out, const DayOutputMetrics& prev_out) {
     int i = 0;
 
