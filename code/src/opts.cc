@@ -68,7 +68,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             case 'h': {
 
                 std::cout << "./bin/parse_tick -t -N 10 -I 1 -d $d/chuanheng -r s" << std::endl;
-                std::cout << "./bin/parse_tick -A -N 10 -I 1 -d $d/chuanheng -l 10" << std::endl;
+                std::cout << "./bin/parse_tick -A -N 10 -I 30 -d $d/chuanheng -l 10" << std::endl;
                 std::cout << "./bin/parse_tick -S -d $d/chuanheng  -l 10 -P 0" << std::endl;
                 std::cout << "./bin/parse_tick -D $d -l 10 -P 0" << std::endl;
 

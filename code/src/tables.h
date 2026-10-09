@@ -47,11 +47,11 @@ inline const std::vector<Col> will_price_table_cols = {
     {"PRICE-Net", 12, 0, true},     
     {"Money", 12, 0},  
     {"Volume", 8, 0},
-    {"Pre", 8, 0},     
+    {"Pre", 8, 2},     
     {"StartCh", 9, 2, true}, 
     {"Pct_925", 9, 2, true},
     {"Pct_Pre", 9, 2, true},   
-    {"Close", 5}
+    {"Close", 5, 1, true}
 };
 
 inline const std::vector<Col> will_price_ratio_table_cols = {
@@ -75,11 +75,11 @@ inline const std::vector<Col> will_price_ratio_table_cols = {
     {"PRICE-Net", 12, 2, true},     
     {"Money", 12, 0, false},  
     {"Volume", 8, 0, false},
-    {"Pre", 8, 2, true},     
+    {"Pre", 8, 2, false},     
     {"StartCh", 9, 2, true}, 
     {"Pct_925", 9, 2, true},
     {"Pct_Pre", 9, 2, true},   
-    {"Close", 5}
+    {"Close", 5, 1, true}
 };
 
 inline const std::vector<Col> signal_table_cols = {
