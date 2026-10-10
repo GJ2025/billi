@@ -227,14 +227,12 @@ void parse_tick_records(std::vector<TickRecord>& records,
 
 void parse_tick_file_by_tseq(std::string filename, 
                             double prev_closing_price, 
-                            DailyMetrics& metrics, 
-                            std::vector<tickTime>& tick_times, 
-                            std::vector<DailyMetrics>& all_metrics) {
+                            DailyMetrics_range_st& range) {
 
     std::vector<TickRecord> records;
     read_tick_records(filename, records);
 
-    parse_tick_records(records, prev_closing_price, metrics, tick_times, all_metrics);
+    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics);
 }
 
 void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price){
@@ -395,7 +393,7 @@ void traverse_files_for_sz(const std::vector<std::string>& files_to_process) {
         range.tick_times = generate_sz_tick_times(opts.tseq.cnt, opts.tseq.intervel);
         const std::string date  = extract_date_from_filename(file);
 
-        parse_tick_file_by_tseq(file, 0, range.metrics, range.tick_times, range.all_metrics);
+        parse_tick_file_by_tseq(file, 0, range);
         print_tseq_sz(date, range.metrics, range.all_metrics);
     }
 
@@ -483,8 +481,8 @@ void handle_tseq_mode(const ProgramOptions& opts, const std::vector<std::string>
     range.tick_times = min_vector(opts.tseq);
     std::reverse(range.tick_times.begin(), range.tick_times.end());
     
-    parse_tick_file_by_tseq(files_to_process[0], 0, range_dump.metrics, range_dump.tick_times, range_dump.all_metrics);
-    parse_tick_file_by_tseq(files_to_process[1], range_dump.metrics.closing_price, range.metrics, range.tick_times, range.all_metrics);
+    parse_tick_file_by_tseq(files_to_process[0], 0, range_dump);
+    parse_tick_file_by_tseq(files_to_process[1], range_dump.metrics.closing_price, range);
 
     show_oneday_metrics_by_opts(opts, range.metrics, range.all_metrics, range_dump.metrics);
 

@@ -250,7 +250,7 @@ static const std::vector<Col> tseq_data_all_table_cols = {
     {"AM-Close", 8, 0, true, false}, 
     {"AM-Pct%", 8, 2, true, false},
     {"BaseAvg%", 8, 2, true, false},  
-    {"Pct_925", 9, 2, true, true},
+    {"Pct_925", 9, 2, true, false},
     {"Pct_pre", 9, 2, true, true}, 
     {"Close", 7, 2, false, true},
 
