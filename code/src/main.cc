@@ -210,9 +210,6 @@ void parse_tick_records(std::vector<TickRecord>& records,
 
         if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) > 0) {
             all_metrics.push_back(metrics);
-
-            // std::cout << record.t.hour << ":" << record.t.minute << std::endl;
-
             tick_idx++; 
         }
 

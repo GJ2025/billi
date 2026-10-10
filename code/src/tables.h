@@ -169,41 +169,6 @@ static const std::vector<Col> price_table_cols = {
 };
 
 
-static const std::vector<Col> tseq_price_table_cols = {
-    {"Date", 11},
-
-    {"Super-Up", 9, false}, 
-    {"Super-Dn", 9, false}, 
-    
-
-    {"Big-Up", 9, false},  
-    {"Big-Dn", 9, false},   
-    
-    {"Mid-Up", 9, false},  
-    {"Mid-Dn", 9, false}, 
-    
-
-    {"Small-Up", 9, false}, 
-    {"Small-Dn", 9, false}, 
-    
-
-    {"Super-NET", 12},
-    {"Big-NET", 9},
-    {"Mid-NET", 9},
-    {"Small-NET", 9},
-    {"Tot-NET", 12},
-
-    {"Tot-Up", 12},  
-    {"Tot-Dn", 12},
-    {"Tot-KEEP", 12},
-
-    {"KEEP/ALL", 8},
-
-    {"Money", 12},   
-    {"Volume", 12},
-    {"Close", 5}
-};
-
 static const std::vector<Col> data_all_table_cols = {
     // 成员顺序: { name, width, precision, show_pos, visible }
     {"Date", 11, 0, false, true},            
@@ -250,46 +215,46 @@ static const std::vector<Col> data_all_table_cols = {
 };
 
 static const std::vector<Col> tseq_data_all_table_cols = {
-    {"Date", 11}, 
-    {"Ticks", 5, false}, 
-    {"AM-volume(W)", 12, false},
-    {"AM-Money(W)", 11, false}, 
-    {"AM-Money%", 11, false}, 
-    {"V/Tick", 6}, 
+    {"Date", 11, 0, false, true}, 
+    {"Ticks", 5, 0, false, false}, 
+    {"AM-volume(W)", 12, 0, false, false},
+    {"AM-Money(W)", 11, 0, false, false}, 
+    {"AM-Money%", 11, 0, false, false}, 
+    {"V/Tick", 6, 0, false, false}, 
 
-    {"AM-NET", 11, false}, 
-    {"PM-NET", 11, false},
-    {"AM-P-NET", 11, false}, 
-    {"PM-P-NET", 11, false}, 
+    {"AM-NET", 11, 0, false, false}, 
+    {"PM-NET", 11, 0, false, false},
+    {"AM-P-NET", 11, 0, false, false}, 
+    {"PM-P-NET", 11, 0, false, false}, 
 
-    {"WNET", 8},
-    {"PNET", 8},
+    {"WNET", 8, 0, true, true},
+    {"PNET", 8, 0, true, true},
 
-    {"WillP", 8},
-    {"PRICEP", 8},
+    {"WillP", 8, 2, true, true},
+    {"PRICEP", 8, 2, true, true},
 
-    {"Strip-W", 8, false},
-    {"Strip-P", 8, false},
+    {"Strip-W", 8, 0, false, false},
+    {"Strip-P", 8, 0, false, false},
 
-    {"Distribute_M", 24, false},
-    {"Distribute_V", 24},
-    {"Money", 11},
-    {"Volume", 9}, 
+    {"Distribute_M", 24, 0, false, false},
+    {"Distribute_V", 24, 0, false, true},
+    {"Money", 11, 0, false, true},
+    {"Volume", 9, 0, false, true}, 
     
-    {"NET/Money", 9, false},
+    {"NET/Money", 9, 0, false, false},
 
-    {"AvgPrice", 9, true},
-    {"1st", 8}, 
-    {"StartCh%", 8,  false}, 
-    {"AvgPct%", 8, false},
-    {"AM-Close", 8, false}, 
-    {"AM-Pct%", 8, false},
-    {"BaseAvg%", 8, false},  
-    {"Pct_925", 9, false},
-    {"Pct_pre", 9}, 
-    {"Close", 7},
+    {"AvgPrice", 9, 2, false, true},
+    {"1st", 8, 2, true, true}, 
+    {"StartCh%", 8,  2, true, false}, 
+    {"AvgPct%", 8, 2, true, false},
+    {"AM-Close", 8, 0, true, false}, 
+    {"AM-Pct%", 8, 2, true, false},
+    {"BaseAvg%", 8, 2, true, false},  
+    {"Pct_925", 9, 2, true, true},
+    {"Pct_pre", 9, 2, true, true}, 
+    {"Close", 7, 2, false, true},
 
-    {"Divergence", 20, false}
+    {"Divergence", 20, 0, false, false}
 };
 
 

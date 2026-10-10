@@ -133,29 +133,3 @@ int show_time_vector(std::vector<tickTime>& tick_times){
               
     return 0;
 }
-
-// int main(int argc, char* argv[]) {
-//     int interval = 30;
-//     int cnt = 0;
-//     int hour = 0;
-//     int min = 0;
-
-//     cnt = std::stoi(argv[1]);
-//     interval = std::stoi(argv[2]);
-
-//     if (argc == 5){
-//         hour = std::stoi(argv[3]);
-//         min = std::stoi(argv[4]);
-//     }
-
-
-//     std::vector<tickTime> tick_times = min_vector(cnt, interval, hour, min);
-
-//     std::cout << "今天过滤后的有效时间点 (共 " << tick_times.size() << " 个):\n";
-//     for (const auto& t : tick_times) {
-//         std::cout << std::setw(2) << std::setfill('0') << t.hour << ":" 
-//                   << std::setw(2) << std::setfill('0') << t.minute << "\n";
-//     }
-              
-//     return 0;
-// }
