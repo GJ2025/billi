@@ -25,6 +25,7 @@ struct ProgramOptions {
     bool show_sz = false;
     bool show_t= false;
     bool show_static= false;
+    bool show_top= false;
     SeqTime tseq;
     size_t show_limit = 10000;
     size_t pre_day = 0;

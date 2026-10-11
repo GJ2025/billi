@@ -247,16 +247,20 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
 }
 
 void update_top10(Top_st& top10, TickRecord& r) {
-    // 1. 找到第一个 volume 小于当前 r.volume 的位置，保持降序排列
+    if (top10.records.size() == 10 && r.volume < top10.records.back().volume) {
+        return;
+    }
+
+
     auto it = top10.records.begin();
     while (it != top10.records.end() && it->volume >= r.volume) {
         ++it;
     }
     
-    // 2. 将记录插入到正确的位置
+
     top10.records.insert(it, r);
     
-    // 3. 如果超过 10 个，移除末尾（即 volume 最小的那个元素）
+
     if (top10.records.size() > 10) {
         top10.records.pop_back();
     }

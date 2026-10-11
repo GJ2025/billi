@@ -491,6 +491,56 @@ void print_all_data(const std::string& date_str,
     return;
 }
 
+
+
+void print_top(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, const Top_st& top10, const std::vector<Col>& cols) {
+
+    int i = 0;
+    int j = 0;
+    long long buy_v = 0; 
+    long long sale_v = 0 ;
+    long long neu_v = 0; 
+
+    double pct_change_base_pre =pct(metrics.closing_price, pre_metrics.closing_price);
+    double pct_change_base_925 = pct(metrics.closing_price, metrics.daily_first_record.price);
+
+    // sort_top10_by_time(top10);
+
+    print_next_new(date_str, i, cols);
+
+    for (j = 0; j < 10; j++){
+        std::ostringstream oss;
+        if (top10.records[j].bs_type == "B"){
+
+           oss  << top10.records[j].time <<  " " << "+" << top10.records[j].volume ;
+           buy_v += top10.records[j].volume;
+
+        }else if (top10.records[j].bs_type == "S"){
+
+            oss  << top10.records[j].time <<  " " << "-" << top10.records[j].volume ;
+            sale_v += top10.records[j].volume;
+
+        }else{
+            oss  << top10.records[j].time <<  " " << " " << top10.records[j].volume ;
+
+            neu_v += top10.records[j].volume;
+        }
+
+        print_next_new(oss.str(), i, cols);
+    }
+
+    print_next_new(buy_v, i, cols);
+    print_next_new(0-sale_v, i, cols);
+    print_next_new(buy_v - sale_v, i, cols);
+
+
+    print_next_new(pct_change_base_925, i, cols);
+    print_next_new(pct_change_base_pre, i, cols);
+    print_next_new(metrics.closing_price, i, cols);
+
+    std::cout << std::endl;
+}
+
 void print_all() {
    
     std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
@@ -577,6 +627,10 @@ void print_headers(const ProgramOptions& opts, PrintWhat what) {
     if (opts.show_total_ratio){
         print__headers("TOTAL_RATIO", will_price_ratio_table_cols);
     }
+
+    if (opts.show_top){
+        print__headers("SHOW_TOP", will_top10_cols);
+    }
 }
 
 void print_bodys(const ProgramOptions& opts,  
@@ -584,7 +638,7 @@ void print_bodys(const ProgramOptions& opts,
                 const DailyMetrics& am_metrics,
                 const DailyMetrics& middle_metrics, 
                 const DailyMetrics& metrics, 
-                const DailyMetrics& pre_metrics,  PrintWhat what)  {
+                const DailyMetrics& pre_metrics,  PrintWhat what,  const Top_st& top10)  {
 
         if (opts.show_all && what == PrintWhat::DSEQ){
             print_all_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, data_all_table_cols);
@@ -640,5 +694,9 @@ void print_bodys(const ProgramOptions& opts,
 
         if (opts.show_total_ratio){
             print_slim_price_ratio(date_str, metrics, pre_metrics, RecordScale::TOTAL, will_price_ratio_table_cols);
+        }
+        
+        if (opts.show_top){
+            print_top(date_str, metrics, pre_metrics, top10, will_top10_cols);
         } 
 }

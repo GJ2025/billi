@@ -54,6 +54,30 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Close", 5, 1, true}
 };
 
+#define TOP10_WIDTH 12
+
+inline const std::vector<Col> will_top10_cols = {
+    {"Date", 11}, 
+    {"top1", TOP10_WIDTH, 0, true},
+    {"top2", TOP10_WIDTH, 0, true},
+    {"top3", TOP10_WIDTH, 0, true},
+    {"top4", TOP10_WIDTH, 0, true},
+    {"top5", TOP10_WIDTH, 0, true},
+    {"top6", TOP10_WIDTH, 0, true},
+    {"top7", TOP10_WIDTH, 0, true},
+    {"top8", TOP10_WIDTH, 0, true},
+    {"top9", TOP10_WIDTH, 0, true},
+    {"top10", TOP10_WIDTH, 0, true},
+
+    {"buy_t", 7, 0, true},
+    {"sale_t", 7, 0, true},
+    {"sub_t", 7, 0, true, true},
+
+    {"Pct_925", 9, 2, true, false},
+    {"Pct_Pre", 9, 2, true, true},   
+    {"Close", 5, 1, true, false}
+};
+
 inline const std::vector<Col> will_price_ratio_table_cols = {
     {"Date", 11}, 
     {"Buy-Dn", 12, 2, false, false}, 

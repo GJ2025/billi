@@ -33,10 +33,9 @@ void print_headers(const ProgramOptions& opts, PrintWhat what);
 void print_bodys(const ProgramOptions& opts,  
                 const std::string& date_str, 
                 const DailyMetrics& am_metrics,
-                const DailyMetrics& middle_metrics,  
+                const DailyMetrics& middle_metrics, 
                 const DailyMetrics& metrics, 
-                const DailyMetrics& pre_metrics,
-                PrintWhat what);
+                const DailyMetrics& pre_metrics,  PrintWhat what,  const Top_st& top10); 
 
 void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<DailyMetrics>& all_metrics);
 

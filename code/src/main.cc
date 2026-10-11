@@ -191,6 +191,15 @@ void read_tick_records(const std::string& filename, std::vector<TickRecord>& rec
     infile.close();
 }
 
+#include <algorithm>
+
+// 对 Top_st 中的记录按时间升序排序（早的时间在前）
+void sort_top10_by_time(Top_st& top10) {
+    std::sort(top10.records.begin(), top10.records.end(), [](const TickRecord& a, const TickRecord& b) {
+        return a.time < b.time; // 字符串直接比大小，"09:38" 会排在 "13:05" 前面
+    });
+}
+
 void parse_tick_records(std::vector<TickRecord>& records, 
                         double prev_closing_price, 
                         DailyMetrics& metrics,  
@@ -224,6 +233,8 @@ void parse_tick_records(std::vector<TickRecord>& records,
 
         pre_record = record;
     }
+
+    sort_top10_by_time(top10);
 }
 
 void parse_tick_file_by_tseq(std::string filename, 
@@ -290,7 +301,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
 
     range.tick_times.push_back(am_current);
     read_tick_records(filename, records);
-    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics, range.top10);
+    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics, out.top10);
 
     if (range.metrics.ticks_count == 0) {
         return false;
@@ -410,7 +421,7 @@ void print_metrics(const ProgramOptions& opts,  const std::vector<DayOutputMetri
 
     for (const auto& out : out_vector) {
 
-        print_bodys(opts, out.date_str, out.am_metrics, out.middle_metrics, out.metrics, prev_out.metrics, what);
+        print_bodys(opts, out.date_str, out.am_metrics, out.middle_metrics, out.metrics, prev_out.metrics, what, out.top10);
 
         if (out.metrics.ticks_count > 0) {
             prev_out = out;
@@ -426,13 +437,14 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
 
     DailyMetrics pre_metrics = pre_m;
     DailyMetrics dump_metrics;
+    Top_st dump_top10;
     std::string tshow = format_tick_times(metrics.header.time);
     PrintWhat what = PrintWhat::TSEQ;  
 
     print_headers(opts, what);
 
     for (size_t i = 0; i < all_metrics.size() ; ++i) {
-        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, dump_metrics, all_metrics[i], pre_metrics, what);
+        print_bodys(opts, format_tick_times(all_metrics[i].header.time), dump_metrics, dump_metrics, all_metrics[i], pre_metrics, what, dump_top10);
 
         pre_metrics = all_metrics[i];
 
@@ -442,7 +454,7 @@ void print_tseq(const ProgramOptions& opts,  DailyMetrics& metrics, std::vector<
                 
     }
 
-    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, dump_metrics, metrics, pre_metrics, what);
+    print_bodys(opts, format_tick_times(metrics.header.time), dump_metrics, dump_metrics, metrics, pre_metrics, what, dump_top10);
 
     print_headers(opts, what);
 

@@ -207,6 +207,8 @@ struct DayOutputMetrics {
     DailyMetrics metrics;
     DailyMetrics am_metrics;
 
+    Top_st top10;
+
 };
 
 

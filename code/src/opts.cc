@@ -15,13 +15,14 @@ bool ProgramOptions::* const flags[] = {
     &ProgramOptions::show_small_ratio,
     &ProgramOptions::show_total,
     &ProgramOptions::show_total_ratio,
+    &ProgramOptions::show_top,
 };
 
 
 //  ./bin/parse_tick -t -N 90 -I 5 -d  $d/chuanheng -a > $s/a.txt
 int parse_opt(int argc, char* argv[], ProgramOptions& opts){
     int opt;
-    while ((opt = getopt(argc, argv, "aAd:D:wpl:tN:I:hH:M:r:R:SP:")) != -1) {
+    while ((opt = getopt(argc, argv, "aAd:D:wpl:tTN:I:hH:M:r:R:SP:")) != -1) {
         switch (opt) {
             case 'a': opts.show_all = true; break;
             case 'A': opts.show_sz = true; break;
@@ -64,6 +65,7 @@ int parse_opt(int argc, char* argv[], ProgramOptions& opts){
             }
 
             case 'S': opts.show_static = true; break;
+            case 'T': opts.show_top = true; break;
 
             case 'h': {
 
