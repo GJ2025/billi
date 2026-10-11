@@ -246,17 +246,41 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
     } 
 }
 
-void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst) {
+void update_top10(Top_st& top10, TickRecord& r) {
+    // 1. 找到第一个 volume 小于当前 r.volume 的位置，保持降序排列
+    auto it = top10.records.begin();
+    while (it != top10.records.end() && it->volume >= r.volume) {
+        ++it;
+    }
+    
+    // 2. 将记录插入到正确的位置
+    top10.records.insert(it, r);
+    
+    // 3. 如果超过 10 个，移除末尾（即 volume 最小的那个元素）
+    if (top10.records.size() > 10) {
+        top10.records.pop_back();
+    }
+}
+
+void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst, Top_st& top10) {
     double total_money = 0.0;
     size_t total_volume = 0;
+
+    TickRecord sum_r;
     
     if (burst.records.empty()) {
         return;
     }
 
+
+    sum_r = burst.records[0];
+    sum_r.volume = 0;
+
     for (const auto& r : burst.records){
         total_money += (r.volume * r.price * 100.0);
         total_volume += r.volume * 100;
+
+        sum_r.volume += r.volume;
     } 
     
     bsn_action_group* group = (total_money > 100 * WAN) ? &header.super :
@@ -268,7 +292,11 @@ void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst
 
     header.time = time;
 
+    update_top10(top10, sum_r);
+
     burst.records.clear();
+
+    return;
 }
 
 void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price) {

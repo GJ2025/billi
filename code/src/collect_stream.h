@@ -104,6 +104,10 @@ struct Burst_st {
     double gap = 0.0;
 };
 
+struct Top_st {
+    std::vector<TickRecord> records;
+};
+
 struct HeadTickData {
     TickRecord v_924;
     TickRecord pre_924;
@@ -138,6 +142,7 @@ struct DailyMetrics_range_st {
     std::vector<tickTime> tick_times;
     std::vector<DailyMetrics> all_metrics;
     DailyMetrics metrics;
+    Top_st top10;
 };
 
 struct SubCondition {
@@ -232,7 +237,7 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
 extern void burst_new(Burst_st& burst, TickRecord record, double pre_price);
 extern void update_burst(Burst_st& burst, const TickRecord& record, const TickRecord& pre_record);
 
-extern void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst);
+extern void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst, Top_st& top10);
 extern bool record_change(TickRecord this_record, const TickRecord pre_record);
 extern void get_record_stream_point(record_stream& this_point, TickRecord r, double pre_price);
 extern void sub_record_stream_point(record_stream& this_point, record_stream& that_point);

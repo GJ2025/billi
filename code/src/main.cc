@@ -32,7 +32,7 @@ std::unordered_map<std::string, std::string> code_path_map;
 ProgramOptions opts;
 
 bool record_should_process(TickRecord& record);
-void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price);
+void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price, Top_st& top10);
 void process_first_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_closing_price);
 
 bool is_loading_data(const std::string& str) {
@@ -195,7 +195,8 @@ void parse_tick_records(std::vector<TickRecord>& records,
                         double prev_closing_price, 
                         DailyMetrics& metrics,  
                         std::vector<tickTime>& tick_times, 
-                        std::vector<DailyMetrics>& all_metrics) {
+                        std::vector<DailyMetrics>& all_metrics,
+                        Top_st& top10) {
 
     TickRecord pre_record;
     Burst_st burst;
@@ -205,7 +206,7 @@ void parse_tick_records(std::vector<TickRecord>& records,
         process_first_record(metrics, burst, record, prev_closing_price);
 
         if (pre_record.full() && record_change(record, pre_record)) {
-            update_metrics_stream(record.t, metrics.header, burst);
+            update_metrics_stream(record.t, metrics.header, burst, top10);
         }
 
         if (tick_idx < tick_times.size() && check_time(record.t, tick_times[tick_idx]) > 0) {
@@ -219,7 +220,7 @@ void parse_tick_records(std::vector<TickRecord>& records,
 
         update_metrics_by_record(metrics, record);
 
-        process_last_record(metrics, burst, record, pre_record.price);
+        process_last_record(metrics, burst, record, pre_record.price, top10);
 
         pre_record = record;
     }
@@ -232,13 +233,13 @@ void parse_tick_file_by_tseq(std::string filename,
     std::vector<TickRecord> records;
     read_tick_records(filename, records);
 
-    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics);
+    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics, range.top10);
 }
 
-void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price){
+void process_last_record(DailyMetrics& metrics, Burst_st& burst, TickRecord record, double pre_price, Top_st& top10){
     if (last_record(record)) {
 
-        update_metrics_stream(record.t, metrics.header, burst);
+        update_metrics_stream(record.t, metrics.header, burst, top10);
         set_metrics_record(metrics, record, RecordType::LAST);
         metrics.this_1457_pirce = pre_price;
 
@@ -289,7 +290,7 @@ bool process_single_file(const std::string& filename, DayOutputMetrics& out, dou
 
     range.tick_times.push_back(am_current);
     read_tick_records(filename, records);
-    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics);
+    parse_tick_records(records, prev_closing_price, range.metrics, range.tick_times, range.all_metrics, range.top10);
 
     if (range.metrics.ticks_count == 0) {
         return false;
