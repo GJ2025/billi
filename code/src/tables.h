@@ -12,6 +12,8 @@ struct Col {
 };
 
 
+#define TOP10_WIDTH 12
+
 std::vector<tickTime> generate_sz_tick_times(size_t cnt , int interval_minutes);
 
 inline void init_tick_columns(std::vector<Col>& cols) {
@@ -24,6 +26,62 @@ inline void init_tick_columns(std::vector<Col>& cols) {
         cols.push_back({format_tick_time(tick_times[j]), 8});
     }
 }
+
+inline std::string format_top(size_t j) {
+    char buf[32];
+    // 如果需要带冒号的格式（如 "09:35"）
+    std::snprintf(buf, sizeof(buf), "top%lu", j);
+    
+    // 如果需要纯数字无冒号拼接（如 "0935"），请改成：
+    // std::snprintf(buf, sizeof(buf), "%02d%02d", t.hour, t.minute);
+    
+    return std::string(buf);
+}
+
+inline void init_topN_table(std::vector<Col>& cols, int topN) {
+    cols.clear();
+    cols.push_back({"Date", 11});
+
+    for (size_t j = 0; j < (size_t)topN; ++j) {
+        cols.push_back({format_top(j), TOP10_WIDTH, 0, true});
+    }
+
+    cols.push_back({"buy_t", 7, 0, true});
+    cols.push_back({"sale_t", 7, 0, true});
+    cols.push_back({"NET", 7, 0, true, true});
+    cols.push_back({"DIS", 7, 0, true, true});
+
+    cols.push_back({"Pct_925", 9, 2, true, false});
+    cols.push_back({"Pct_Pre", 9, 2, true, true});
+    cols.push_back({"Close", 5, 1, true, false});
+
+    return;
+}
+
+
+
+
+inline const std::vector<Col> will_top10_cols = {
+    {"Date", 11}, 
+    {"top1", TOP10_WIDTH, 0, true},
+    {"top2", TOP10_WIDTH, 0, true},
+    {"top3", TOP10_WIDTH, 0, true},
+    {"top4", TOP10_WIDTH, 0, true},
+    {"top5", TOP10_WIDTH, 0, true},
+    {"top6", TOP10_WIDTH, 0, true},
+    {"top7", TOP10_WIDTH, 0, true},
+    {"top8", TOP10_WIDTH, 0, true},
+    {"top9", TOP10_WIDTH, 0, true},
+    {"top10", TOP10_WIDTH, 0, true},
+
+    {"buy_t", 7, 0, true},
+    {"sale_t", 7, 0, true},
+    {"sub_t", 7, 0, true, true},
+
+    {"Pct_925", 9, 2, true, false},
+    {"Pct_Pre", 9, 2, true, true},   
+    {"Close", 5, 1, true, false}
+};
 
 
 inline const std::vector<Col> will_price_table_cols = {
@@ -52,30 +110,6 @@ inline const std::vector<Col> will_price_table_cols = {
     {"Pct_925", 9, 2, true},
     {"Pct_Pre", 9, 2, true},   
     {"Close", 5, 1, true}
-};
-
-#define TOP10_WIDTH 12
-
-inline const std::vector<Col> will_top10_cols = {
-    {"Date", 11}, 
-    {"top1", TOP10_WIDTH, 0, true},
-    {"top2", TOP10_WIDTH, 0, true},
-    {"top3", TOP10_WIDTH, 0, true},
-    {"top4", TOP10_WIDTH, 0, true},
-    {"top5", TOP10_WIDTH, 0, true},
-    {"top6", TOP10_WIDTH, 0, true},
-    {"top7", TOP10_WIDTH, 0, true},
-    {"top8", TOP10_WIDTH, 0, true},
-    {"top9", TOP10_WIDTH, 0, true},
-    {"top10", TOP10_WIDTH, 0, true},
-
-    {"buy_t", 7, 0, true},
-    {"sale_t", 7, 0, true},
-    {"sub_t", 7, 0, true, true},
-
-    {"Pct_925", 9, 2, true, false},
-    {"Pct_Pre", 9, 2, true, true},   
-    {"Close", 5, 1, true, false}
 };
 
 inline const std::vector<Col> will_price_ratio_table_cols = {

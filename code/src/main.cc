@@ -473,10 +473,19 @@ void show_oneday_metrics_by_opts(const ProgramOptions& opts,  DailyMetrics& metr
 }
 
 void show_metrics_by_opts(const ProgramOptions& opts, const std::vector<DayOutputMetrics>& out_vector) {
+
+    ProgramOptions opts_template = opts;
+
+    for (auto flag_ptr : flags) {
+        opts_template.*flag_ptr = false;
+    }
+
+
+
     
     for (auto flag_ptr : flags) {
         if (opts.*flag_ptr) {
-            ProgramOptions this_opts{};
+            ProgramOptions this_opts = opts_template;
             this_opts.*flag_ptr = true; 
             print_metrics(this_opts, out_vector);
         }
@@ -614,7 +623,7 @@ int main(int argc, char* argv[]) {
 
         traverse_files_for_sz(file2out.files_to_process);
 
-    }else if (opts.tseq.cnt != 0){
+    }else if (opts.show_t != 0){
 
         handle_tseq_mode(opts, file2out.files_to_process);
 

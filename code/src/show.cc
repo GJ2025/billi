@@ -493,13 +493,16 @@ void print_all_data(const std::string& date_str,
 
 
 
-void print_top(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, const Top_st& top10, const std::vector<Col>& cols) {
+void print_top(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, const Top_st& top10, const std::vector<Col>& cols, int N) {
 
     int i = 0;
     int j = 0;
     long long buy_v = 0; 
     long long sale_v = 0 ;
-    long long neu_v = 0; 
+    long long neu_v = 0;
+    
+    long long buy_cnt = 0;
+    long long sale_cnt = 0;
 
     double pct_change_base_pre =pct(metrics.closing_price, pre_metrics.closing_price);
     double pct_change_base_925 = pct(metrics.closing_price, metrics.daily_first_record.price);
@@ -508,17 +511,19 @@ void print_top(const std::string& date_str, const DailyMetrics& metrics, const D
 
     print_next_new(date_str, i, cols);
 
-    for (j = 0; j < 10; j++){
+    for (j = 0; j < N; j++){
         std::ostringstream oss;
         if (top10.records[j].bs_type == "B"){
 
            oss  << top10.records[j].time <<  " " << "+" << top10.records[j].volume ;
            buy_v += top10.records[j].volume;
+           buy_cnt++;
 
         }else if (top10.records[j].bs_type == "S"){
 
             oss  << top10.records[j].time <<  " " << "-" << top10.records[j].volume ;
             sale_v += top10.records[j].volume;
+            sale_cnt++;
 
         }else{
             oss  << top10.records[j].time <<  " " << " " << top10.records[j].volume ;
@@ -532,6 +537,11 @@ void print_top(const std::string& date_str, const DailyMetrics& metrics, const D
     print_next_new(buy_v, i, cols);
     print_next_new(0-sale_v, i, cols);
     print_next_new(buy_v - sale_v, i, cols);
+
+    std::ostringstream oss;
+
+    oss << "(" << buy_cnt << ":" << sale_cnt << ")";
+    print_next_new(oss.str(), i, cols);
 
 
     print_next_new(pct_change_base_925, i, cols);
@@ -629,7 +639,9 @@ void print_headers(const ProgramOptions& opts, PrintWhat what) {
     }
 
     if (opts.show_top){
-        print__headers("SHOW_TOP", will_top10_cols);
+        std::vector<Col> cols;
+        init_topN_table(cols, opts.tseq.cnt);
+        print__headers("SHOW_TOP", cols);
     }
 }
 
@@ -697,6 +709,8 @@ void print_bodys(const ProgramOptions& opts,
         }
         
         if (opts.show_top){
-            print_top(date_str, metrics, pre_metrics, top10, will_top10_cols);
+            std::vector<Col> cols;
+            init_topN_table(cols, opts.tseq.cnt);
+            print_top(date_str, metrics, pre_metrics, top10, cols, opts.tseq.cnt);
         } 
 }
