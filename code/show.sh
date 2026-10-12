@@ -26,7 +26,7 @@ fi
 
 # 在调用时使用变量 target_dir
 ./bin/parse_tick -d "$target_dir" -a -w -p -r sbmSt -R sbmSt $limit_opt > "$output"
-./bin/parse_tick -d "$target_dir" -N 9  -T  $limit_opt >> "$output"
+./bin/parse_tick -d "$target_dir" -N 10  -T  $limit_opt >> "$output"
 
 
 echo "Done: $output"
