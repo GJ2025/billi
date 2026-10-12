@@ -8,7 +8,7 @@ int metrics_grow_loose(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_loose(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_grow_firm(const std::vector<DayOutputMetrics>& out_vector);
 int metrics_shrink_firm(const std::vector<DayOutputMetrics>& out_vector);
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats);
+void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats, int topN);
 
 
 #endif // STATICS_H

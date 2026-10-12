@@ -42,14 +42,21 @@ void check_sub_conditions(const std::string& file, const VectorStats& v_stats, s
     return;
 }
 
-void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway) {
+std::string top10show(topN& N){
+    std::ostringstream oss;
+
+    oss << "top10:" << N.net << ":b" << N.b << ":s" << N.s;
+    return oss.str();
+}
+
+void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
     if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
         return;
     }
 
     VectorStats v_stats;
     const auto& file = files_to_process[0]; 
-    metry_vector_summary(out_vector, v_stats);
+    metry_vector_summary(out_vector, v_stats, topN);
     TradeCategoryStats& a0 = v_stats.a[0];
 
     std::vector<SubCondition> sub_conditions = {
@@ -64,7 +71,19 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
         {
             a0.all_netin && a0.pct_change_base_pre < 0.1,
             "abnormal_all"
-        },       
+        },
+        {
+            a0.middle_netin && a0.pct_change_base_925 < 0.1,
+            "abnormal_middle"
+        },
+        {
+            a0.all_netin && a0.pct_change_base_pre < 0.1 && a0.middle_netin && a0.pct_change_base_925 < 0.1,
+            "abnormal_FULL"
+        },
+        {
+            v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+1 && a0.pct_change_base_pre < -1.0 &&  a0.pct_change_base_925 < -1.0,
+            top10show(v_stats.N)
+        },             
     };
 
 

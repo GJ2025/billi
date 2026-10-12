@@ -539,7 +539,11 @@ bool check_and_print_date_mismatches(const std::vector<std::string>& files,
     return has_mismatch;
 }
 
-void select_stock(const std::string& data_dir_path, std::vector<std::string>& files_to_process, std::vector<DayOutputMetrics>& out_vector, bool print_any_way) {
+void select_stock(const std::string& data_dir_path, 
+                    std::vector<std::string>& files_to_process, 
+                    std::vector<DayOutputMetrics>& out_vector, 
+                    bool print_any_way,
+                    int topN) {
     if (check_and_print_date_mismatches(files_to_process, out_vector)){
         std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
         return;
@@ -548,23 +552,23 @@ void select_stock(const std::string& data_dir_path, std::vector<std::string>& fi
     std::reverse(out_vector.begin(), out_vector.end());
     std::reverse(files_to_process.begin(), files_to_process.end());
 
-    signals_from_metrics(out_vector.size(), files_to_process, out_vector, print_any_way);
+    signals_from_metrics(out_vector.size(), files_to_process, out_vector, print_any_way, topN);
 
     return;
 }
 
-void process_single_directory(const std::string& sub_dir_path, size_t show_limit, size_t pre_day, bool print_any_way) {
+void process_single_directory(const std::string& sub_dir_path, size_t show_limit, size_t pre_day, bool print_any_way, int topN) {
     std::vector<std::string> files_to_process;
     std::vector<DayOutputMetrics> out_vector;
 
     files_list(sub_dir_path, show_limit, pre_day, files_to_process);
     files_to_metrics(files_to_process, out_vector); 
 
-    select_stock(sub_dir_path, files_to_process, out_vector, print_any_way);
+    select_stock(sub_dir_path, files_to_process, out_vector, print_any_way, topN);
 }
 
 
-void process_subdirectories(const std::string& data_dir_path, size_t show_limit, size_t pre_day) {
+void process_subdirectories(const std::string& data_dir_path, size_t show_limit, size_t pre_day, int topN) {
 
     if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
         std::cerr << "Invalid directory path: " << data_dir_path << std::endl;
@@ -581,7 +585,7 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit,
                 continue;
             }
 
-            process_single_directory(entry.path().string(), show_limit, pre_day, false);
+            process_single_directory(entry.path().string(), show_limit, pre_day, false, topN);
         }
     }
 
@@ -602,7 +606,7 @@ int main(int argc, char* argv[]) {
     }
 
      if (opts.check_Dir()){
-        process_subdirectories(opts.data_dir_path, opts.show_limit, opts.pre_day);
+        process_subdirectories(opts.data_dir_path, opts.show_limit, opts.pre_day, opts.tseq.cnt);
         return 0;
     }
 
@@ -612,7 +616,7 @@ int main(int argc, char* argv[]) {
 
     if (opts.show_static){
 
-        process_single_directory(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, true);
+        process_single_directory(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, true, opts.tseq.cnt);
         return 0;
     } 
 

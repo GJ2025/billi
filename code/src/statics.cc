@@ -118,8 +118,23 @@ int metrics_volume_check_adjacent(const std::vector<DayOutputMetrics>& out_vecto
 }
 
 
+void dig_topN(const Top_st& top10, topN& topN, int n){
 
-void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats){
+    for(int i =0; i < n; i++){
+        if (top10.records[i].bs_type == "B"){
+            topN.net += top10.records[i].volume;
+            topN.b++;
+        }else if (top10.records[i].bs_type == "S"){
+            topN.net -= top10.records[i].volume;
+            topN.s++;
+        }else{}
+    }
+
+    return;
+
+}
+
+void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, VectorStats& stats, int topN){
 
     size_t i =0;
     stats.a.resize(10);
@@ -150,6 +165,8 @@ void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, Vecto
             stats.money_in_and_price_up_nt++;
         }
     }
+
+    dig_topN(out_vector[0].top10, stats.N, topN);
 
     return;
 }

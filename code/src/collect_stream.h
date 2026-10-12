@@ -176,6 +176,12 @@ struct TradeCategoryStats {
 
 };
 
+struct topN{
+    long long net = 0;
+    int s = 0 ; 
+    int b = 0;
+};
+
 struct VectorStats {    
     std::vector<int> price_day_adjacent;
     std::vector<int> volume_day_adjacent;
@@ -189,6 +195,8 @@ struct VectorStats {
     std::vector<TradeCategoryStats> a;
 
     int money_in_and_price_up_nt = 0;
+
+    topN N;
 };
 
 
