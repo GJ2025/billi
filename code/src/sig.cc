@@ -65,7 +65,7 @@ void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_
             "M_IN_NT_UP"
         },
         {
-            a0.all_will_netin > 0 && a0.all_price_netin > 0 && a0.pct_change_base_pre < 0.3 &&  v_stats.price_day_adjacent[0] < -3,
+            a0.all_netin && a0.pct_change_base_pre < 0.1 && a0.middle_netin && a0.pct_change_base_925 < 0.1 &&  v_stats.price_day_adjacent[0] < -3,
             "will_up"
         },
         {

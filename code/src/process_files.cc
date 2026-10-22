@@ -141,10 +141,18 @@ int files_list(const std::string& dir_path, size_t end_left_0, size_t end_left_1
         return -1; 
     }
 
-    if (end_left_0 && files_to_process.size() > end_left_0){
-        files_to_process.assign(files_to_process.end() - end_left_0, files_to_process.end() - end_left_1);   
-        files_to_process.shrink_to_fit();
+    if (end_left_0 == 0){
+        return 0;
     }
+
+    if (files_to_process.size() > end_left_0){
+        files_to_process.assign(files_to_process.end() - end_left_0, files_to_process.end() - end_left_1);   
+    }else {
+        files_to_process.assign(files_to_process.begin()  , files_to_process.end() - end_left_1);   
+
+    }
+
+    files_to_process.shrink_to_fit();
 
     return 0;
 }

@@ -216,6 +216,7 @@ void print_will(const std::string& date_str, const DailyMetrics& pre_metrics, co
 
     print_next_new(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
     print_next_new(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next_new(pct(metrics.closing_price, pre_metrics.closing_price), i, cols);
 
     print_next_new(metrics.closing_price, i, cols);
 
@@ -279,6 +280,7 @@ void print_price(const std::string& date_str, const DailyMetrics& pre_metrics, c
 
     print_next_new(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
     print_next_new(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next_new(pct(metrics.closing_price, pre_metrics.closing_price), i, cols);
     print_next_new(metrics.closing_price, i, cols);
 
 

@@ -86,15 +86,15 @@ inline const std::vector<Col> will_top10_cols = {
 
 inline const std::vector<Col> will_price_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12, 0, false, false}, 
-    {"Buy-Kp", 12, 0, false, false},  
-    {"Buy-Up", 12, 0, false, false},
-    {"Sale-Dn", 12, 0, false, false}, 
-    {"Sale-Kp", 12, 0, false, false}, 
-    {"Sale-Up", 12, 0, false, false}, 
-    {"Neutral-Dn", 12, 0, false, false},
-    {"Neutral-Kp", 12, 0, false, false},  
-    {"Neutral-Up", 12, 0, false, false},
+    {"Buy-Dn", 12, 0, false, true}, 
+    {"Buy-Kp", 12, 0, false, true},  
+    {"Buy-Up", 12, 0, false, true},
+    {"Sale-Dn", 12, 0, false, true}, 
+    {"Sale-Kp", 12, 0, false, true}, 
+    {"Sale-Up", 12, 0, false, true}, 
+    {"Neutral-Dn", 12, 0, false, true},
+    {"Neutral-Kp", 12, 0, false, true},  
+    {"Neutral-Up", 12, 0, false, true},
     {"Buy", 12, 0}, 
     {"Sale", 12, 0},
     {"Neutral", 12, 0},    
@@ -109,20 +109,20 @@ inline const std::vector<Col> will_price_table_cols = {
     {"StartCh", 9, 2, true}, 
     {"Pct_925", 9, 2, true},
     {"Pct_Pre", 9, 2, true},   
-    {"Close", 5, 2, true}
+    {"Close", 5, 2, false, true}
 };
 
 inline const std::vector<Col> will_price_ratio_table_cols = {
     {"Date", 11}, 
-    {"Buy-Dn", 12, 2, false, false}, 
-    {"Buy-Kp", 12,  2, false, false}, 
-    {"Buy-Up", 12,  2, false, false}, 
-    {"Sale-Dn", 12,  2, false, false}, 
-    {"Sale-Kp", 12,  2, false, false}, 
-    {"Sale-Up", 12,  2, false, false},  
-    {"Neutral-Dn", 12,  2, false, false}, 
-    {"Neutral-Kp", 12,  2, false, false},   
-    {"Neutral-Up", 12,  2, false, false}, 
+    {"Buy-Dn", 12, 2, false, true}, 
+    {"Buy-Kp", 12,  2, false, true}, 
+    {"Buy-Up", 12,  2, false, true}, 
+    {"Sale-Dn", 12,  2, false, true}, 
+    {"Sale-Kp", 12,  2, false, true}, 
+    {"Sale-Up", 12,  2, false, true},  
+    {"Neutral-Dn", 12,  2, false, true}, 
+    {"Neutral-Kp", 12,  2, false, true},   
+    {"Neutral-Up", 12,  2, false, true}, 
     {"Buy", 12 , 2, false}, 
     {"Sale", 12, 2, false},
     {"Neutral", 12, 2, false},    
@@ -137,7 +137,7 @@ inline const std::vector<Col> will_price_ratio_table_cols = {
     {"StartCh", 9, 2, true}, 
     {"Pct_925", 9, 2, true},
     {"Pct_Pre", 9, 2, true},   
-    {"Close", 5, 2, true}
+    {"Close", 5, 2, false, true}
 };
 
 inline const std::vector<Col> signal_table_cols = {
@@ -176,16 +176,17 @@ static const std::vector<Col> will_table_cols = {
     {"Small-NET", 9, 0, true},
     {"Tot-NET", 9, 0, true},
 
-    {"Tot-Buy", 12, 0, true},    
-    {"Tot-Sale", 12, 0, true},
-    {"Tot-Neutral", 12, 0, true}, 
+    {"Tot-Buy", 12, 0, false, true},    
+    {"Tot-Sale", 12, 0, false, true},
+    {"Tot-Neutral", 12, 0, false, true}, 
 
     {"Money", 12, 0, false},     
     {"Volume", 7, 0, false},
     {"Pre", 5, 2, false},        
     {"StartCh", 5, 2, true},    
-    {"Pct_925", 5, 2, true}, 
-    {"Close", 5, 2, true}
+    {"Pct_925", 5, 2, true, true},
+    {"Pct_pre", 9, 2, true, true},  
+    {"Close", 5, 2, false, true}
 };
 
 static const std::vector<Col> price_table_cols = {
@@ -222,7 +223,8 @@ static const std::vector<Col> price_table_cols = {
     {"Volume", 7, 0, false},
     {"Pre", 5, 2, false},      
     {"StartCh", 5, 2, true},  
-    {"Pct_925", 5, 2, true}, 
+    {"Pct_925", 5, 2, true, true}, 
+    {"Pct_pre", 9, 2, true, true},  
     {"Close", 5, 2}
 };
 
