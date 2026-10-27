@@ -552,7 +552,9 @@ void select_stock(const std::string& data_dir_path,
     std::reverse(out_vector.begin(), out_vector.end());
     std::reverse(files_to_process.begin(), files_to_process.end());
 
-    signals_from_metrics(out_vector.size(), files_to_process, out_vector, print_any_way, topN);
+    const auto& file = files_to_process[0];
+
+    signals_from_metrics(file, out_vector.size(), out_vector, print_any_way, topN);
 
     return;
 }

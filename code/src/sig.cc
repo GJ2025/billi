@@ -49,13 +49,12 @@ std::string top10show(topN& N){
     return oss.str();
 }
 
-void signals_from_metrics(size_t size, const std::vector<std::string>& files_to_process, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
-    if (size < 2 || size > files_to_process.size() || size > out_vector.size()) {
+void signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
+    if (size < 2 ||  size > out_vector.size()) {
         return;
     }
 
     VectorStats v_stats;
-    const auto& file = files_to_process[0]; 
     metry_vector_summary(out_vector, v_stats, topN);
     TradeCategoryStats& a0 = v_stats.a[0];
 
