@@ -24,7 +24,7 @@
 #include "collect_stream.h"
 #include "statics.h"
 
-void check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions, bool print_anyway){
+bool check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
     bool printed = false;
 
     for (const auto& sc : sub_conditions) {
@@ -34,12 +34,7 @@ void check_sub_conditions(const std::string& file, const VectorStats& v_stats, s
         }
     }
 
-    if (printed == false && print_anyway){
-        SubCondition dump;
-        print_signal(file, v_stats, dump);
-    }
-
-    return;
+    return printed;
 }
 
 std::string top10show(topN& N){
@@ -54,6 +49,7 @@ void signals_from_metrics(const std::string& file, size_t size, const std::vecto
         return;
     }
 
+    bool  hit = false;
     VectorStats v_stats;
     metry_vector_summary(out_vector, v_stats, topN);
     TradeCategoryStats& a0 = v_stats.a[0];
@@ -86,7 +82,12 @@ void signals_from_metrics(const std::string& file, size_t size, const std::vecto
     };
 
 
-    check_sub_conditions(file, v_stats, sub_conditions, print_anyway);
+    hit = check_sub_conditions(file, v_stats, sub_conditions);
+
+    if (hit == false && print_anyway == true){
+        SubCondition dump;
+        print_signal(file, v_stats, dump);
+    }
 
     return;
 }
