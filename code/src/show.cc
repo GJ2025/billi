@@ -498,7 +498,7 @@ void print_all_data(const std::string& date_str,
 void print_top(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, const Top_st& top10, const std::vector<Col>& cols, int N) {
 
     int i = 0;
-    int j = 0;
+    size_t j = 0;
     long long buy_v = 0; 
     long long sale_v = 0 ;
     long long neu_v = 0;
@@ -509,11 +509,15 @@ void print_top(const std::string& date_str, const DailyMetrics& metrics, const D
     double pct_change_base_pre =pct(metrics.closing_price, pre_metrics.closing_price);
     double pct_change_base_925 = pct(metrics.closing_price, metrics.daily_first_record.price);
 
+    if (top10.records.size() == 0){
+        return;
+    }
+
     // sort_top10_by_time(top10);
 
     print_next_new(date_str, i, cols);
 
-    for (j = 0; j < N; j++){
+    for (j = 0; j < (size_t)N && j < top10.records.size(); j++){
         std::ostringstream oss;
         if (top10.records[j].bs_type == "B"){
 
@@ -551,35 +555,6 @@ void print_top(const std::string& date_str, const DailyMetrics& metrics, const D
     print_next_new(metrics.closing_price, i, cols);
 
     std::cout << std::endl;
-}
-
-void print_all() {
-   
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl; 
-    std::cout << std::left  << std::setw(11) << "Date" << " | "
-              << std::right << std::setw(5)  << "Ticks" << " | "
-              << std::setw(9)  << "Vol" << " | "               
-              << std::setw(9)  << "AM_Vol" << " | "
-              << std::setw(11) << "AM_Turnover" << " | "  
-              << std::setw(11) << "AM_Turn%" << " | " 
-              << std::setw(10) << "Vol/Ticks" << " | "         
-              << std::setw(11) << "Turnover" << " | "
-              << std::setw(8)  << "AM_Close" << " | "  
-              << std::setw(9)  << "Avg_Price" << " | " 
-              << std::setw(7)  << "Close" << " | "  
-              << std::setw(8)  << "AM_Chan%" << " | "               
-              << std::setw(8)  << "Change%" << " | "     
-              << std::setw(10) << "Net_In" << " | "     
-              << std::setw(10) << "AM_Net_In" << " | "
-              << std::setw(10) << "PM_Net_In" << " | " 
-              << std::setw(9) << "Net_In%" << " | " 
-              << std::setw(9) << "Net/change" << " | " 
-              << std::setw(11) << "Hist_Cum" << " | "   
-              << std::left  << std::setw(20) << "Signal" 
-              << std::endl;
-    std::cout << "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    std::cout << "----------------" << std::endl;
 }
 
 void print_headers(const ProgramOptions& opts, PrintWhat what) {

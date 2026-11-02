@@ -26,8 +26,6 @@ void print_all_data(const std::string& date_str,
 void print_header_info(const DayOutputMetrics& out, const DayOutputMetrics& pre_out);
 std::string get_and_print_signals(const DayOutputMetrics& out) ;
 
-void print_all() ;
-
 void print_headers(const ProgramOptions& opts, PrintWhat what);
 
 void print_bodys(const ProgramOptions& opts,  
