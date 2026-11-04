@@ -53,6 +53,7 @@ void signals_from_metrics(const std::string& file, size_t size, const std::vecto
     VectorStats v_stats;
     metry_vector_summary(out_vector, v_stats, topN);
     TradeCategoryStats& a0 = v_stats.a[0];
+    bool fld = v_stats.price_day_adjacent[0] < 0 && v_stats.volume_day_adjacent[0] > 0;
 
     std::vector<SubCondition> sub_conditions = {
         {
@@ -60,19 +61,19 @@ void signals_from_metrics(const std::string& file, size_t size, const std::vecto
             "M_IN_NT_UP"
         },
         {
-            a0.all_netin && a0.pct_change_base_pre < 0.1 && a0.middle_netin && a0.pct_change_base_925 < 0.1 &&  v_stats.price_day_adjacent[0] < -3,
+            !fld && a0.all_netin && a0.pct_change_base_pre < 0 && a0.middle_netin && a0.pct_change_base_925 < 0 &&  v_stats.price_day_adjacent[0] < -3,
             "will_up"
         },
         {
-            a0.all_netin && a0.pct_change_base_pre < 0.1,
+            !fld && a0.all_netin && a0.pct_change_base_pre < 0,
             "abnormal_all"
         },
         {
-            a0.middle_netin && a0.pct_change_base_925 < 0.1,
+             !fld && a0.middle_netin && a0.pct_change_base_925 < 0,
             "abnormal_middle"
         },
         {
-            a0.all_netin && a0.pct_change_base_pre < 0.1 && a0.middle_netin && a0.pct_change_base_925 < 0.1,
+            !fld && a0.all_netin && a0.pct_change_base_pre < 0 && a0.middle_netin && a0.pct_change_base_925 < 0,
             "abnormal_FULL"
         },
         {
