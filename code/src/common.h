@@ -20,6 +20,11 @@ struct tickTime {
     int minute = 0;
 };
 
+struct hits {
+    int hit_rules = 0;
+    int hit_dir = 0;
+};
+
 inline std::string format_tick_time(const tickTime& t) {
     char buf[16];
     // 如果需要带冒号的格式（如 "09:35"）

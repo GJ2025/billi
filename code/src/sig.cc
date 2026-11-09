@@ -24,13 +24,13 @@
 #include "collect_stream.h"
 #include "statics.h"
 
-bool check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
-    bool printed = false;
+int check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
+    int printed = 0;
 
     for (const auto& sc : sub_conditions) {
         if (sc.satisfied) {
             print_signal(file, v_stats, sc);
-            printed = true;
+            printed++;
         }
     }
 
@@ -44,12 +44,12 @@ std::string top10show(topN& N){
     return oss.str();
 }
 
-void signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
+int signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
     if (size < 2 ||  size > out_vector.size()) {
-        return;
+        return 0;
     }
 
-    bool  hit = false;
+    int  hit = 0;
     VectorStats v_stats;
     metry_vector_summary(out_vector, v_stats, topN);
     TradeCategoryStats& a0 = v_stats.a[0];
@@ -79,16 +79,24 @@ void signals_from_metrics(const std::string& file, size_t size, const std::vecto
         {
             v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+1 && a0.pct_change_base_pre < -1.0 &&  a0.pct_change_base_925 < -1.0,
             top10show(v_stats.N)
-        },             
+        },
+        {
+            v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+2 && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
+            top10show(v_stats.N)
+        }, 
+        {
+            v_stats.N.net > 0  && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
+            top10show(v_stats.N)
+        },               
     };
 
 
     hit = check_sub_conditions(file, v_stats, sub_conditions);
 
-    if (hit == false && print_anyway == true){
+    if (hit == 0 && print_anyway == true){
         SubCondition dump;
         print_signal(file, v_stats, dump);
     }
 
-    return;
+    return hit;
 }
