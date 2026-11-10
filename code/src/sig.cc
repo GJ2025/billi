@@ -24,7 +24,7 @@
 #include "collect_stream.h"
 #include "statics.h"
 
-int Check_sub_condition(const std::string& file,  VectorStats& v_stats);
+int Check_sub_condition(VectorStats& v_stats);
 
 int signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
     if (size < 2 ||  size > out_vector.size()) {
@@ -41,12 +41,15 @@ int signals_from_metrics(const std::string& file, size_t size, const std::vector
         return 0;
     }
 
-    hit = Check_sub_condition(file, v_stats);
+    hit = Check_sub_condition(v_stats);    
+    if (v_stats.desc.size() > 0){
+        print_signal(file, v_stats);
+    }
 
     return hit;
 }
 
-int Check_sub_condition(const std::string& file,  VectorStats& v_stats){
+int Check_sub_condition(VectorStats& v_stats){
 
     bool fld = v_stats.price_day_adjacent[0] < 0 && v_stats.volume_day_adjacent[0] > 0;
 
@@ -92,10 +95,6 @@ int Check_sub_condition(const std::string& file,  VectorStats& v_stats){
         if (sc.satisfied) {
             v_stats.desc.push_back(sc.description);
         }
-    }
-
-    if (v_stats.desc.size() > 0){
-        print_signal(file, v_stats);
     }
 
     return v_stats.desc.size();
