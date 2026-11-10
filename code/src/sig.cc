@@ -24,25 +24,7 @@
 #include "collect_stream.h"
 #include "statics.h"
 
-int check_sub_conditions(const std::string& file, const VectorStats& v_stats, std::vector<SubCondition>& sub_conditions){
-    int printed = 0;
-
-    for (const auto& sc : sub_conditions) {
-        if (sc.satisfied) {
-            print_signal(file, v_stats, sc);
-            printed++;
-        }
-    }
-
-    return printed;
-}
-
-std::string top10show(topN& N){
-    std::ostringstream oss;
-
-    oss << "top10:" << N.net << ":b" << N.b << ":s" << N.s;
-    return oss.str();
-}
+int Check_sub_condition(const std::string& file,  VectorStats& v_stats);
 
 int signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
     if (size < 2 ||  size > out_vector.size()) {
@@ -52,8 +34,23 @@ int signals_from_metrics(const std::string& file, size_t size, const std::vector
     int  hit = 0;
     VectorStats v_stats;
     metry_vector_summary(out_vector, v_stats, topN);
-    TradeCategoryStats& a0 = v_stats.a[0];
+
+
+    if (print_anyway){
+        print_signal(file, v_stats);
+        return 0;
+    }
+
+    hit = Check_sub_condition(file, v_stats);
+
+    return hit;
+}
+
+int Check_sub_condition(const std::string& file,  VectorStats& v_stats){
+
     bool fld = v_stats.price_day_adjacent[0] < 0 && v_stats.volume_day_adjacent[0] > 0;
+
+    const TradeCategoryStats& a0 = v_stats.a[0];
 
     std::vector<SubCondition> sub_conditions = {
         {
@@ -69,34 +66,37 @@ int signals_from_metrics(const std::string& file, size_t size, const std::vector
             "abnormal_all"
         },
         {
-             !fld && a0.middle_netin && a0.pct_change_base_925 < 0,
+            !fld && a0.middle_netin && a0.pct_change_base_925 < 0,
             "abnormal_middle"
         },
         {
             !fld && a0.all_netin && a0.pct_change_base_pre < 0 && a0.middle_netin && a0.pct_change_base_925 < 0,
             "abnormal_FULL"
         },
-        {
-            v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+1 && a0.pct_change_base_pre < -1.0 &&  a0.pct_change_base_925 < -1.0,
-            top10show(v_stats.N)
-        },
-        {
-            v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+2 && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
-            top10show(v_stats.N)
-        }, 
-        {
-            v_stats.N.net > 0  && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
-            top10show(v_stats.N)
-        },               
+        // {
+        //     v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+1 && a0.pct_change_base_pre < -1.0 &&  a0.pct_change_base_925 < -1.0,
+        //     top10show(v_stats.N)
+        // },
+        // {
+        //     v_stats.N.net > 0 &&  v_stats.N.b > v_stats.N.s+2 && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
+        //     top10show(v_stats.N)
+        // }, 
+        // {
+        //     v_stats.N.net > 0  && (a0.pct_change_base_pre < 0 ||  a0.pct_change_base_925 < 0),
+        //     top10show(v_stats.N)
+        // },               
     };
 
 
-    hit = check_sub_conditions(file, v_stats, sub_conditions);
-
-    if (hit == 0 && print_anyway == true){
-        SubCondition dump;
-        print_signal(file, v_stats, dump);
+    for (const auto& sc : sub_conditions) {
+        if (sc.satisfied) {
+            v_stats.desc.push_back(sc.description);
+        }
     }
 
-    return hit;
+    if (v_stats.desc.size() > 0){
+        print_signal(file, v_stats);
+    }
+
+    return v_stats.desc.size();
 }

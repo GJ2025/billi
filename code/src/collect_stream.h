@@ -197,6 +197,7 @@ struct VectorStats {
     int money_in_and_price_up_nt = 0;
 
     topN N;
+    std::vector<std::string> desc;
 };
 
 

@@ -313,7 +313,28 @@ void print_tseq_sz(const std::string& date, DailyMetrics& metrics, std::vector<D
 
 }
 
-void print_signal(const std::string& file, const VectorStats& v_stats, SubCondition sc) {
+std::string descShow(const VectorStats& stats) {
+    std::ostringstream oss;
+    
+    for (size_t i = 0; i < stats.desc.size(); ++i) {
+        if (i > 0) {
+            oss << "/"; 
+        }
+        oss << stats.desc[i];
+    }
+    
+    return oss.str();
+}
+
+std::string top10show(const topN& N){
+    std::ostringstream oss;
+
+    oss << "b" << N.b << ":s" << N.s <<":" << N.net;
+    return oss.str();
+}
+
+
+void print_signal(const std::string& file, const VectorStats& v_stats) {
     int i = 0;
 
     const std::vector<Col>& cols = signal_table_cols;
@@ -347,9 +368,11 @@ void print_signal(const std::string& file, const VectorStats& v_stats, SubCondit
     print_next_new(v_stats.a[0].pct_change_base_925, i, cols);
     print_next_new(v_stats.a[0].pct_change_base_pre, i, cols);
 
+    print_next_new(top10show(v_stats.N), i, cols);
+
     print_next_new(v_stats.money_in_and_price_up_nt, i, cols);
 
-    print_next_new(sc.description, i, cols);
+    print_next_new(descShow(v_stats), i, cols);
     
 
     std::cout << std::endl;

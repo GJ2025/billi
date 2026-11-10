@@ -154,6 +154,7 @@ inline const std::vector<Col> signal_table_cols = {
     {"pday", 12},
     {"Pct0", 5, 2, true},
     {"Pct1", 5, 2, true},
+    {"Top10", 20},
     {"int", 3},
     {"REASON", 12}
 };
