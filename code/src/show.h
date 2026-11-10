@@ -15,7 +15,7 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
 void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols);
 void print_will(const std::string& date_str, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols) ;
 void print_price(const std::string& date_str, const DailyMetrics& pre_metrics, const DailyMetrics& metrics, const std::vector<Col>& cols);
-void print_signal(const std::string& file, const VectorStats& v_stats);
+void print_signal(const VectorStats& v_stats);
 void print_all_data(const std::string& date_str,  
                     const DailyMetrics& am_metrics,
                     const DailyMetrics& middle_metrics, 

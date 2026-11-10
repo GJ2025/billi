@@ -539,30 +539,11 @@ bool check_and_print_date_mismatches(const std::vector<std::string>& files,
     return has_mismatch;
 }
 
-int select_stock(const std::string& data_dir_path, 
-                    std::vector<std::string>& files_to_process, 
-                    std::vector<DayOutputMetrics>& out_vector, 
-                    bool print_any_way,
-                    int topN) {
-    
-    int  hit = 0;                    
-
-    if (check_and_print_date_mismatches(files_to_process, out_vector)){
-        std::cout << "impossible: " << data_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
-        return 0;
-    }
-    
-    std::reverse(out_vector.begin(), out_vector.end());
-    std::reverse(files_to_process.begin(), files_to_process.end());
-
-    const auto& file = files_to_process[0];
-
-    hit = signals_from_metrics(file, out_vector.size(), out_vector, print_any_way, topN);
-
-    return hit;
+int select_stock(std::vector<DayOutputMetrics>& out_vector, VectorStats& v_stats) {
+    return signals_from_metrics(out_vector.size(), out_vector, v_stats);
 }
 
-int process_single_directory(const std::string& sub_dir_path, size_t show_limit, size_t pre_day, bool print_any_way, int topN) {
+int process_single_directory(const std::string& sub_dir_path, size_t show_limit, size_t pre_day, bool print_any_way, int topN, VectorStats& v_stats) {
     int hit = 0;
 
     std::vector<std::string> files_to_process;
@@ -571,22 +552,59 @@ int process_single_directory(const std::string& sub_dir_path, size_t show_limit,
     files_list(sub_dir_path, show_limit, pre_day, files_to_process);
     files_to_metrics(files_to_process, out_vector); 
 
-    hit = select_stock(sub_dir_path, files_to_process, out_vector, print_any_way, topN);
+    if (check_and_print_date_mismatches(files_to_process, out_vector)){
+        std::cout << "impossible: " << sub_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
+        return 0;
+    }
+
+    std::reverse(out_vector.begin(), out_vector.end());
+    std::reverse(files_to_process.begin(), files_to_process.end());
+
+    const auto& file = files_to_process[0];
+
+    metry_vector_summary(out_vector, v_stats, topN);
+    v_stats.file = file;
+
+    if (print_any_way){
+        return 0;
+    }
+
+    hit = select_stock(out_vector, v_stats);
 
     return hit;
 }
 
 
+std::string getHitsSummary(const hits& h) {
+    std::ostringstream oss;
+
+   
+    if (h.all_dir == 0) {
+        return "all_dir is 0, cannot calculate ratios.";
+    }
+
+    double dir_ratio = (static_cast<double>(h.hit_dir) / h.all_dir) * 100.0;
+    double rules_per_dir = static_cast<double>(h.hit_rules) / h.all_dir;
+
+    oss << std::fixed << std::setprecision(2);
+    
+    oss << "HitD " << h.hit_dir << "/" << h.all_dir 
+        << " (" << dir_ratio << "%), "
+        << "HitR: " << rules_per_dir 
+        << " (TotalR: " << h.hit_rules << ")";
+
+    return oss.str();
+}
+
 void process_subdirectories(const std::string& data_dir_path, size_t show_limit, size_t pre_day, int topN) {
     hits hits_all;
     int hits_tmp = 0;
+    std::vector<VectorStats> all_vector_stats;
 
     if (!fs::exists(data_dir_path) || !fs::is_directory(data_dir_path)) {
         std::cerr << "Invalid directory path: " << data_dir_path << std::endl;
         return;
     }
-
-    print__headers("QUIET", signal_table_cols);
 
     for (const auto& entry : fs::directory_iterator(data_dir_path)) {
         hits_tmp = 0;
@@ -597,15 +615,28 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit,
                 continue;
             }
 
-            hits_tmp = process_single_directory(entry.path().string(), show_limit, pre_day, false, topN);
+            hits_all.all_dir++;
+
+            VectorStats v_stats;
+
+            hits_tmp = process_single_directory(entry.path().string(), show_limit, pre_day, false, topN, v_stats);
             if (hits_tmp !=0 ){
                 hits_all.hit_dir++;
                 hits_all.hit_rules += hits_tmp;
+                all_vector_stats.push_back(v_stats);
             }
         }
     }
 
-    print__headers("QUIET", signal_table_cols);
+    print__headers(getHitsSummary(hits_all), signal_table_cols);
+
+    for (size_t i = 0; i < all_vector_stats.size(); ++i) {
+        const auto& v_stats = all_vector_stats[i];
+        
+        print_signal(v_stats);
+    }
+
+    print__headers(getHitsSummary(hits_all), signal_table_cols);
 }
 
 int main(int argc, char* argv[]) {
@@ -631,8 +662,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (opts.show_static){
-
-        process_single_directory(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, true, opts.tseq.cnt);
+        VectorStats v_stats;
+        process_single_directory(opts.lvmeng_dir_path, opts.show_limit, opts.pre_day, true, opts.tseq.cnt, v_stats);
+        print_signal(v_stats);
         return 0;
     } 
 

@@ -120,7 +120,7 @@ int metrics_volume_check_adjacent(const std::vector<DayOutputMetrics>& out_vecto
 
 void dig_topN(const Top_st& top10, topN& topN, int n){
 
-    for(int i =0; i < n; i++){
+    for(int i =0; i < n && (unsigned int)i < top10.records.size(); i++){
         if (top10.records[i].bs_type == "B"){
             topN.net += top10.records[i].volume;
             topN.b++;

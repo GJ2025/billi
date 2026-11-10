@@ -26,25 +26,16 @@
 
 int Check_sub_condition(VectorStats& v_stats);
 
-int signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN) {
+int signals_from_metrics(size_t size, const std::vector<DayOutputMetrics>& out_vector, VectorStats& v_stats) {
     if (size < 2 ||  size > out_vector.size()) {
         return 0;
     }
 
     int  hit = 0;
-    VectorStats v_stats;
-    metry_vector_summary(out_vector, v_stats, topN);
 
-
-    if (print_anyway){
-        print_signal(file, v_stats);
-        return 0;
-    }
 
     hit = Check_sub_condition(v_stats);    
-    if (v_stats.desc.size() > 0){
-        print_signal(file, v_stats);
-    }
+
 
     return hit;
 }

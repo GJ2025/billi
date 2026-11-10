@@ -23,6 +23,7 @@ struct tickTime {
 struct hits {
     int hit_rules = 0;
     int hit_dir = 0;
+    int all_dir = 0;
 };
 
 inline std::string format_tick_time(const tickTime& t) {

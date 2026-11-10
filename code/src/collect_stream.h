@@ -198,6 +198,7 @@ struct VectorStats {
 
     topN N;
     std::vector<std::string> desc;
+    std::string file;
 };
 
 

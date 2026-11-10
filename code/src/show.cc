@@ -334,14 +334,14 @@ std::string top10show(const topN& N){
 }
 
 
-void print_signal(const std::string& file, const VectorStats& v_stats) {
+void print_signal(const VectorStats& v_stats) {
     int i = 0;
 
     const std::vector<Col>& cols = signal_table_cols;
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    print_next_new(get_display_file(file), i, cols);
+    print_next_new(get_display_file(v_stats.file), i, cols);
     print_next_new(v_stats.a[0].all_will_netin/WAN, i, cols);
     print_next_new(v_stats.a[0].all_price_netin/WAN, i, cols);
 

@@ -8,6 +8,6 @@
 #include <string>          // 2. 缺少 string 头文件
 #include "collect_stream.h"
 
-int signals_from_metrics(const std::string& file, size_t size, const std::vector<DayOutputMetrics>& out_vector, bool print_anyway, int topN);
+int signals_from_metrics(size_t size, const std::vector<DayOutputMetrics>& out_vector, VectorStats& v_stats) ;
 
 #endif // SIG_H
