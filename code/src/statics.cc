@@ -19,6 +19,20 @@
 #include "collect_stream.h"
 #include "sig.h"
 
+enum class IsAdjacent {
+    Fix,
+    Adjacent
+};
+
+enum class WhichDirection {
+    Up,
+    Down
+};
+
+enum class CheckWhat {
+    Money,
+    Volume
+};
 
 template <typename F>
 int generic_fixed_base_check(const std::vector<DayOutputMetrics>& out_vector, F should_break) {
@@ -52,27 +66,36 @@ int generic_adjacent_check(const std::vector<DayOutputMetrics>& out_vector, F sh
     return j;
 }
 
+int metrics_check_price(const std::vector<DayOutputMetrics>& out_vector, CheckWhat what, IsAdjacent adjacent, WhichDirection wd) {
 
-int metrics_down_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-    auto pred = [](const auto& base, const auto& curr) { 
-        return base.closing_price >= curr.closing_price; 
+    // 修复：在捕获列表中加入 what（或者使用 [=] 隐式捕获所有外层变量）
+    auto pred = [wd, what](const auto& base, const auto& curr) {
+        if (wd == WhichDirection::Down) {
+            if (what == CheckWhat::Money) {
+                return base.closing_price >= curr.closing_price;
+            } else {
+                return metrics_total_volume(base) >= metrics_total_volume(curr);
+            }
+        } else {
+            if (what == CheckWhat::Money) {
+                return base.closing_price < curr.closing_price;
+            } else {
+                return metrics_total_volume(base) < metrics_total_volume(curr);    
+            }
+        }
     };
-    
-    return generic_adjacent_check(out_vector, pred);
+
+    if (adjacent == IsAdjacent::Adjacent) {
+        return generic_adjacent_check(out_vector, pred);
+    } else {
+        return generic_fixed_base_check(out_vector, pred);
+    }
 }
 
-int metrics_up_check_price_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-    auto pred = [](const auto& base, const auto& curr) { 
-        return base.closing_price < curr.closing_price; 
-    };
-    
-    return generic_adjacent_check(out_vector, pred);
-}
+int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector, CheckWhat what, IsAdjacent adjacent) {
 
-int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-
-    int down_day = metrics_down_check_price_adjacent(out_vector);
-    int up_day = metrics_up_check_price_adjacent(out_vector);
+    int down_day = metrics_check_price(out_vector, what, adjacent, WhichDirection::Down);
+    int up_day = metrics_check_price(out_vector, what, adjacent, WhichDirection::Up);
 
     if (down_day != 0) {
         return 0 - down_day;
@@ -85,26 +108,10 @@ int metrics_price_check_adjacent(const std::vector<DayOutputMetrics>& out_vector
     return 0;
 }
 
-int metrics_down_check_volume_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-    auto pred = [](const auto& base, const auto& curr) { 
-        return metrics_total_volume(base) >= metrics_total_volume(curr); 
-    };
-    
-    return generic_adjacent_check(out_vector, pred);
-}
+int metrics_volume_check_adjacent(const std::vector<DayOutputMetrics>& out_vector, CheckWhat what, IsAdjacent adjacent) {
 
-int metrics_up_check_volume_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-    auto pred = [](const auto& base, const auto& curr) { 
-        return metrics_total_volume(base) < metrics_total_volume(curr);
-    };
-    
-    return generic_adjacent_check(out_vector, pred);
-}
-
-int metrics_volume_check_adjacent(const std::vector<DayOutputMetrics>& out_vector) {
-
-    int down_day = metrics_down_check_volume_adjacent(out_vector);
-    int up_day = metrics_up_check_volume_adjacent(out_vector);
+    int down_day = metrics_check_price(out_vector, what, adjacent, WhichDirection::Down);
+    int up_day = metrics_check_price(out_vector, what, adjacent, WhichDirection::Up);
 
     if (down_day != 0) {
         return 0 - down_day;
@@ -140,9 +147,12 @@ void metry_vector_summary(const std::vector<DayOutputMetrics>& out_vector, Vecto
     stats.a.resize(10);
 
     for (i = 0; i < 5; i++){
-        stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,i)));
-        stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,i)));
+        stats.price_day_adjacent.push_back(metrics_price_check_adjacent(get_sub_vector(out_vector,i), CheckWhat::Money, IsAdjacent::Adjacent));
+        stats.volume_day_adjacent.push_back(metrics_volume_check_adjacent(get_sub_vector(out_vector,i), CheckWhat::Volume, IsAdjacent::Adjacent));
     }
+
+    stats.price_day_fix = metrics_price_check_adjacent(out_vector, CheckWhat::Money, IsAdjacent::Fix);
+    stats.volume_day_fix = metrics_price_check_adjacent(out_vector, CheckWhat::Volume, IsAdjacent::Fix);
 
     for (i = 0; i < 6; i++){
         metry_summary(out_vector[i], stats.a[i]);

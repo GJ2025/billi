@@ -355,12 +355,14 @@ void print_signal(const VectorStats& v_stats) {
     std::string volume_adjacent_up_days = format_with_sign(v_stats.volume_day_adjacent[0]) 
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[1])
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[2])
-                                            + ":" + format_with_sign(v_stats.volume_day_adjacent[3]);
+                                            + ":" + format_with_sign(v_stats.volume_day_adjacent[3])
+                                             + "::" + format_with_sign(v_stats.volume_day_fix);
 
     std::string price_adjacent_up_days = format_with_sign(v_stats.price_day_adjacent[0]) 
                                             + ":" +  format_with_sign(v_stats.price_day_adjacent[1])
                                             + ":" +  format_with_sign(v_stats.price_day_adjacent[2])
-                                            + ":" +  format_with_sign(v_stats.price_day_adjacent[3]);
+                                            + ":" +  format_with_sign(v_stats.price_day_adjacent[3])
+                                            + "::" +  format_with_sign(v_stats.price_day_fix);
 
     print_next_new(volume_adjacent_up_days, i, cols);                 
     print_next_new(price_adjacent_up_days, i, cols);

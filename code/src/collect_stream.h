@@ -186,11 +186,14 @@ struct VectorStats {
     std::vector<int> price_day_adjacent;
     std::vector<int> volume_day_adjacent;
 
-    int volume_shrink_firm = 0;
-    int volume_grow_firm = 0;
+    int price_day_fix;
+    int volume_day_fix;
 
-    int volume_shrink_loose = 0;
-    int volume_grow_loose = 0;
+    // int volume_shrink_firm = 0;
+    // int volume_grow_firm = 0;
+
+    // int volume_shrink_loose = 0;
+    // int volume_grow_loose = 0;
 
     std::vector<TradeCategoryStats> a;
 
