@@ -552,7 +552,7 @@ int process_single_directory(const std::string& sub_dir_path, size_t show_limit,
     files_list(sub_dir_path, show_limit, pre_day, files_to_process);
     files_to_metrics(files_to_process, out_vector); 
 
-    if (check_and_print_date_mismatches(files_to_process, out_vector)){
+    if (files_to_process.size() == 0 || check_and_print_date_mismatches(files_to_process, out_vector)){
         std::cout << "impossible: " << sub_dir_path << ":" << files_to_process.size() << "-" << out_vector.size()  << std::endl;
         return 0;
     }
@@ -596,6 +596,24 @@ std::string getHitsSummary(const hits& h) {
     return oss.str();
 }
 
+double score_create(const VectorStats& s){
+
+    double score =  s.a[0].all_price_netin_pct + s.a[0].all_will_netin_pct + s.a[0].strip_price_netin_pct + s.a[0].strip_will_netin_pct;
+
+    return score;
+
+}
+
+
+void sort_vector_stats_by_price_fix(std::vector<VectorStats>& all_vector_stats) {
+    std::sort(all_vector_stats.begin(), all_vector_stats.end(), 
+        [](const VectorStats& a, const VectorStats& b) {
+            double score_a = score_create(a);
+            double score_b = score_create(b);
+            return score_a > score_b; 
+        });
+}
+
 void process_subdirectories(const std::string& data_dir_path, size_t show_limit, size_t pre_day, int topN) {
     hits hits_all;
     int hits_tmp = 0;
@@ -627,6 +645,8 @@ void process_subdirectories(const std::string& data_dir_path, size_t show_limit,
             }
         }
     }
+
+    sort_vector_stats_by_price_fix(all_vector_stats);
 
     print__headers(getHitsSummary(hits_all), signal_table_cols);
 

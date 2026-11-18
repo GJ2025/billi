@@ -352,6 +352,9 @@ void print_signal(const VectorStats& v_stats) {
     print_next_new(v_stats.a[0].strip_will_netin/WAN, i, cols);
     print_next_new(v_stats.a[0].strip_price_netin/WAN, i, cols);
 
+    print_next_new(v_stats.a[0].strip_will_netin_pct, i, cols);
+    print_next_new(v_stats.a[0].strip_price_netin_pct, i, cols);
+
     std::string volume_adjacent_up_days = format_with_sign(v_stats.volume_day_adjacent[0]) 
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[1])
                                             + ":" + format_with_sign(v_stats.volume_day_adjacent[2])

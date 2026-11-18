@@ -150,6 +150,8 @@ inline const std::vector<Col> signal_table_cols = {
     {"PNET-P", 6, 2, true, true},
     {"Strip-W", 9, 0, true, true}, 
     {"Strip-P", 9, 0, true, true}, 
+    {"WNET-P", 6, 2, true, true},
+    {"PNET-P", 6, 2, true, true},
     {"pvolume", 16},
     {"pday", 16},
     {"Pct0", 5, 2, true},
