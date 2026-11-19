@@ -58,21 +58,33 @@ struct deal_bsn {
     trade neutral;
 };
 
-struct deal_price {
+struct deal_on_front_price {
     trade up;
     trade down;
     trade keep;
 };
 
+struct deal_on_tail_price{
+    double zero;
+    double nonzero;
+};
+
+
+struct deal_bsn_item{
+    deal_on_front_price front;
+    deal_on_tail_price tail;
+};
+
+
 struct bsn_action_group {
-    deal_price buy;
-    deal_price sale;
-    deal_price neutral; 
+    deal_bsn_item buy;
+    deal_bsn_item sale;
+    deal_bsn_item neutral; 
 };
 
 struct deal_summary {
     deal_bsn bsn; 
-    deal_price price ;
+    deal_on_front_price price ;
     trade total;
     trade type_total;
 };

@@ -72,17 +72,17 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
     print_next_new(date_str, i, cols);
-    print_next_new(bsn_group.buy.down.money / WAN, i, cols);
-    print_next_new(bsn_group.buy.keep.money / WAN, i, cols);
-    print_next_new(bsn_group.buy.up.money / WAN, i, cols);
+    print_next_new(bsn_group.buy.front.down.money / WAN, i, cols);
+    print_next_new(bsn_group.buy.front.keep.money / WAN, i, cols);
+    print_next_new(bsn_group.buy.front.up.money / WAN, i, cols);
 
-    print_next_new(bsn_group.sale.down.money / WAN, i, cols);
-    print_next_new(bsn_group.sale.keep.money / WAN, i, cols);
-    print_next_new(bsn_group.sale.up.money / WAN, i, cols);
+    print_next_new(bsn_group.sale.front.down.money / WAN, i, cols);
+    print_next_new(bsn_group.sale.front.keep.money / WAN, i, cols);
+    print_next_new(bsn_group.sale.front.up.money / WAN, i, cols);
 
-    print_next_new(bsn_group.neutral.down.money / WAN, i, cols);
-    print_next_new(bsn_group.neutral.keep.money / WAN, i, cols);
-    print_next_new(bsn_group.neutral.up.money / WAN, i, cols);
+    print_next_new(bsn_group.neutral.front.down.money / WAN, i, cols);
+    print_next_new(bsn_group.neutral.front.keep.money / WAN, i, cols);
+    print_next_new(bsn_group.neutral.front.up.money / WAN, i, cols);
 
     print_next_new(deal_summary.bsn.buy.money / WAN, i, cols);
     print_next_new(deal_summary.bsn.sale.money / WAN, i, cols);
@@ -123,17 +123,17 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     std::cout << std::left << std::fixed << std::setprecision(3);
 
     print_next_new(date_str, i, cols);
-    print_next_new(bsn_group.buy.down.money / total_money, i, cols);
-    print_next_new(bsn_group.buy.keep.money / total_money, i, cols);
-    print_next_new(bsn_group.buy.up.money / total_money, i, cols);
+    print_next_new(bsn_group.buy.front.down.money / total_money, i, cols);
+    print_next_new(bsn_group.buy.front.keep.money / total_money, i, cols);
+    print_next_new(bsn_group.buy.front.up.money / total_money, i, cols);
 
-    print_next_new(bsn_group.sale.down.money / total_money, i, cols);
-    print_next_new(bsn_group.sale.keep.money / total_money, i, cols);
-    print_next_new(bsn_group.sale.up.money / total_money, i, cols);
+    print_next_new(bsn_group.sale.front.down.money / total_money, i, cols);
+    print_next_new(bsn_group.sale.front.keep.money / total_money, i, cols);
+    print_next_new(bsn_group.sale.front.up.money / total_money, i, cols);
 
-    print_next_new(bsn_group.neutral.down.money / total_money, i, cols);
-    print_next_new(bsn_group.neutral.keep.money / total_money, i, cols);
-    print_next_new(bsn_group.neutral.up.money / total_money, i, cols);
+    print_next_new(bsn_group.neutral.front.down.money / total_money, i, cols);
+    print_next_new(bsn_group.neutral.front.keep.money / total_money, i, cols);
+    print_next_new(bsn_group.neutral.front.up.money / total_money, i, cols);
 
     print_next_new(deal_summary.bsn.buy.money / total_money, i, cols);
     print_next_new(deal_summary.bsn.sale.money / total_money, i, cols);

@@ -46,16 +46,16 @@ void get_slim_base(const DailyMetrics& metrics, RecordScale type,  bsn_action_gr
         h = metrics.header.total;
     }
 
-    deal_summary.bsn.buy = h.buy.down + h.buy.keep + h.buy.up;
-    deal_summary.bsn.neutral = h.neutral.down + h.neutral.keep + h.neutral.up;
-    deal_summary.bsn.sale = h.sale.down + h.sale.keep + h.sale.up;
+    deal_summary.bsn.buy = h.buy.front.down + h.buy.front.keep + h.buy.front.up;
+    deal_summary.bsn.neutral = h.neutral.front.down + h.neutral.front.keep + h.neutral.front.up;
+    deal_summary.bsn.sale = h.sale.front.down + h.sale.front.keep + h.sale.front.up;
 
-    deal_summary.price.down = h.buy.down + h.sale.down + h.neutral.down;
-    deal_summary.price.up = h.buy.up + h.sale.up + h.neutral.up;
-    deal_summary.price.keep = h.buy.keep + h.sale.keep + h.neutral.keep;
+    deal_summary.price.down = h.buy.front.down + h.sale.front.down + h.neutral.front.down;
+    deal_summary.price.up = h.buy.front.up + h.sale.front.up + h.neutral.front.up;
+    deal_summary.price.keep = h.buy.front.keep + h.sale.front.keep + h.neutral.front.keep;
 
-    calculate_total(deal_summary.total, t.buy.down, t.buy.up, t.buy.keep, t.sale.down, t.sale.up, t.sale.keep, t.neutral.down, t.neutral.up, t.neutral.keep);
-    calculate_total(deal_summary.type_total, h.buy.down, h.buy.up, h.buy.keep, h.sale.down, h.sale.up, h.sale.keep, h.neutral.down, h.neutral.up, h.neutral.keep);
+    calculate_total(deal_summary.total, t.buy.front.down, t.buy.front.up, t.buy.front.keep, t.sale.front.down, t.sale.front.up, t.sale.front.keep, t.neutral.front.down, t.neutral.front.up, t.neutral.front.keep);
+    calculate_total(deal_summary.type_total, h.buy.front.down, h.buy.front.up, h.buy.front.keep, h.sale.front.down, h.sale.front.up, h.sale.front.keep, h.neutral.front.down, h.neutral.front.up, h.neutral.front.keep);
 
 
     return;
@@ -192,8 +192,8 @@ double metrics_total_volume(const DailyMetrics& metrics){
 
 double metrics_bsn_net(const DailyMetrics& metrics){
 
-    trade buy = metrics.header.total.buy.down + metrics.header.total.buy.keep + metrics.header.total.buy.up;
-    trade sale = metrics.header.total.sale.down + metrics.header.total.sale.keep + metrics.header.total.sale.up;
+    trade buy = metrics.header.total.buy.front.down + metrics.header.total.buy.front.keep + metrics.header.total.buy.front.up;
+    trade sale = metrics.header.total.sale.front.down + metrics.header.total.sale.front.keep + metrics.header.total.sale.front.up;
 
     trade net_in = buy - sale;
 
@@ -202,8 +202,8 @@ double metrics_bsn_net(const DailyMetrics& metrics){
 
 double metrics_price_net(const bsn_action_group& total){
     
-    trade up =  total.buy.up + total.sale.up + total.neutral.up;
-    trade down = total.sale.down +total.buy.down +  total.neutral.down;
+    trade up =  total.buy.front.up + total.sale.front.up + total.neutral.front.up;
+    trade down = total.sale.front.down +total.buy.front.down +  total.neutral.front.down;
     
     trade net_in = up - down;
 
@@ -220,7 +220,7 @@ void set_metrics_record(DailyMetrics& metrics, TickRecord record, RecordType t){
     }
 }
 
-void collect_price_action(deal_price& rp, double trade, size_t volume, double gap, size_t tick_count) {
+void collect_action_price_on_front(deal_on_front_price& rp, double trade, size_t volume, double gap, size_t tick_count) {
     if (gap < 0.0){
         rp.down.money += trade;
         rp.down.volume += volume;
@@ -238,11 +238,11 @@ void collect_price_action(deal_price& rp, double trade, size_t volume, double ga
 
 void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count) {
     if (bs_type == "B"){
-        collect_price_action(group.buy, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.buy.front, money, volume, gap, tick_count);
     }else if (bs_type == "S"){
-        collect_price_action(group.sale, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.sale.front, money, volume, gap, tick_count);
     } else{
-        collect_price_action(group.neutral, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.neutral.front, money, volume, gap, tick_count);
     } 
 }
 
@@ -328,7 +328,7 @@ void sub_record_stream_point(record_stream& this_point, record_stream& that_poin
     };
 
     
-    auto sub_deal_price = [&](deal_price& d1, const deal_price& d2) {
+    auto sub_deal_price = [&](deal_on_front_price& d1, const deal_on_front_price& d2) {
         sub_trade(d1.up,    d2.up);
         sub_trade(d1.down,     d2.down);
         sub_trade(d1.keep,    d2.keep);
@@ -336,9 +336,9 @@ void sub_record_stream_point(record_stream& this_point, record_stream& that_poin
 
     
     auto sub_group = [&](bsn_action_group& g1, const bsn_action_group& g2) {
-        sub_deal_price(g1.buy,     g2.buy);
-        sub_deal_price(g1.sale,    g2.sale);
-        sub_deal_price(g1.neutral, g2.neutral);
+        sub_deal_price(g1.buy.front,     g2.buy.front);
+        sub_deal_price(g1.sale.front,    g2.sale.front);
+        sub_deal_price(g1.neutral.front, g2.neutral.front);
     };
 
     
@@ -379,10 +379,10 @@ void metry_summary(const DayOutputMetrics& out, TradeCategoryStats& stats){
     stats.strip_price_netin = metrics_price_net(out.middle_metrics.header.total);
 
 
-    stats.buyup_pct = pct_base(bs.buy.up.money,   summary.total.money);
-    stats.buydown_pct = pct_base(bs.buy.down.money,   summary.total.money);
+    stats.buyup_pct = pct_base(bs.buy.front.up.money,   summary.total.money);
+    stats.buydown_pct = pct_base(bs.buy.front.down.money,   summary.total.money);
 
-    stats.saleup_pct = pct_base(bs.sale.up.money,   summary.total.money);
+    stats.saleup_pct = pct_base(bs.sale.front.up.money,   summary.total.money);
 
     stats.pct_change_base_925 = out.pct_change_base_925;
     stats.pct_change_base_pre = out.pct_change_base_pre;
