@@ -65,8 +65,9 @@ struct deal_on_front_price {
 };
 
 struct deal_on_tail_price{
-    double zero;
-    double nonzero;
+    double zero_money = 0.0;
+    double nonzero_money = 0.0;
+    double nonzero_tail_gap = 0.0;
 };
 
 
@@ -260,7 +261,7 @@ inline bool last_record(TickRecord this_record) { return this_record.time == "15
 inline bool first_record(TickRecord this_record) { return this_record.time == "09:25"; }
 
 
-void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count);
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double front_gap, double tail_gap, size_t tick_count);
 extern void burst_new(Burst_st& burst, TickRecord record, double pre_price);
 extern void update_burst(Burst_st& burst, const TickRecord& record, const TickRecord& pre_record);
 

@@ -64,12 +64,18 @@ void print__headers(const std::string& title, const std::vector<Col>& cols) {
 void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
 
     int i = 0;
+    double buy_tail = 0.0;
+    double sale_tail = 0.0;
+
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
     get_slim_base(metrics, t, bsn_group, deal_summary);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
+
+    buy_tail = bsn_group.buy.tail.nonzero_tail_gap;
+    sale_tail = bsn_group.sale.tail.nonzero_tail_gap;
 
     print_next_new(date_str, i, cols);
     print_next_new(bsn_group.buy.front.down.money / WAN, i, cols);
@@ -91,6 +97,16 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
     print_next_new(deal_summary.price.up.money / WAN, i, cols);
     print_next_new(deal_summary.price.down.money / WAN, i, cols);
     print_next_new(deal_summary.price.keep.money / WAN, i, cols);
+
+    //     print_next_new(buy_tail  , i, cols);
+    // print_next_new(sale_tail  , i, cols);
+
+    // print_next_new(buy_tail*WAN*WAN/(deal_summary.bsn.buy.money/WAN)  , i, cols);
+    // print_next_new(sale_tail*WAN*WAN /(deal_summary.bsn.sale.money/WAN)  , i, cols);
+    double total_money = deal_summary.bsn.buy.money + deal_summary.bsn.sale.money + deal_summary.bsn.neutral.money;
+
+    print_next_new(bsn_group.buy.tail.nonzero_money / (total_money)  , i, cols);
+    print_next_new(bsn_group.sale.tail.nonzero_money / (total_money)  , i, cols);
 
     print_next_new((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
 
@@ -116,8 +132,14 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
+        double buy_tail = 0.0;
+    double sale_tail = 0.0;
+
     get_slim_base(metrics, t, bsn_group, deal_summary);
     double total_money = deal_summary.type_total.money;
+
+    buy_tail = bsn_group.buy.tail.nonzero_tail_gap;
+    sale_tail = bsn_group.sale.tail.nonzero_tail_gap;
 
 
     std::cout << std::left << std::fixed << std::setprecision(3);
@@ -142,6 +164,8 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     print_next_new(deal_summary.price.up.money / total_money, i, cols);
     print_next_new(deal_summary.price.down.money / total_money, i, cols);
     print_next_new(deal_summary.price.keep.money / total_money, i, cols);
+    print_next_new(buy_tail /deal_summary.bsn.buy.money  , i, cols);
+    print_next_new(sale_tail /deal_summary.bsn.sale.money  , i, cols);
 
     print_next_new((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) /  deal_summary.total.money, i, cols);
 

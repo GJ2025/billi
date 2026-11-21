@@ -236,14 +236,31 @@ void collect_action_price_on_front(deal_on_front_price& rp, double trade, size_t
     } 
 }
 
-void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double gap, size_t tick_count) {
+void collect_bs_action(bsn_action_group& group, const std::string& bs_type, double money, size_t volume, double front_gap, double tail_gap, size_t tick_count) {
+
+    deal_on_tail_price* tail = nullptr;
+
     if (bs_type == "B"){
-        collect_action_price_on_front(group.buy.front, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.buy.front, money, volume, front_gap, tick_count);
+       tail =  &group.buy.tail;
+    
+
     }else if (bs_type == "S"){
-        collect_action_price_on_front(group.sale.front, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.sale.front, money, volume, front_gap, tick_count);
+        tail =  &group.sale.tail;
+
     } else{
-        collect_action_price_on_front(group.neutral.front, money, volume, gap, tick_count);
+        collect_action_price_on_front(group.neutral.front, money, volume, front_gap, tick_count);
+        tail =  &group.neutral.tail;
+
     } 
+
+    if (tail_gap == 0.0){
+        tail->zero_money += money;
+    }else{
+        tail->nonzero_money += money;
+        tail->nonzero_tail_gap += tail_gap;
+    }
 }
 
 void update_top10(Top_st& top10, TickRecord& r) {
@@ -269,13 +286,18 @@ void update_top10(Top_st& top10, TickRecord& r) {
 void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst, Top_st& top10) {
     double total_money = 0.0;
     size_t total_volume = 0;
+    double tail_gap = 0;
 
-    TickRecord sum_r;
-    
     if (burst.records.empty()) {
         return;
     }
 
+    const TickRecord& first_r = burst.records.front();
+    const TickRecord& last_r  = burst.records.back();
+
+    tail_gap = last_r.price - first_r.price;
+
+    TickRecord sum_r;
 
     sum_r = burst.records[0];
     sum_r.volume = 0;
@@ -291,8 +313,8 @@ void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst
                              (total_money > 30 * WAN) ? &header.big :
                              (total_money > 5 * WAN)  ? &header.middle : &header.small;
     
-    collect_bs_action(*group, burst.records[0].bs_type, total_money, total_volume, burst.gap, burst.records.size());
-    collect_bs_action(header.total, burst.records[0].bs_type, total_money, total_volume, burst.gap, burst.records.size());
+    collect_bs_action(*group, burst.records[0].bs_type, total_money, total_volume, burst.gap, tail_gap, burst.records.size());
+    collect_bs_action(header.total, burst.records[0].bs_type, total_money, total_volume, burst.gap, tail_gap, burst.records.size());
 
     header.time = time;
 
@@ -315,8 +337,8 @@ void get_record_stream_point(record_stream& this_point, TickRecord r, double pre
                              (total_money > 30 * WAN) ? &this_point.big :
                              (total_money > 5 * WAN)  ? &this_point.middle : &this_point.small;
     
-    collect_bs_action(*group, r.bs_type, total_money, total_volume, r.price - pre_price, 1);
-    collect_bs_action(this_point.total, r.bs_type, total_money, total_volume, r.price - pre_price, 1);
+    collect_bs_action(*group, r.bs_type, total_money, total_volume, r.price - pre_price, 0, 1);
+    collect_bs_action(this_point.total, r.bs_type, total_money, total_volume, r.price - pre_price, 0, 1);
 }
 
 void sub_record_stream_point(record_stream& this_point, record_stream& that_point) {
