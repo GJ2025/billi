@@ -114,7 +114,7 @@ struct record_stream {
 
 struct Burst_st {
     std::vector<TickRecord> records;
-    double gap = 0.0;
+    double first_pre_gap = 0.0;
 };
 
 struct Top_st {

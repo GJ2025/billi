@@ -163,7 +163,7 @@ bool record_change(const TickRecord this_record, const TickRecord pre_record) {
 void burst_new(Burst_st& burst, const TickRecord record, double pre_price) {
     burst.records.clear();
     burst.records.push_back(record);
-    burst.gap = record.price - pre_price;
+    burst.first_pre_gap = record.price - pre_price;
 }
 
 void burst_add_record(Burst_st& burst, const TickRecord record) {
@@ -313,8 +313,8 @@ void update_metrics_stream(tickTime time, record_stream& header, Burst_st& burst
                              (total_money > 30 * WAN) ? &header.big :
                              (total_money > 5 * WAN)  ? &header.middle : &header.small;
     
-    collect_bs_action(*group, burst.records[0].bs_type, total_money, total_volume, burst.gap, tail_gap, burst.records.size());
-    collect_bs_action(header.total, burst.records[0].bs_type, total_money, total_volume, burst.gap, tail_gap, burst.records.size());
+    collect_bs_action(*group, burst.records[0].bs_type, total_money, total_volume, burst.first_pre_gap, tail_gap, burst.records.size());
+    collect_bs_action(header.total, burst.records[0].bs_type, total_money, total_volume, burst.first_pre_gap, tail_gap, burst.records.size());
 
     header.time = time;
 
