@@ -11,6 +11,7 @@
 struct ProgramOptions {
     bool show_price = false;
     bool show_all = false;
+    bool show_b_pressure = false;
     bool show_will = false;
     bool show_super = false;
     bool show_big = false;
@@ -44,9 +45,12 @@ struct ProgramOptions {
     }
 };
 
+#define FLAGS_NUM 15
+
+
 int parse_opt(int argc, char* argv[], ProgramOptions& opts);
 
-extern bool ProgramOptions::* const flags[14];
+extern bool ProgramOptions::* const flags[FLAGS_NUM];
 
 extern ProgramOptions opts;
 

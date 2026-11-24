@@ -283,6 +283,29 @@ static const std::vector<Col> data_all_table_cols = {
     {"Divergence", 20, 0, false, true}       
 };
 
+static const std::vector<Col> data_b_pressure_table_cols = {
+    {"Date", 11},
+    {"Buy0", 8, 0},
+    {"Sale0", 8, 0}, 
+    {"Buy1", 8, 0},
+    {"Sale1", 8, 0},
+    {"Buy0_R", 12, 2},
+    {"Sale0_R", 12, 2},
+    {"Buy1_R", 12, 2},
+    {"Sale1_R", 12, 2},
+    {"ABuy_R", 12, 2},
+    {"ASale_R", 12, 2},    
+    {"WILL-Net", 10, 0, true, false}, 
+    {"PRICE-Net", 12, 0, true, false},     
+    {"Money", 12, 0, false, false},  
+    {"Volume", 8, 0, false, false},
+    {"Pre", 8, 2, false, false},     
+    {"StartCh", 9, 2, true, false}, 
+    {"Pct_925", 9, 2, true},
+    {"Pct_Pre", 9, 2, true},   
+    {"Close", 5, 2, false, true}
+};
+
 static const std::vector<Col> tseq_data_all_table_cols = {
     {"Date", 11, 0, false, true}, 
     {"Ticks", 5, 0, false, false}, 

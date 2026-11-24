@@ -66,8 +66,9 @@ struct deal_on_front_price {
 
 struct deal_on_tail_price{
     double zero_money = 0.0;
+    double zero_money_gap = 0.0;
     double nonzero_money = 0.0;
-    double nonzero_tail_gap = 0.0;
+    double nonzero_money_gap = 0.0;
 };
 
 
@@ -114,6 +115,7 @@ struct record_stream {
 
 struct Burst_st {
     std::vector<TickRecord> records;
+    double pre_price;
     double first_pre_gap = 0.0;
 };
 

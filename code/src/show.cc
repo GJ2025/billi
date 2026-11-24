@@ -74,8 +74,8 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
 
     std::cout << std::left << std::fixed << std::setprecision(2);
 
-    buy_tail = bsn_group.buy.tail.nonzero_tail_gap;
-    sale_tail = bsn_group.sale.tail.nonzero_tail_gap;
+    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
+    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
 
     print_next_new(date_str, i, cols);
     print_next_new(bsn_group.buy.front.down.money / WAN, i, cols);
@@ -138,8 +138,8 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     get_slim_base(metrics, t, bsn_group, deal_summary);
     double total_money = deal_summary.type_total.money;
 
-    buy_tail = bsn_group.buy.tail.nonzero_tail_gap;
-    sale_tail = bsn_group.sale.tail.nonzero_tail_gap;
+    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
+    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
 
 
     std::cout << std::left << std::fixed << std::setprecision(3);
@@ -545,6 +545,80 @@ void print_all_data(const std::string& date_str,
     return;
 }
 
+void print_b_pressure_data(const std::string& date_str,  
+                    const DailyMetrics& am_metrics,
+                    const DailyMetrics& middle_metrics, 
+                    const DailyMetrics& metrics, 
+                    const DailyMetrics& pre_metrics,
+                    const std::vector<Col>& cols) {
+
+    int i = 0;
+    double buy_tail = 0.0;
+    double sale_tail = 0.0;
+
+    bsn_action_group bsn_group ;
+    deal_summary deal_summary;
+
+    get_slim_base(metrics, RecordScale::TOTAL, bsn_group, deal_summary);
+
+    
+    double total_money = deal_summary.bsn.buy.money + deal_summary.bsn.sale.money + deal_summary.bsn.neutral.money;
+
+    std::cout << std::left << std::fixed << std::setprecision(2);
+
+    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
+    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
+
+    print_next_new(date_str, i, cols);
+
+    double buy_0_money = bsn_group.buy.tail.zero_money/WAN; 
+    double sale_0_money = bsn_group.sale.tail.zero_money/WAN; 
+    
+    double buy_1_money = bsn_group.buy.tail.nonzero_money/WAN; 
+    double sale_1_money = bsn_group.sale.tail.nonzero_money/WAN; 
+    
+    double buy_0_gap = bsn_group.buy.tail.zero_money_gap*WAN; 
+    double sale_0_gap = bsn_group.sale.tail.zero_money_gap*WAN; 
+    
+    double buy_1_gap = bsn_group.buy.tail.nonzero_money_gap*WAN; 
+    double sale_1_gap = bsn_group.sale.tail.nonzero_money_gap*WAN;  
+
+
+
+    print_next_new(bsn_group.buy.tail.zero_money/WAN  , i, cols);
+    print_next_new(bsn_group.sale.tail.zero_money/WAN   , i, cols);
+
+    print_next_new(bsn_group.buy.tail.nonzero_money/WAN  , i, cols);
+    print_next_new(bsn_group.sale.tail.nonzero_money/WAN   , i, cols);
+
+    print_next_new(buy_0_gap/buy_0_money  , i, cols);
+    print_next_new(sale_0_gap/sale_0_money   , i, cols);
+
+    print_next_new(buy_1_gap/buy_1_money  , i, cols);
+    print_next_new(sale_1_gap/sale_1_money   , i, cols);
+
+    print_next_new((buy_0_gap + buy_1_gap)/(buy_0_money + buy_1_money)  , i, cols);
+    print_next_new((sale_0_gap + sale_1_gap)/(sale_0_money + sale_1_money)  , i, cols);
+
+    print_next_new((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
+    print_next_new((metrics_price_net(bsn_group)) / WAN, i, cols);
+
+    print_next_new(deal_summary.type_total.money / WAN, i, cols);
+    print_next_new(deal_summary.type_total.volume/ SHOU, i, cols);
+    
+    print_next_new(pre_metrics.closing_price, i, cols);
+
+    print_next_new(pct(metrics.daily_first_record.price, pre_metrics.closing_price), i, cols);
+    print_next_new(pct(metrics.closing_price, metrics.daily_first_record.price), i, cols);
+    print_next_new(pct(metrics.closing_price, pre_metrics.closing_price), i, cols);
+
+    print_next_new(metrics.closing_price, i, cols);
+
+    std::cout << std::endl;
+
+    return;
+}
+
 
 
 void print_top(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, const Top_st& top10, const std::vector<Col>& cols, int N) {
@@ -617,7 +691,11 @@ void print_headers(const ProgramOptions& opts, PrintWhat what) {
       
     if (opts.show_all && what == PrintWhat::TSEQ){
         print__headers("ALL", tseq_data_all_table_cols);
-    }  
+    }
+    
+    if (opts.show_b_pressure){
+        print__headers("b_pressure", data_b_pressure_table_cols);
+    }
 
     if (opts.show_will){
         print__headers("WILL", will_table_cols);
@@ -687,6 +765,10 @@ void print_bodys(const ProgramOptions& opts,
 
         if (opts.show_all && what == PrintWhat::TSEQ){
             print_all_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, tseq_data_all_table_cols);
+        }
+
+        if (opts.show_b_pressure){
+            print_b_pressure_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, data_b_pressure_table_cols);
         }
 
         if (opts.show_will){

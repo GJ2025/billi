@@ -163,6 +163,7 @@ bool record_change(const TickRecord this_record, const TickRecord pre_record) {
 void burst_new(Burst_st& burst, const TickRecord record, double pre_price) {
     burst.records.clear();
     burst.records.push_back(record);
+    burst.pre_price = pre_price;
     burst.first_pre_gap = record.price - pre_price;
 }
 
@@ -257,9 +258,10 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
 
     if (tail_gap == 0.0){
         tail->zero_money += money;
+        tail->zero_money_gap += 0.01;
     }else{
         tail->nonzero_money += money;
-        tail->nonzero_tail_gap += tail_gap;
+        tail->nonzero_money_gap += std::abs(tail_gap);
     }
 }
 
