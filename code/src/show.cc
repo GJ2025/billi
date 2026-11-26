@@ -64,18 +64,13 @@ void print__headers(const std::string& title, const std::vector<Col>& cols) {
 void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, const DailyMetrics& pre_metrics, RecordScale t, const std::vector<Col>& cols) {
 
     int i = 0;
-    double buy_tail = 0.0;
-    double sale_tail = 0.0;
-
+  
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
     get_slim_base(metrics, t, bsn_group, deal_summary);
 
     std::cout << std::left << std::fixed << std::setprecision(2);
-
-    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
-    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
 
     print_next_new(date_str, i, cols);
     print_next_new(bsn_group.buy.front.down.money / WAN, i, cols);
@@ -97,16 +92,6 @@ void print_slim_price(const std::string& date_str, const DailyMetrics& metrics, 
     print_next_new(deal_summary.price.up.money / WAN, i, cols);
     print_next_new(deal_summary.price.down.money / WAN, i, cols);
     print_next_new(deal_summary.price.keep.money / WAN, i, cols);
-
-    //     print_next_new(buy_tail  , i, cols);
-    // print_next_new(sale_tail  , i, cols);
-
-    // print_next_new(buy_tail*WAN*WAN/(deal_summary.bsn.buy.money/WAN)  , i, cols);
-    // print_next_new(sale_tail*WAN*WAN /(deal_summary.bsn.sale.money/WAN)  , i, cols);
-    double total_money = deal_summary.bsn.buy.money + deal_summary.bsn.sale.money + deal_summary.bsn.neutral.money;
-
-    print_next_new(bsn_group.buy.tail.nonzero_money / (total_money)  , i, cols);
-    print_next_new(bsn_group.sale.tail.nonzero_money / (total_money)  , i, cols);
 
     print_next_new((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
 
@@ -138,8 +123,7 @@ void print_slim_price_ratio(const std::string& date_str, const DailyMetrics& met
     get_slim_base(metrics, t, bsn_group, deal_summary);
     double total_money = deal_summary.type_total.money;
 
-    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
-    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
+
 
 
     std::cout << std::left << std::fixed << std::setprecision(3);
@@ -545,60 +529,66 @@ void print_all_data(const std::string& date_str,
     return;
 }
 
+void generate_pressure_S(const bsn_action_group bsn_group,  pressure_S& ps){
+    pressure zb;
+    pressure zs;
+    pressure xb;
+    pressure xs;
+    pressure b;
+    pressure s;
+
+    ps.zb.money = bsn_group.buy.tail.zero.money/WAN; 
+    ps.zs.money = bsn_group.sale.tail.zero.money/WAN; 
+    
+    ps.xb.money = bsn_group.buy.tail.x.money/WAN; 
+    ps.xs.money = bsn_group.sale.tail.x.money/WAN; 
+    
+    ps.zb.gap = bsn_group.buy.tail.zero.gap*WAN; 
+    ps.zs.gap = bsn_group.sale.tail.zero.gap*WAN; 
+    
+    ps.xb.gap = bsn_group.buy.tail.x.gap*WAN; 
+    ps.xs.gap = bsn_group.sale.tail.x.gap*WAN;
+
+    ps.b = ps.zb + ps.xb;
+    ps.s = ps.zs + ps.xs;
+}
+
 void print_b_pressure_data(const std::string& date_str,  
-                    const DailyMetrics& am_metrics,
-                    const DailyMetrics& middle_metrics, 
                     const DailyMetrics& metrics, 
                     const DailyMetrics& pre_metrics,
                     const std::vector<Col>& cols) {
 
     int i = 0;
-    double buy_tail = 0.0;
-    double sale_tail = 0.0;
 
     bsn_action_group bsn_group ;
     deal_summary deal_summary;
 
     get_slim_base(metrics, RecordScale::TOTAL, bsn_group, deal_summary);
 
-    
-    double total_money = deal_summary.bsn.buy.money + deal_summary.bsn.sale.money + deal_summary.bsn.neutral.money;
-
     std::cout << std::left << std::fixed << std::setprecision(2);
-
-    buy_tail = bsn_group.buy.tail.nonzero_money_gap;
-    sale_tail = bsn_group.sale.tail.nonzero_money_gap;
 
     print_next_new(date_str, i, cols);
 
-    double buy_0_money = bsn_group.buy.tail.zero_money/WAN; 
-    double sale_0_money = bsn_group.sale.tail.zero_money/WAN; 
-    
-    double buy_1_money = bsn_group.buy.tail.nonzero_money/WAN; 
-    double sale_1_money = bsn_group.sale.tail.nonzero_money/WAN; 
-    
-    double buy_0_gap = bsn_group.buy.tail.zero_money_gap*WAN; 
-    double sale_0_gap = bsn_group.sale.tail.zero_money_gap*WAN; 
-    
-    double buy_1_gap = bsn_group.buy.tail.nonzero_money_gap*WAN; 
-    double sale_1_gap = bsn_group.sale.tail.nonzero_money_gap*WAN;  
+    pressure_S ps; 
+
+    generate_pressure_S(bsn_group, ps);
 
 
 
-    print_next_new(bsn_group.buy.tail.zero_money/WAN  , i, cols);
-    print_next_new(bsn_group.sale.tail.zero_money/WAN   , i, cols);
+    print_next_new(ps.zb.money  , i, cols);
+    print_next_new(ps.zs.money   , i, cols);
 
-    print_next_new(bsn_group.buy.tail.nonzero_money/WAN  , i, cols);
-    print_next_new(bsn_group.sale.tail.nonzero_money/WAN   , i, cols);
+    print_next_new(ps.xb.money  , i, cols);
+    print_next_new(ps.xs.money, i, cols);
 
-    print_next_new(buy_0_gap/buy_0_money  , i, cols);
-    print_next_new(sale_0_gap/sale_0_money   , i, cols);
+    print_next_new(ps.zb.gap/ps.zb.money  , i, cols);
+    print_next_new(ps.zs.gap/ps.zs.money   , i, cols);
 
-    print_next_new(buy_1_gap/buy_1_money  , i, cols);
-    print_next_new(sale_1_gap/sale_1_money   , i, cols);
+    print_next_new(ps.xb.gap/ps.xb.money  , i, cols);
+    print_next_new(ps.xs.gap/ps.xs.money   , i, cols);
 
-    print_next_new((buy_0_gap + buy_1_gap)/(buy_0_money + buy_1_money)  , i, cols);
-    print_next_new((sale_0_gap + sale_1_gap)/(sale_0_money + sale_1_money)  , i, cols);
+    print_next_new((ps.b.gap)/(ps.b.money)  , i, cols);
+    print_next_new((ps.s.gap)/(ps.s.money)  , i, cols);
 
     print_next_new((deal_summary.bsn.buy.money - deal_summary.bsn.sale.money) / WAN, i, cols);
     print_next_new((metrics_price_net(bsn_group)) / WAN, i, cols);
@@ -768,7 +758,7 @@ void print_bodys(const ProgramOptions& opts,
         }
 
         if (opts.show_b_pressure){
-            print_b_pressure_data(date_str, am_metrics, middle_metrics, metrics, pre_metrics, data_b_pressure_table_cols);
+            print_b_pressure_data(date_str,  metrics, pre_metrics, data_b_pressure_table_cols);
         }
 
         if (opts.show_will){

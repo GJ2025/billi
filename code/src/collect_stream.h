@@ -64,11 +64,47 @@ struct deal_on_front_price {
     trade keep;
 };
 
+struct pressure {
+    double money = 0.0;
+    double gap = 0.0;
+
+    pressure& operator+=(const pressure& rhs) {
+        money += rhs.money;
+        gap += rhs.gap;
+        return *this;
+    }
+
+    pressure& operator-=(const pressure& rhs) {
+        money -= rhs.money;
+        gap -= rhs.gap;
+        return *this;
+    }
+};
+
+inline pressure operator+(pressure lhs, const pressure& rhs) {
+    lhs += rhs;
+    return lhs;
+}
+
+inline pressure operator-(pressure lhs, const pressure& rhs) {
+    lhs -= rhs;
+    return lhs;
+}
+
+struct pressure_S{
+    pressure zb;
+    pressure zs;
+    pressure xb;
+    pressure xs;
+    pressure b;
+    pressure s;
+};
+
 struct deal_on_tail_price{
-    double zero_money = 0.0;
-    double zero_money_gap = 0.0;
-    double nonzero_money = 0.0;
-    double nonzero_money_gap = 0.0;
+
+    pressure  zero;
+    pressure  x;
+
 };
 
 

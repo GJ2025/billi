@@ -257,11 +257,11 @@ void collect_bs_action(bsn_action_group& group, const std::string& bs_type, doub
     } 
 
     if (tail_gap == 0.0){
-        tail->zero_money += money;
-        tail->zero_money_gap += 0.01;
+        tail->zero.money += money;
+        tail->zero.gap += 0.01;
     }else{
-        tail->nonzero_money += money;
-        tail->nonzero_money_gap += std::abs(tail_gap);
+        tail->x.money += money;
+        tail->x.gap += std::abs(tail_gap);
     }
 }
 
